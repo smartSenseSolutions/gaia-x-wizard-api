@@ -1,0 +1,49 @@
+@startuml
+User -> "API server": Onboarding request with needed fields
+"API server" -> "AWS route53": create Subdomain
+"API server" <-- "AWS route53": Subdomain created
+"API server" -> "let's encrypt": Create let's encrypt certificate for a subdomain
+"API server" -> "AWS route53": Add txt record  to verify DNS challenge
+"API server" <-- "let's encrypt": SSL certificate created
+"API server" -> "AWS S3": Upload private key and public key\n host public key under.wellknown path
+"API server" -> "K8S API": Create tls secret
+"API server" -> "K8S API": Create ingress for subdomain using tls secret
+"API server" -> "Signer API": Create did
+"API server" <-- "Signer API": did.json
+"API server" -> "AWS S3": Upload did.json \n Host did.json under .well-known path
+"API server" -> "Signer API": Create participant credentials
+"Signer API"  -> "Gaia-X API": register/sign participant credentials
+"Signer API"  <-- "Gaia-X API": Signed participant.json
+"API server" <-- "Signer API": participant.json
+"API server" -> "AWS S3": Upload partipant.json \n Host participant.json in .well-known path
+User  <- "API server": Onboarding completed
+@enduml
+
+
+Create Service offer
+
+@startuml
+User -> "API server": Create service offer with data
+"API server" -> "Signer tool": Create service offer credentials
+"Signer tool" -> "Signer tool": Sign service offer credential using the private key
+"Signer tool" -> "Gaia-X API": Sign service offer credential
+"API server" <-- "Signer tool": service offers json
+"API server"  -> "AWS S3": Upload json and host json under.well-known path
+User <-- "API server": Offer created
+@enduml
+
+
+Service offering flow
+
+@startuml
+User -> "API server": Browse catalog
+User  <-- "API server": List of service offerings by other enterprise
+User -> "API server": Create verifiable presentation of participant credentials
+"API server" -> "Signer tool": Create VP
+"API server" <-- "Signer tool": Return VP
+"User"  <-- "API server": Return VP
+"User"  -> "API server": Present VP of Gaia-x participant and request for details(data) of service offering
+"API server"  -> "Signer tool": Verify VP
+"API server"  <-- "Signer tool": Verification results
+"User" <-- "API server": Return details(data) of service offering
+@enduml

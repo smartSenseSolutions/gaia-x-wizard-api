@@ -1,0 +1,94 @@
+server:
+  port: ${APPLICATION_PORT:8080}
+  shutdown: graceful
+  compression:
+    enabled: true
+
+spring:
+  profiles:
+    active: ${APPLICATION_ENVIRONMENT:dev}
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: smartsense-gaia-x-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=${USE_SSL}
+    username: ${DB_USER_NAME}
+    password: ${DB_PASSWORD}
+    initialization-mode: always
+    hikari:
+      connectionTimeout: ${DB_CONNECTION_TIME_OUT:120000}
+      maximumPoolSize: ${DB_POOL_SIZE:10}
+      leakDetectionThreshold: 50000
+      maxLifetime: 30000
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: smartSense
+            instanceId: AUTO
+            batchTriggerAcquisitionMaxCount: ${QUARTZ_BATCH_TRIGGER_ACQUISITION_MAX_COUNT:10}
+            batchTriggerAcquisitionFireAheadTimeWindow: 1000
+          jobStore:
+            isClustered: true
+            clusterCheckinInterval: 10000
+            acquireTriggersWithinLock: true
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+          threadPool:
+            threadCount: ${QUARTZ_THREAD_COUNT:10}
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: none
+      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+    properties:
+      hibernate:
+        proc:
+          param_null_passing: true
+        c3p0:
+          timeout: 1800
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 100
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8090}
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*, pre-stop'
+  health:
+    db:
+      enabled: true
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+aws:
+  accessKey: ${AWS_ACCESS_KEY}
+  secretKey: ${AWS_SECRET_KEY}
+  hostedZoneId: ${HOSTED_ZONE_ID}
+  serverIp: ${SERVER_IP}
+  baseDomain: ${BASE_DOMAIN}
+k8s:
+  basePath: ${K8S_BASE_PATH}
+  token: ${K8S_TOKEN}
+  serviceName: ${K8S_SERVICE_NAME}
+signer:
+  host: ${SIGNER_API_HOST}
+jwt:
+  tokenSigningKey: ${JWT_TOKEN_SIGNING_KEY}

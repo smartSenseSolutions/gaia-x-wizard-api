@@ -1,0 +1,67 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+    }
+}
+
+group = "${group}"
+version = "${version}"
+
+subprojects {
+    apply {
+        plugin "java"
+        plugin "org.springframework.boot"
+        plugin "io.spring.dependency-management"
+        plugin 'jacoco-report-aggregation'
+    }
+
+    java {
+        sourceCompatibility = JavaVersion.VERSION_17
+    }
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.danubetech.com/repository/maven-public' }
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+        implementation "org.springdoc:springdoc-openapi-starter-common:${openApiVersion}"
+        implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}"
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+        developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+    }
+
+    tasks.named('test') {
+        useJUnitPlatform()
+    }
+
+    bootJar {
+        enabled = false
+    }
+
+    jacocoTestReport {
+        dependsOn test
+    }
+
+    jacoco {
+        toolVersion = "${jacocoVersion}"
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required = false
+            csv.required = false
+            html.required = true
+        }
+    }
+}
