@@ -5,7 +5,8 @@
 package eu.gaiax.wizard.core.service.job;
 
 
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.StringPool;
+import lombok.RequiredArgsConstructor;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
@@ -25,19 +26,11 @@ import java.util.UUID;
  * The type Schedule service.
  */
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleService.class);
 
     private final Scheduler scheduler;
-
-    /**
-     * Instantiates a new Schedule service.
-     *
-     * @param scheduler the scheduler
-     */
-    public ScheduleService(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
 
     /**
      * Delete job.

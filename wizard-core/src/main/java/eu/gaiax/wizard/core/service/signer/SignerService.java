@@ -7,10 +7,10 @@ package eu.gaiax.wizard.core.service.signer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.models.CreateDidRequest;
-import eu.gaiax.wizard.api.models.CreateVCRequest;
-import eu.gaiax.wizard.api.models.RegistrationStatus;
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.CreateDidRequest;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
@@ -18,6 +18,7 @@ import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.repository.EnterpriseCredentialRepository;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ import java.util.Map;
  * The type Signer service.
  */
 @Service
+@RequiredArgsConstructor
 public class SignerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SignerService.class);
@@ -48,25 +50,6 @@ public class SignerService {
     private final ScheduleService scheduleService;
 
     private final EnterpriseCredentialRepository enterpriseCredentialRepository;
-
-    /**
-     * Instantiates a new Signer service.
-     *
-     * @param enterpriseRepository           the enterprise repository
-     * @param signerClient                   the signer client
-     * @param s3Utils                        the s 3 utils
-     * @param objectMapper                   the object mapper
-     * @param scheduleService                the schedule service
-     * @param enterpriseCredentialRepository the enterprise credential repository
-     */
-    public SignerService(EnterpriseRepository enterpriseRepository, SignerClient signerClient, S3Utils s3Utils, ObjectMapper objectMapper, ScheduleService scheduleService, EnterpriseCredentialRepository enterpriseCredentialRepository) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.signerClient = signerClient;
-        this.s3Utils = s3Utils;
-        this.objectMapper = objectMapper;
-        this.scheduleService = scheduleService;
-        this.enterpriseCredentialRepository = enterpriseCredentialRepository;
-    }
 
     /**
      * Create participant json.

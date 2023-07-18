@@ -99,3 +99,6 @@ ALTER TABLE public.service_offer ADD terms_hash varchar(255) NULL;
 
 --changeset Nitin:6
 ALTER TABLE public.service_offer ADD "label" varchar(255) NULL;
+
+--changeset Neha:7
+ALTER TABLE enterprise DROP COLUMN IF EXISTS password;

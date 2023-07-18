@@ -4,10 +4,10 @@
 
 package eu.gaiax.wizard.api.client;
 
-import eu.gaiax.wizard.api.models.CreateDidRequest;
-import eu.gaiax.wizard.api.models.CreateVCRequest;
-import eu.gaiax.wizard.api.models.CreateVPRequest;
-import eu.gaiax.wizard.api.models.VerifyRequest;
+import eu.gaiax.wizard.api.model.CreateDidRequest;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.CreateVPRequest;
+import eu.gaiax.wizard.api.model.VerifyRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

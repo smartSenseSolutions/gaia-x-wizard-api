@@ -2,7 +2,7 @@
  * Copyright (c) 2023 | smartSense
  */
 
-package eu.gaiax.wizard.api.models;
+package eu.gaiax.wizard.api.model;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -26,17 +26,12 @@ public class RegisterRequest {
     @NotBlank
     private String email;
 
-    @Size(min = 8, max = 16)
-    private String password;
-
-
     @Size(min = 3, max = 32)
     private String legalName;
 
     @Size(min = 3, max = 12)
     @Pattern(regexp = "^[A-Za-z0-9]+$")
     private String subDomainName;
-
     @NotBlank
     private String legalRegistrationNumber;
 

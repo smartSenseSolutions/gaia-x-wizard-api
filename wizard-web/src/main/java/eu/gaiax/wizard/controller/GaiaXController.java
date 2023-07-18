@@ -5,13 +5,11 @@
 package eu.gaiax.wizard.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.gaiax.wizard.api.models.CommonResponse;
-import eu.gaiax.wizard.api.models.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.models.LoginRequest;
-import eu.gaiax.wizard.api.models.LoginResponse;
-import eu.gaiax.wizard.api.models.RegisterRequest;
-import eu.gaiax.wizard.api.models.SessionDTO;
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.RegisterRequest;
+import eu.gaiax.wizard.api.model.SessionDTO;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -28,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -52,12 +51,9 @@ import java.util.Set;
  * @version 1.0
  */
 @RestController
+@RequiredArgsConstructor
 public class GaiaXController {
 
-    /**
-     * The constant CREATED.
-     */
-    public static final String CREATED = "Created";
     private final RegistrationService registrationService;
 
     private final DomainService domainService;
@@ -73,44 +69,9 @@ public class GaiaXController {
     private final CredentialService credentialService;
 
 
-    /**
-     * Instantiates a new Gaia x controller.
-     *
-     * @param registrationService the registration service
-     * @param domainService       the domain service
-     * @param certificateService  the certificate service
-     * @param k8SService          the k 8 s service
-     * @param enterpriseService   the enterprise service
-     * @param signerService       the signer service
-     * @param credentialService   the credential service
-     */
-    public GaiaXController(RegistrationService registrationService, DomainService domainService, CertificateService certificateService, K8SService k8SService, EnterpriseService enterpriseService, SignerService signerService, CredentialService credentialService) {
-        this.registrationService = registrationService;
-        this.domainService = domainService;
-        this.certificateService = certificateService;
-        this.k8SService = k8SService;
-        this.enterpriseService = enterpriseService;
-        this.signerService = signerService;
-        this.credentialService = credentialService;
-    }
-
     private void validateAccess(Set<Integer> requiredRoles, int userRole) {
         boolean contains = requiredRoles.contains(userRole);
         Validate.isFalse(contains).launch(new SecurityException("can not access API"));
-    }
-
-    /**
-     * Register business enterprise.
-     *
-     * @param registerRequest the register request
-     * @return the enterprise
-     * @throws SchedulerException the scheduler exception
-     */
-    @Tag(name = "Login")
-    @Operation(summary = "Login(type=1 for login as admin, type =2 for login as enterprise)")
-    @PostMapping(path = "login", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse<LoginResponse> login(@RequestBody @Valid LoginRequest registerRequest) {
-        return CommonResponse.of(enterpriseService.login(registerRequest.getEmail(), registerRequest.getPassword(), registerRequest.getType()));
     }
 
     /**
@@ -132,17 +93,13 @@ public class GaiaXController {
      * Register business enterprise.
      *
      * @param registerRequest the register request
-     * @param sessionDTO      the session dto
      * @return the enterprise
      * @throws SchedulerException the scheduler exception
      */
-    @Operation(summary = "Register enterprise in the system. This will save enterprise data in database and create job to create subdomain, role: admin")
+    @Operation(summary = "Register enterprise in the system. This will save enterprise data in database and create job to create subdomain")
     @PostMapping(path = "register", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     @Tag(name = "Onboarding")
-    public CommonResponse<Enterprise> registerBusiness(@RequestBody @Valid RegisterRequest registerRequest,
-                                                       @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO
-    ) throws SchedulerException {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Enterprise> registerBusiness(@RequestBody @Valid RegisterRequest registerRequest) throws SchedulerException {
         return CommonResponse.of(registrationService.registerEnterprise(registerRequest));
     }
 
@@ -198,14 +155,12 @@ public class GaiaXController {
      * Create sub domain string.
      *
      * @param enterpriseId the enterprise id
-     * @param sessionDTO   the session dto
      * @return the string
      */
     @Tag(name = "Onboarding")
-    @Operation(summary = "Resume onboarding process from sub domain creation, role Admin")
+    @Operation(summary = "Resume onboarding process from sub domain creation")
     @GetMapping(path = "subdomain/{enterpriseId}")
-    public CommonResponse<Map<String, String>> createSubDomain(@PathVariable(name = "enterpriseId") long enterpriseId, @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO) {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Map<String, String>> createSubDomain(@PathVariable(name = "enterpriseId") long enterpriseId) {
         domainService.createSubDomain(enterpriseId);
         Map<String, String> map = new HashMap<>();
         map.put("message", "Subdomain creation started");
@@ -216,14 +171,12 @@ public class GaiaXController {
      * Create certificate string.
      *
      * @param enterpriseId the enterprise id
-     * @param sessionDTO   the session dto
      * @return the string
      */
     @Tag(name = "Onboarding")
-    @Operation(summary = "Resume onboarding process from SLL certificate creation, role = admin")
+    @Operation(summary = "Resume onboarding process from SLL certificate creation")
     @GetMapping(path = "certificate/{enterpriseId}")
-    public CommonResponse<Map<String, String>> createCertificate(@PathVariable(name = "enterpriseId") long enterpriseId, @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO) {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Map<String, String>> createCertificate(@PathVariable(name = "enterpriseId") long enterpriseId) {
         certificateService.createSSLCertificate(enterpriseId, null);
         Map<String, String> map = new HashMap<>();
         map.put("message", "Certification creation started");
@@ -235,14 +188,12 @@ public class GaiaXController {
      * Create ingress string.
      *
      * @param enterpriseId the enterprise id
-     * @param sessionDTO   the session dto
      * @return the string
      */
     @Tag(name = "Onboarding")
-    @Operation(summary = "Resume onboarding process from ingress creation, role = admin")
+    @Operation(summary = "Resume onboarding process from ingress creation")
     @GetMapping(path = "ingress/{enterpriseId}")
-    public CommonResponse<Map<String, String>> createIngress(@PathVariable(name = "enterpriseId") long enterpriseId, @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO) {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Map<String, String>> createIngress(@PathVariable(name = "enterpriseId") long enterpriseId) {
         k8SService.createIngress(enterpriseId);
         Map<String, String> map = new HashMap<>();
         map.put("message", "Ingress creation started");
@@ -253,14 +204,12 @@ public class GaiaXController {
      * Create did string.
      *
      * @param enterpriseId the enterprise id
-     * @param sessionDTO   the session dto
      * @return the string
      */
     @Tag(name = "Onboarding")
-    @Operation(summary = "Resume onboarding process from did creation, role-=admin")
+    @Operation(summary = "Resume onboarding process from did creation")
     @GetMapping(path = "did/{enterpriseId}")
-    public CommonResponse<Map<String, String>> createDid(@PathVariable(name = "enterpriseId") long enterpriseId, @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO) {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Map<String, String>> createDid(@PathVariable(name = "enterpriseId") long enterpriseId) {
         signerService.createDid(enterpriseId);
         Map<String, String> map = new HashMap<>();
         map.put("message", "did creation started");
@@ -271,14 +220,12 @@ public class GaiaXController {
      * Create participant json string.
      *
      * @param enterpriseId the enterprise id
-     * @param sessionDTO   the session dto
      * @return the string
      */
     @Tag(name = "Onboarding")
-    @Operation(summary = "Resume onboarding process from participant credential creation, role Admin")
+    @Operation(summary = "Resume onboarding process from participant credential creation")
     @GetMapping(path = "participant/{enterpriseId}")
-    public CommonResponse<Map<String, String>> createParticipantJson(@PathVariable(name = "enterpriseId") long enterpriseId, @Parameter(hidden = true) @RequestAttribute(value = StringPool.SESSION_DTO) SessionDTO sessionDTO) {
-        validateAccess(Set.of(StringPool.ADMIN_ROLE), sessionDTO.getRole());
+    public CommonResponse<Map<String, String>> createParticipantJson(@PathVariable(name = "enterpriseId") long enterpriseId) {
         signerService.createParticipantJson(enterpriseId);
         Map<String, String> map = new HashMap<>();
         map.put("message", "participant json creation started");
@@ -335,6 +282,7 @@ public class GaiaXController {
      * Create service offering common response.
      *
      * @param sessionDTO the session dto
+     * @param id         the id
      * @return the common response
      */
     @Tag(name = "Catalogue")

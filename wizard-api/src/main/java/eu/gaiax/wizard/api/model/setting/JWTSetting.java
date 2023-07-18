@@ -2,7 +2,7 @@
  * Copyright (c) 2023 | smartSense
  */
 
-package eu.gaiax.wizard.api.models.setting;
+package eu.gaiax.wizard.api.model.setting;
 
 import lombok.Getter;
 import lombok.Setter;

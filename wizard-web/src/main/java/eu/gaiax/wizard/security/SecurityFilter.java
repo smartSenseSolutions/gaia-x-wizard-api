@@ -4,8 +4,8 @@
 
 package eu.gaiax.wizard.security;
 
-import eu.gaiax.wizard.api.models.SessionDTO;
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.SessionDTO;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.JWTUtil;
 import eu.gaiax.wizard.api.utils.Validate;
 import io.jsonwebtoken.Claims;
@@ -52,6 +52,12 @@ public class SecurityFilter implements Filter {
         //No authentication will be done
         publicUrls = new TreeSet<>();
         publicUrls.add("/login");
+        publicUrls.add("/register");
+        publicUrls.add("/subdomain/{enterpriseId}");
+        publicUrls.add("/participant/{enterpriseId}");
+        publicUrls.add("/ingress/*");
+        publicUrls.add("/did/*");
+        publicUrls.add("/certificate/*");
         publicUrls.add("/.well-known/**");
         publicUrls.add("/actuator/health");
         publicUrls.add("/webjars/**");
@@ -63,7 +69,6 @@ public class SecurityFilter implements Filter {
         publicUrls.add("/v2/api-docs");
         Collections.unmodifiableCollection(publicUrls);
     }
-
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -79,7 +84,7 @@ public class SecurityFilter implements Filter {
             String accessToken = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
             Validate.isNull(accessToken).launch(new SecurityException("Can not find token"));
 
-            //get user info
+            //get user info; todo change for keycloak
             Claims claims = jwtUtil.getAllClaimsFromToken(jwtUtil.extractToken(accessToken));
             SessionDTO sessionDTO = SessionDTO.builder()
                     .role(claims.get(StringPool.ROLE, Integer.class))

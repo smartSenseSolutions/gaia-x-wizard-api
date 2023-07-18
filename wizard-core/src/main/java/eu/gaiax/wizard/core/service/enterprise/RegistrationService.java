@@ -4,16 +4,17 @@
 
 package eu.gaiax.wizard.core.service.enterprise;
 
-import eu.gaiax.wizard.api.models.RegisterRequest;
-import eu.gaiax.wizard.api.models.RegistrationStatus;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.setting.AWSSettings;
+import eu.gaiax.wizard.api.model.RegisterRequest;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
+import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @version 1.0
  */
 @Service
+@RequiredArgsConstructor
 public class RegistrationService {
 
     private final EnterpriseRepository enterpriseRepository;
@@ -34,18 +36,7 @@ public class RegistrationService {
 
     private final AWSSettings awsSettings;
 
-    /**
-     * Instantiates a new Registration service.
-     *
-     * @param enterpriseRepository the enterprise repository
-     * @param scheduleService      the schedule service
-     * @param awsSettings          the aws settings
-     */
-    public RegistrationService(EnterpriseRepository enterpriseRepository, ScheduleService scheduleService, AWSSettings awsSettings) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.scheduleService = scheduleService;
-        this.awsSettings = awsSettings;
-    }
+    private final KeycloakService keycloakService;
 
     /**
      * Test long.
@@ -80,16 +71,19 @@ public class RegistrationService {
         String subdomain = registerRequest.getSubDomainName().toLowerCase() + "." + awsSettings.getBaseDomain();
         //save enterprise details
         Enterprise enterprise = enterpriseRepository.save(Enterprise.builder()
-                .email(registerRequest.getEmail())
-                .headquarterAddress(registerRequest.getHeadquarterAddress())
-                .legalAddress(registerRequest.getLegalAddress())
-                .legalName(registerRequest.getLegalName())
-                .legalRegistrationNumber(registerRequest.getLegalRegistrationNumber())
-                .legalRegistrationType(registerRequest.getLegalRegistrationType())
-                .status(RegistrationStatus.STARTED.getStatus())
-                .subDomainName(subdomain.trim())
-                .password(BCrypt.hashpw(registerRequest.getPassword(), BCrypt.gensalt()))
-                .build());
+          .email(registerRequest.getEmail())
+          .headquarterAddress(registerRequest.getHeadquarterAddress())
+          .legalAddress(registerRequest.getLegalAddress())
+          .legalName(registerRequest.getLegalName())
+          .legalRegistrationNumber(registerRequest.getLegalRegistrationNumber())
+          .legalRegistrationType(registerRequest.getLegalRegistrationType())
+          .status(RegistrationStatus.STARTED.getStatus())
+          .subDomainName(subdomain.trim())
+          .build());
+
+        // add enterprise to keycloak
+        keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail());
+        enterprise.setRequiredActionsUri(keycloakService.getRequiredActionsUri(registerRequest.getEmail()));
 
         //create job to create subdomain
         scheduleService.createJob(enterprise.getId(), StringPool.JOB_TYPE_CREATE_SUB_DOMAIN, 0);

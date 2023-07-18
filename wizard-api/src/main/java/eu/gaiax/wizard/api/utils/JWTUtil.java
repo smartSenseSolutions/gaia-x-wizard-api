@@ -4,9 +4,9 @@
 
 package eu.gaiax.wizard.api.utils;
 
-import eu.gaiax.wizard.api.models.SessionDTO;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.setting.JWTSetting;
+import eu.gaiax.wizard.api.model.SessionDTO;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.JWTSetting;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;

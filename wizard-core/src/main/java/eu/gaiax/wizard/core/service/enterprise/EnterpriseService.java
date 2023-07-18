@@ -8,17 +8,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.models.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.models.CreateVCRequest;
-import eu.gaiax.wizard.api.models.LoginResponse;
-import eu.gaiax.wizard.api.models.SessionDTO;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.VerifyRequest;
+import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.VerifyRequest;
 import eu.gaiax.wizard.api.utils.CommonUtils;
-import eu.gaiax.wizard.api.utils.JWTUtil;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.dao.entity.Admin;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.entity.ServiceOffer;
@@ -28,12 +24,12 @@ import eu.gaiax.wizard.dao.repository.EnterpriseCredentialRepository;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
 import eu.gaiax.wizard.dao.repository.ServiceOfferRepository;
 import eu.gaiax.wizard.dao.repository.ServiceOfferViewRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -48,6 +44,7 @@ import java.util.Set;
  * The type Enterprise service.
  */
 @Service
+@RequiredArgsConstructor
 public class EnterpriseService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EnterpriseService.class);
@@ -66,77 +63,7 @@ public class EnterpriseService {
 
     private final AdminRepository adminRepository;
 
-    private final JWTUtil jwtUtil;
-
     private final ServiceOfferViewRepository serviceOfferViewRepository;
-
-
-    /**
-     * Instantiates a new Enterprise service.
-     *
-     * @param enterpriseRepository           the enterprise repository
-     * @param enterpriseCredentialRepository the enterprise credential repository
-     * @param s3Utils                        the s 3 utils
-     * @param serviceOfferRepository         the service offer repository
-     * @param signerClient                   the signer client
-     * @param objectMapper                   the object mapper
-     * @param adminRepository                the admin repository
-     * @param jwtUtil                        the jwt util
-     * @param serviceOfferViewRepository     the service offer view repository
-     */
-    public EnterpriseService(EnterpriseRepository enterpriseRepository, EnterpriseCredentialRepository enterpriseCredentialRepository, S3Utils s3Utils, ServiceOfferRepository serviceOfferRepository, SignerClient signerClient, ObjectMapper objectMapper, AdminRepository adminRepository, JWTUtil jwtUtil, ServiceOfferViewRepository serviceOfferViewRepository) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.enterpriseCredentialRepository = enterpriseCredentialRepository;
-        this.s3Utils = s3Utils;
-        this.serviceOfferRepository = serviceOfferRepository;
-        this.signerClient = signerClient;
-        this.objectMapper = objectMapper;
-        this.adminRepository = adminRepository;
-        this.jwtUtil = jwtUtil;
-        this.serviceOfferViewRepository = serviceOfferViewRepository;
-    }
-
-    /**
-     * Login login response.
-     *
-     * @param email    the email
-     * @param password the password
-     * @param type     the type
-     * @return the login response
-     */
-    public LoginResponse login(String email, String password, int type) {
-        if (type == 1) {
-            //login as admin
-            Admin admin = adminRepository.getByUserName(email);
-            Validate.isNull(admin).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            boolean valid = BCrypt.checkpw(password, admin.getPassword());
-            Validate.isFalse(valid).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            SessionDTO sessionDTO = SessionDTO.builder()
-                    .role(StringPool.ADMIN_ROLE)
-                    .email(admin.getUserName())
-                    .enterpriseId(-1)
-                    .build();
-            return LoginResponse.builder()
-                    .token("Bearer " + jwtUtil.generateToken(sessionDTO))
-                    .session(sessionDTO)
-                    .build();
-        } else {
-            //login aa enterprise
-            Enterprise enterprise = enterpriseRepository.getByEmail(email);
-            Validate.isNull(enterprise).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            boolean valid = BCrypt.checkpw(password, enterprise.getPassword());
-            Validate.isFalse(valid).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            SessionDTO sessionDTO = SessionDTO.builder()
-                    .role(StringPool.ENTERPRISE_ROLE)
-                    .email(enterprise.getEmail())
-                    .enterpriseId(enterprise.getId())
-                    .build();
-            return LoginResponse.builder()
-                    .token("Bearer " + jwtUtil.generateToken(sessionDTO))
-                    .session(sessionDTO)
-                    .build();
-        }
-    }
 
     /**
      * Gets enterprise.

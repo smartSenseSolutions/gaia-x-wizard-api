@@ -9,13 +9,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.models.CreateVPRequest;
+import eu.gaiax.wizard.api.model.CreateVPRequest;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.repository.EnterpriseCredentialRepository;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.Map;
  * The type Credential service.
  */
 @Service
+@RequiredArgsConstructor
 public class CredentialService {
 
     private final EnterpriseRepository enterpriseRepository;
@@ -37,23 +39,6 @@ public class CredentialService {
 
     private final SignerClient signerClient;
     private final S3Utils s3Utils;
-
-    /**
-     * Instantiates a new Credential service.
-     *
-     * @param enterpriseRepository           the enterprise repository
-     * @param enterpriseCredentialRepository the enterprise credential repository
-     * @param objectMapper                   the object mapper
-     * @param signerClient                   the signer client
-     * @param s3Utils                        the s 3 utils
-     */
-    public CredentialService(EnterpriseRepository enterpriseRepository, EnterpriseCredentialRepository enterpriseCredentialRepository, ObjectMapper objectMapper, SignerClient signerClient, S3Utils s3Utils) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.enterpriseCredentialRepository = enterpriseCredentialRepository;
-        this.objectMapper = objectMapper;
-        this.signerClient = signerClient;
-        this.s3Utils = s3Utils;
-    }
 
     /**
      * Create vp map.
