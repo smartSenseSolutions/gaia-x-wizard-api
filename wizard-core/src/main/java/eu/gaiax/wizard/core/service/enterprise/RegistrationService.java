@@ -6,6 +6,7 @@ package eu.gaiax.wizard.core.service.enterprise;
 
 import eu.gaiax.wizard.api.model.RegisterRequest;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
@@ -85,7 +86,7 @@ public class RegistrationService {
         enterprise.setRequiredActionsUri(keycloakService.getRequiredActionsUri(registerRequest.getEmail()));
 
         //create job to create subdomain
-//        scheduleService.createJob(enterprise.getId(), StringPool.JOB_TYPE_CREATE_SUB_DOMAIN, 0);
+        scheduleService.createJob(enterprise.getId(), StringPool.JOB_TYPE_CREATE_SUB_DOMAIN, 0);
         return enterprise;
     }
 }
