@@ -10,15 +10,11 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
-import eu.gaiax.wizard.api.model.LoginResponse;
-import eu.gaiax.wizard.api.model.SessionDTO;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.VerifyRequest;
 import eu.gaiax.wizard.api.utils.CommonUtils;
-import eu.gaiax.wizard.api.utils.JWTUtil;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.dao.entity.Admin;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.entity.ServiceOffer;
@@ -34,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -68,60 +63,7 @@ public class EnterpriseService {
 
     private final AdminRepository adminRepository;
 
-    private final JWTUtil jwtUtil;
-
     private final ServiceOfferViewRepository serviceOfferViewRepository;
-
-    /**
-     * Login login response.
-     *
-     * @param email    the email
-     * @param password the password
-     * @param type     the type
-     * @return the login response
-     */
-    public LoginResponse login(String email, String password, int type) {
-        SessionDTO sessionDTO;
-
-        Admin admin = adminRepository.getByUserName(email);
-        Validate.isNull(admin).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-        boolean valid = BCrypt.checkpw(password, admin.getPassword());
-        Validate.isFalse(valid).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-        sessionDTO = SessionDTO.builder()
-          .role(StringPool.ADMIN_ROLE)
-          .email(admin.getUserName())
-          .enterpriseId(-1)
-          .build();
-
-        /*if (type == 1) {
-            //login as admin
-            Admin admin = adminRepository.getByUserName(email);
-            Validate.isNull(admin).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            boolean valid = BCrypt.checkpw(password, admin.getPassword());
-            Validate.isFalse(valid).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            sessionDTO = SessionDTO.builder()
-                    .role(StringPool.ADMIN_ROLE)
-                    .email(admin.getUserName())
-                    .enterpriseId(-1)
-                    .build();
-        } else {
-            //login aa enterprise
-            Enterprise enterprise = enterpriseRepository.getByEmail(email);
-            Validate.isNull(enterprise).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            boolean valid = BCrypt.checkpw(password, enterprise.getPassword());
-            Validate.isFalse(valid).launch(new BadDataException(StringPool.INVALID_USERNAME_OR_PASSWORD));
-            sessionDTO = SessionDTO.builder()
-                    .role(StringPool.ENTERPRISE_ROLE)
-                    .email(enterprise.getEmail())
-                    .enterpriseId(enterprise.getId())
-                    .build();
-        }*/
-
-        return LoginResponse.builder()
-          .token("Bearer " + jwtUtil.generateToken(sessionDTO))
-          .session(sessionDTO)
-          .build();
-    }
 
     /**
      * Gets enterprise.

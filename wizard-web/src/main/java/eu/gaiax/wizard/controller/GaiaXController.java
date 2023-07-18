@@ -7,8 +7,6 @@ package eu.gaiax.wizard.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.LoginRequest;
-import eu.gaiax.wizard.api.model.LoginResponse;
 import eu.gaiax.wizard.api.model.RegisterRequest;
 import eu.gaiax.wizard.api.model.SessionDTO;
 import eu.gaiax.wizard.api.model.StringPool;
@@ -18,7 +16,6 @@ import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.enterprise.EnterpriseService;
 import eu.gaiax.wizard.core.service.enterprise.RegistrationService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
-import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Enterprise;
@@ -75,21 +72,6 @@ public class GaiaXController {
     private void validateAccess(Set<Integer> requiredRoles, int userRole) {
         boolean contains = requiredRoles.contains(userRole);
         Validate.isFalse(contains).launch(new SecurityException("can not access API"));
-    }
-
-    /**
-     * Register business enterprise.
-     *
-     * @param registerRequest the register request
-     * @return the enterprise
-     * @throws SchedulerException the scheduler exception
-     */
-    @Tag(name = "Login")
-//    @Operation(summary = "Login(type=1 for login as admin, type =2 for login as enterprise)")
-    @Operation(summary = "Login(type=1 for login as admin)")
-    @PostMapping(path = "login", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public CommonResponse<LoginResponse> login(@RequestBody @Valid LoginRequest registerRequest) {
-        return CommonResponse.of(enterpriseService.login(registerRequest.getEmail(), registerRequest.getPassword(), registerRequest.getType()));
     }
 
     /**

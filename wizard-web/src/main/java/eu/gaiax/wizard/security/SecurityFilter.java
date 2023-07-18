@@ -84,7 +84,7 @@ public class SecurityFilter implements Filter {
             String accessToken = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
             Validate.isNull(accessToken).launch(new SecurityException("Can not find token"));
 
-            //get user info
+            //get user info; todo change for keycloak
             Claims claims = jwtUtil.getAllClaimsFromToken(jwtUtil.extractToken(accessToken));
             SessionDTO sessionDTO = SessionDTO.builder()
                     .role(claims.get(StringPool.ROLE, Integer.class))
