@@ -4,6 +4,8 @@ WORKDIR /home/app
 RUN gradle clean build --no-daemon -i -x test -x javadoc
 
 FROM openjdk:17-alpine
+RUN adduser -D smartsense && chown -R smartsense /home
+USER smartsense
 RUN mkdir /home/app
 COPY --from=build /home/app/wizard-web/build/libs/wizard-web-0.0.1-SNAPSHOT.jar /home/app/gaia-x/gaia-x-wizard.jar
 WORKDIR /home/app/gaia-x
