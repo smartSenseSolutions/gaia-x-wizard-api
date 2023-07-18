@@ -2,7 +2,7 @@
  * Copyright (c) 2023 | smartSense
  */
 
-package eu.gaiax.wizard.api.models;
+package eu.gaiax.wizard.api.model;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;

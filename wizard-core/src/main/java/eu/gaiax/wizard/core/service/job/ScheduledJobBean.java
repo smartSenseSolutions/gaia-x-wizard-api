@@ -4,11 +4,12 @@
 
 package eu.gaiax.wizard.core.service.job;
 
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
+import lombok.RequiredArgsConstructor;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @DisallowConcurrentExecution
+@RequiredArgsConstructor
 public class ScheduledJobBean extends QuartzJobBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledJobBean.class);
@@ -33,21 +35,6 @@ public class ScheduledJobBean extends QuartzJobBean {
     private final K8SService k8SService;
 
     private final SignerService signerService;
-
-    /**
-     * Instantiates a new Scheduled job bean.
-     *
-     * @param domainService      the domain service
-     * @param certificateService the certificate service
-     * @param k8SService         the k 8 s service
-     * @param signerService      the signer service
-     */
-    public ScheduledJobBean(DomainService domainService, CertificateService certificateService, K8SService k8SService, SignerService signerService) {
-        this.domainService = domainService;
-        this.certificateService = certificateService;
-        this.k8SService = k8SService;
-        this.signerService = signerService;
-    }
 
     @Override
     protected void executeInternal(JobExecutionContext context) {

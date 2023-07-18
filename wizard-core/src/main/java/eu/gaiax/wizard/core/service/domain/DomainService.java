@@ -17,12 +17,13 @@ import com.amazonaws.services.route53.model.ChangeResourceRecordSetsResult;
 import com.amazonaws.services.route53.model.RRType;
 import com.amazonaws.services.route53.model.ResourceRecord;
 import com.amazonaws.services.route53.model.ResourceRecordSet;
-import eu.gaiax.wizard.api.models.RegistrationStatus;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.setting.AWSSettings;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +51,7 @@ public class DomainService {
 
     private final ScheduleService scheduleService;
 
+
     /**
      * Instantiates a new Domain service.
      *
@@ -59,11 +61,10 @@ public class DomainService {
      */
     public DomainService(AWSSettings awsSettings, EnterpriseRepository enterpriseRepository, ScheduleService scheduleService) {
         this.awsSettings = awsSettings;
+        this.amazonRoute53 = getAmazonRoute53();
         this.enterpriseRepository = enterpriseRepository;
         this.scheduleService = scheduleService;
-        this.amazonRoute53 = getAmazonRoute53();
     }
-
 
     /**
      * Update txt records.

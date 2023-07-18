@@ -2,7 +2,7 @@
  * Copyright (c) 2023 | smartSense
  */
 
-package eu.gaiax.wizard.api.models;
+package eu.gaiax.wizard.api.model;
 
 /**
  * The interface String pool.
@@ -74,7 +74,13 @@ public class StringPool {
      * The constant INVALID_USERNAME_OR_PASSWORD.
      */
     public static final String INVALID_USERNAME_OR_PASSWORD = "invalid.username.or.password"; //pragma: allowlist secret
+
+    /**
+     * The constant TERMS_AND_CONDITIONS_HASH.
+     */
     public static final String TERMS_AND_CONDITIONS_HASH = "hash_value"; //pragma: allowlist secret
+
+    public static final String REQUIRED_ACTIONS_PATH = "/login-actions/action-token?key=";
 
     private StringPool() {
     }

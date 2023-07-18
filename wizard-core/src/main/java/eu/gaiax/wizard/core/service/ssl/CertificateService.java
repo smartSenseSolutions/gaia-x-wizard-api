@@ -3,8 +3,8 @@
  */
 package eu.gaiax.wizard.core.service.ssl;
 
-import eu.gaiax.wizard.api.models.RegistrationStatus;
-import eu.gaiax.wizard.api.models.StringPool;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -13,6 +13,7 @@ import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCertificate;
 import eu.gaiax.wizard.dao.repository.EnterpriseCertificateRepository;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import lombok.RequiredArgsConstructor;
 import org.quartz.JobKey;
 import org.shredzone.acme4j.Account;
 import org.shredzone.acme4j.AccountBuilder;
@@ -47,6 +48,7 @@ import java.util.List;
  * Pass the names of the domains as parameters.
  */
 @Service
+@RequiredArgsConstructor
 public class CertificateService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CertificateService.class);
@@ -63,23 +65,6 @@ public class CertificateService {
      * The constant CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE.
      */
     public static final String CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE = "Can not convert file in pccs8 formate for enterprise->{}";
-
-    /**
-     * Instantiates a new Certificate service.
-     *
-     * @param domainService                   the domain service
-     * @param enterpriseRepository            the enterprise repository
-     * @param s3Utils                         the s 3 utils
-     * @param enterpriseCertificateRepository the enterprise certificate repository
-     * @param scheduleService                 the schedule service
-     */
-    public CertificateService(DomainService domainService, EnterpriseRepository enterpriseRepository, S3Utils s3Utils, EnterpriseCertificateRepository enterpriseCertificateRepository, ScheduleService scheduleService) {
-        this.domainService = domainService;
-        this.enterpriseRepository = enterpriseRepository;
-        this.s3Utils = s3Utils;
-        this.enterpriseCertificateRepository = enterpriseCertificateRepository;
-        this.scheduleService = scheduleService;
-    }
 
     private enum ChallengeType {
         /**

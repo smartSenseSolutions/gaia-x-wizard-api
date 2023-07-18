@@ -10,8 +10,8 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.setting.AWSSettings;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import org.springframework.stereotype.Service;
 
 import java.io.File;

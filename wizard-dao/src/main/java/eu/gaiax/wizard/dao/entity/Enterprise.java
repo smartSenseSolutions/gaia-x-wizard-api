@@ -27,10 +27,6 @@ public class Enterprise extends SuperEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-
-    @Column(nullable = false)
-    private String password;
-
     @Column(nullable = false, unique = true)
     private String legalName;
 
@@ -60,5 +56,8 @@ public class Enterprise extends SuperEntity {
 
     @Transient
     private String certificateChain;
+
+    @Transient
+    private String requiredActionsUri;
 
 }

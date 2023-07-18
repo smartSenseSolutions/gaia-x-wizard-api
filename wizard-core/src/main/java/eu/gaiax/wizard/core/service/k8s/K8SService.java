@@ -5,9 +5,9 @@
 package eu.gaiax.wizard.core.service.k8s;
 
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.models.RegistrationStatus;
-import eu.gaiax.wizard.api.models.StringPool;
-import eu.gaiax.wizard.api.models.setting.K8SSettings;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.K8SSettings;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
@@ -31,6 +31,7 @@ import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1ServiceBackendPort;
 import io.kubernetes.client.util.Config;
+import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ import java.util.Map;
  * The type K 8 s service.
  */
 @Service
+@RequiredArgsConstructor
 public class K8SService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(K8SService.class);
@@ -63,23 +65,6 @@ public class K8SService {
     private final K8SSettings k8SSettings;
 
     private final ScheduleService scheduleService;
-
-    /**
-     * Instantiates a new K 8 s service.
-     *
-     * @param enterpriseRepository            the enterprise repository
-     * @param enterpriseCertificateRepository the enterprise certificate repository
-     * @param s3Util                          the s 3 util
-     * @param k8SSettings                     the k 8 s settings
-     * @param scheduleService                 the schedule service
-     */
-    public K8SService(EnterpriseRepository enterpriseRepository, EnterpriseCertificateRepository enterpriseCertificateRepository, S3Utils s3Util, K8SSettings k8SSettings, ScheduleService scheduleService) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.enterpriseCertificateRepository = enterpriseCertificateRepository;
-        this.s3Util = s3Util;
-        this.k8SSettings = k8SSettings;
-        this.scheduleService = scheduleService;
-    }
 
     /**
      * Create ingress.
