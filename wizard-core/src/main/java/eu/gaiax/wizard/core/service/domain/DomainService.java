@@ -9,21 +9,13 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.route53.AmazonRoute53;
 import com.amazonaws.services.route53.AmazonRoute53ClientBuilder;
-import com.amazonaws.services.route53.model.Change;
-import com.amazonaws.services.route53.model.ChangeAction;
-import com.amazonaws.services.route53.model.ChangeBatch;
-import com.amazonaws.services.route53.model.ChangeResourceRecordSetsRequest;
-import com.amazonaws.services.route53.model.ChangeResourceRecordSetsResult;
-import com.amazonaws.services.route53.model.RRType;
-import com.amazonaws.services.route53.model.ResourceRecord;
-import com.amazonaws.services.route53.model.ResourceRecordSet;
+import com.amazonaws.services.route53.model.*;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
-import lombok.RequiredArgsConstructor;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +53,7 @@ public class DomainService {
      */
     public DomainService(AWSSettings awsSettings, EnterpriseRepository enterpriseRepository, ScheduleService scheduleService) {
         this.awsSettings = awsSettings;
-        this.amazonRoute53 = getAmazonRoute53();
+        this.amazonRoute53 = this.getAmazonRoute53();
         this.enterpriseRepository = enterpriseRepository;
         this.scheduleService = scheduleService;
     }
@@ -91,8 +83,8 @@ public class DomainService {
         request.setChangeBatch(batch);
 
 
-        request.setHostedZoneId(awsSettings.getHostedZoneId());
-        ChangeResourceRecordSetsResult result = amazonRoute53.changeResourceRecordSets(request);
+        request.setHostedZoneId(this.awsSettings.hostedZoneId());
+        ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
 
         try {
             Thread.sleep(10000);
@@ -111,7 +103,7 @@ public class DomainService {
      */
     public void deleteTxtRecordForSSLCertificate(String domainName, String value) {
         try {
-            updateTxtRecords(domainName, value, ChangeAction.DELETE);
+            this.updateTxtRecords(domainName, value, ChangeAction.DELETE);
         } catch (Exception e) {
             LOGGER.error("Can not delete txt records for domain ->{}", domainName, e); //TODO need to check if record is already exist
         }
@@ -127,7 +119,7 @@ public class DomainService {
      */
     public void createTxtRecordForSSLCertificate(String domainName, String value) {
         try {
-            updateTxtRecords(domainName, value, ChangeAction.CREATE);
+            this.updateTxtRecords(domainName, value, ChangeAction.CREATE);
         } catch (Exception e) {
             LOGGER.error("Can not create txt records for domain ->{}", domainName, e); //TODO need to check if record is already created
         }
@@ -140,7 +132,7 @@ public class DomainService {
      * @param enterpriseId the enterprise id
      */
     public void createSubDomain(long enterpriseId) {
-        Enterprise enterprise = enterpriseRepository.findById(enterpriseId).orElse(null);
+        Enterprise enterprise = this.enterpriseRepository.findById(enterpriseId).orElse(null);
         if (enterprise == null) {
             LOGGER.error("Invalid enterprise id ->{}", enterpriseId);
             return;
@@ -148,7 +140,7 @@ public class DomainService {
         try {
             String domainName = enterprise.getSubDomainName();
             ResourceRecord resourceRecord = new ResourceRecord();
-            resourceRecord.setValue(awsSettings.getServerIp());
+            resourceRecord.setValue(this.awsSettings.serverIp());
 
             ResourceRecordSet recordsSet = new ResourceRecordSet();
             recordsSet.setResourceRecords(List.of(resourceRecord));
@@ -163,24 +155,24 @@ public class DomainService {
             ChangeResourceRecordSetsRequest request = new ChangeResourceRecordSetsRequest();
             request.setChangeBatch(batch);
 
-            request.setHostedZoneId(awsSettings.getHostedZoneId());
-            ChangeResourceRecordSetsResult result = amazonRoute53.changeResourceRecordSets(request);
+            request.setHostedZoneId(this.awsSettings.hostedZoneId());
+            ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
             LOGGER.info("subdomain created -> {} for enterprise id->{}, result-> {}", domainName, enterpriseId, result);
             enterprise.setStatus(RegistrationStatus.DOMAIN_CREATED.getStatus());
 
             //create job to create certificate
-            createCertificateCreationJob(enterpriseId, enterprise);
+            this.createCertificateCreationJob(enterpriseId, enterprise);
         } catch (Exception e) {
             LOGGER.error("Can not create sub domain for enterprise->{}", enterpriseId, e);
             enterprise.setStatus(RegistrationStatus.DOMAIN_CREATION_FAILED.getStatus());
         } finally {
-            enterpriseRepository.save(enterprise);
+            this.enterpriseRepository.save(enterprise);
         }
     }
 
     private void createCertificateCreationJob(long enterpriseId, Enterprise enterprise) {
         try {
-            scheduleService.createJob(enterpriseId, StringPool.JOB_TYPE_CREATE_CERTIFICATE, 0); //try for 3 time for certificate
+            this.scheduleService.createJob(enterpriseId, StringPool.JOB_TYPE_CREATE_CERTIFICATE, 0); //try for 3 time for certificate
         } catch (SchedulerException e) {
             LOGGER.error("Can not create certificate creation job for enterprise->{}", enterprise, e);
             enterprise.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());
@@ -194,12 +186,12 @@ public class DomainService {
                         return new AWSCredentials() {
                             @Override
                             public String getAWSAccessKeyId() {
-                                return awsSettings.getAccessKey();
+                                return DomainService.this.awsSettings.accessKey();
                             }
 
                             @Override
                             public String getAWSSecretKey() {
-                                return awsSettings.getSecretKey();
+                                return DomainService.this.awsSettings.secretKey();
                             }
                         };
                     }

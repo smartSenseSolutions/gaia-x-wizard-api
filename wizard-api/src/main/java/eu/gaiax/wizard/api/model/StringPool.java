@@ -42,11 +42,6 @@ public class StringPool {
      */
     public static final String JOB_TYPE = "JOB_TYPE";
     /**
-     * The constant S3_BUCKET_NAME.
-     */
-    public static final String S3_BUCKET_NAME = "smartsense-gaiax-mvp";
-
-    /**
      * The constant ROLE.
      */
     public static final String ROLE = "role";

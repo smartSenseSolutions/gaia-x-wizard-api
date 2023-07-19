@@ -4,10 +4,15 @@
 
 package eu.gaiax.wizard.config;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
@@ -33,14 +38,18 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
 
     private final String resourceBundlePath;
+    private final AWSSettings awsSettings;
+
 
     /**
      * Instantiates a new Application config.
      *
      * @param resourceBundlePath the resource bundle path
      */
-    public ApplicationConfig(@Value("${resource.bundle.path:classpath:i18n/language}") String resourceBundlePath) {
+    public ApplicationConfig(@Value("${resource.bundle.path:classpath:i18n/language}") String resourceBundlePath,
+                             AWSSettings awsSettings) {
         this.resourceBundlePath = resourceBundlePath;
+        this.awsSettings = awsSettings;
     }
 
     /**
@@ -66,7 +75,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
     @Bean
     public MessageSource messageSource() {
         ReloadableResourceBundleMessageSource bean = new ReloadableResourceBundleMessageSource();
-        bean.setBasename(resourceBundlePath);
+        bean.setBasename(this.resourceBundlePath);
         bean.setDefaultEncoding(StandardCharsets.UTF_8.name());
         return bean;
     }
@@ -79,8 +88,8 @@ public class ApplicationConfig implements WebMvcConfigurer {
     @Bean
     public LocalValidatorFactoryBean validator() {
         LocalValidatorFactoryBean beanValidatorFactory = new LocalValidatorFactoryBean();
-        beanValidatorFactory.setValidationMessageSource(messageSource());
-        beanValidatorFactory.setMessageInterpolator(new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(messageSource())));
+        beanValidatorFactory.setValidationMessageSource(this.messageSource());
+        beanValidatorFactory.setMessageInterpolator(new ResourceBundleMessageInterpolator(new MessageSourceResourceBundleLocator(this.messageSource())));
         return beanValidatorFactory;
     }
 
@@ -100,7 +109,34 @@ public class ApplicationConfig implements WebMvcConfigurer {
     @Nullable
     @Override
     public Validator getValidator() {
-        return validator();
+        return this.validator();
+    }
+
+    @Bean
+    public AmazonS3 amazonS3() {
+        return AmazonS3ClientBuilder.standard().
+                withRegion(this.awsSettings.region()).
+                withCredentials(new AWSCredentialsProvider() {
+                    @Override
+                    public AWSCredentials getCredentials() {
+                        return new AWSCredentials() {
+                            @Override
+                            public String getAWSAccessKeyId() {
+                                return ApplicationConfig.this.awsSettings.accessKey();
+                            }
+
+                            @Override
+                            public String getAWSSecretKey() {
+                                return ApplicationConfig.this.awsSettings.secretKey();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public void refresh() {
+                        //Do nothing
+                    }
+                }).build();
     }
 
 

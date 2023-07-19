@@ -115,7 +115,8 @@ aws:
   hostedZoneId: ${HOSTED_ZONE_ID}
   serverIp: ${SERVER_IP}
   baseDomain: ${BASE_DOMAIN}
-  bucketName: ${S3_BUCKET_NAME}
+  bucket: ${S3_BUCKET_NAME}
+  region: ${S3_REGION}
 k8s:
   basePath: ${K8S_BASE_PATH}
   token: ${K8S_TOKEN}

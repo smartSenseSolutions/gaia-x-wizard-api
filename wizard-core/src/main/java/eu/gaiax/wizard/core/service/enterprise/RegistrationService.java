@@ -44,7 +44,7 @@ public class RegistrationService {
      * @return the long
      */
     public long test() {
-        return enterpriseRepository.count();
+        return this.enterpriseRepository.count();
     }
 
     /**
@@ -57,36 +57,36 @@ public class RegistrationService {
     @Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
     public Enterprise registerEnterprise(RegisterRequest registerRequest) throws SchedulerException {
         //check legal name
-        Validate.isTrue(enterpriseRepository.existsByLegalName(registerRequest.getLegalName())).launch("duplicate.legal.name");
+        Validate.isTrue(this.enterpriseRepository.existsByLegalName(registerRequest.getLegalName())).launch("duplicate.legal.name");
 
         //check email
-        Validate.isTrue(enterpriseRepository.existsByEmail(registerRequest.getEmail())).launch("duplicate.email");
+        Validate.isTrue(this.enterpriseRepository.existsByEmail(registerRequest.getEmail())).launch("duplicate.email");
 
         //check sub domain
-        Validate.isTrue(enterpriseRepository.existsBySubDomainName(registerRequest.getSubDomainName())).launch("duplicate.sub.domain");
+        Validate.isTrue(this.enterpriseRepository.existsBySubDomainName(registerRequest.getSubDomainName())).launch("duplicate.sub.domain");
 
         //check registration number
-        Validate.isTrue(enterpriseRepository.existsByLegalRegistrationNumber(registerRequest.getLegalRegistrationNumber())).launch("duplicate.registration.number");
+        Validate.isTrue(this.enterpriseRepository.existsByLegalRegistrationNumber(registerRequest.getLegalRegistrationNumber())).launch("duplicate.registration.number");
 
-        String subdomain = registerRequest.getSubDomainName().toLowerCase() + "." + awsSettings.getBaseDomain();
+        String subdomain = registerRequest.getSubDomainName().toLowerCase() + "." + this.awsSettings.baseDomain();
         //save enterprise details
-        Enterprise enterprise = enterpriseRepository.save(Enterprise.builder()
-          .email(registerRequest.getEmail())
-          .headquarterAddress(registerRequest.getHeadquarterAddress())
-          .legalAddress(registerRequest.getLegalAddress())
-          .legalName(registerRequest.getLegalName())
-          .legalRegistrationNumber(registerRequest.getLegalRegistrationNumber())
-          .legalRegistrationType(registerRequest.getLegalRegistrationType())
-          .status(RegistrationStatus.STARTED.getStatus())
-          .subDomainName(subdomain.trim())
-          .build());
+        Enterprise enterprise = this.enterpriseRepository.save(Enterprise.builder()
+                .email(registerRequest.getEmail())
+                .headquarterAddress(registerRequest.getHeadquarterAddress())
+                .legalAddress(registerRequest.getLegalAddress())
+                .legalName(registerRequest.getLegalName())
+                .legalRegistrationNumber(registerRequest.getLegalRegistrationNumber())
+                .legalRegistrationType(registerRequest.getLegalRegistrationType())
+                .status(RegistrationStatus.STARTED.getStatus())
+                .subDomainName(subdomain.trim())
+                .build());
 
         // add enterprise to keycloak
-        keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail(), enterprise.getId());
-        enterprise.setRequiredActionsUri(keycloakService.getRequiredActionsUri(registerRequest.getEmail()));
+        this.keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail(), enterprise.getId());
+        enterprise.setRequiredActionsUri(this.keycloakService.getRequiredActionsUri(registerRequest.getEmail()));
 
         //create job to create subdomain
-        scheduleService.createJob(enterprise.getId(), StringPool.JOB_TYPE_CREATE_SUB_DOMAIN, 0);
+        this.scheduleService.createJob(enterprise.getId(), StringPool.JOB_TYPE_CREATE_SUB_DOMAIN, 0);
         return enterprise;
     }
 }
