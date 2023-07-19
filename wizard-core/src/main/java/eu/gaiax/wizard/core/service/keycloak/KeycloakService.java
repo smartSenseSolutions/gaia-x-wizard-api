@@ -52,6 +52,10 @@ public class KeycloakService {
     }
 
     public void addUser(String legalName, String email, Long enterpriseId) {
+        if (getKeycloakUserByEmail(email) != null) {
+            return;
+        }
+
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setEnabled(true);
         userRepresentation.setEmail(email);
@@ -67,7 +71,7 @@ public class KeycloakService {
         Response response = usersResource.create(userRepresentation);
         LOGGER.info("Keycloak User Creation status: {}", response.getStatus());
         if (response.getStatus() != HttpStatus.CREATED.value()) {
-            throw new BadDataException("Invalid request");
+            throw new BadDataException("Invalid request for user registration");
         }
     }
 
