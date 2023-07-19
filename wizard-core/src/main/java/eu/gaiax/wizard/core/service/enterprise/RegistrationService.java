@@ -82,7 +82,7 @@ public class RegistrationService {
           .build());
 
         // add enterprise to keycloak
-        keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail());
+        keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail(), enterprise.getId());
         enterprise.setRequiredActionsUri(keycloakService.getRequiredActionsUri(registerRequest.getEmail()));
 
         //create job to create subdomain
