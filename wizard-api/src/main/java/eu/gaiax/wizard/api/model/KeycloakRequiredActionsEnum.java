@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum KeycloakRequiredActionsEnum {
 
-    WEB_AUTHN("webauthn-register");
+    WEBAUTHN_REGISTER_PASSWORDLESS("webauthn-register-passwordless");
 
     private final String value;
 }

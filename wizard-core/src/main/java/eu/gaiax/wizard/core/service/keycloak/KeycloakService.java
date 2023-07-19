@@ -22,7 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -49,11 +51,15 @@ public class KeycloakService {
         return keycloak.realm(keycloakSettings.getRealm());
     }
 
-    public void addUser(String legalName, String email) {
+    public void addUser(String legalName, String email, Long enterpriseId) {
         UserRepresentation userRepresentation = new UserRepresentation();
         userRepresentation.setEnabled(true);
         userRepresentation.setEmail(email);
         userRepresentation.setFirstName(legalName);
+
+        Map<String, List<String>> customAttributesMap = new HashMap<>();
+        customAttributesMap.put(StringPool.ENTERPRISE_ID, Collections.singletonList(String.valueOf(enterpriseId)));
+        userRepresentation.setAttributes(customAttributesMap);
 
         RealmResource realmResource = getRealmResource();
         UsersResource usersResource = realmResource.users();
@@ -87,7 +93,7 @@ public class KeycloakService {
         RequiredActionsTokenRequest requiredActionsTokenRequest = new RequiredActionsTokenRequest(
           userRepresentation.getId(),
           email,
-          Collections.singletonList(KeycloakRequiredActionsEnum.WEB_AUTHN.getValue()),
+          Collections.singletonList(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()),
           keycloakSettings.getWebAuthRedirectUrl(),
           keycloakSettings.getActionTokenLifespan()
         );
