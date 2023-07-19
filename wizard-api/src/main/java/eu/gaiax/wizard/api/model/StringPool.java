@@ -47,21 +47,6 @@ public class StringPool {
     public static final String S3_BUCKET_NAME = "smartsense-gaiax-mvp";
 
     /**
-     * The constant ADMIN_ROLE.
-     */
-    public static final int ADMIN_ROLE = 1;
-
-    /**
-     * The constant ENTERPRISE_ROLE.
-     */
-    public static final int ENTERPRISE_ROLE = 2;
-
-    /**
-     * The constant SESSION_DTO.
-     */
-    public static final String SESSION_DTO = "sessionDto";
-
-    /**
      * The constant ROLE.
      */
     public static final String ROLE = "role";

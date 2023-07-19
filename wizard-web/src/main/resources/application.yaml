@@ -4,6 +4,17 @@ server:
   compression:
     enabled: true
 
+wizard:
+  security:
+    enabled: true
+    realm: Gaia-x
+    clientId: pr-gaia-x-wizard
+    auth-server-url: http://localhost:8080
+    authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
+    tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
+    refreshTokenUrl: ${wizard.security.token-url}
+    corsOrigins: "*"
+
 spring:
   profiles:
     active: ${APPLICATION_ENVIRONMENT:dev}
@@ -40,6 +51,13 @@ spring:
             driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
           threadPool:
             threadCount: ${QUARTZ_THREAD_COUNT:10}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          #Issuer-uri indicates the iss claims from jwt token
+          issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
+          jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
 
   jpa:
     show-sql: false
@@ -77,6 +95,19 @@ management:
       enabled: true
     readinessState:
       enabled: true
+
+springdoc:
+  swagger-ui:
+    oauth:
+      clientId: pu-gaia-x-wizard
+      clientSecret:
+    disable-swagger-default-url: true
+    path: /ui/swagger-ui
+    show-common-extensions: true
+    csrf:
+      enabled: true
+  api-docs:
+    path: /docs/api-docs
 
 aws:
   accessKey: ${AWS_ACCESS_KEY}
