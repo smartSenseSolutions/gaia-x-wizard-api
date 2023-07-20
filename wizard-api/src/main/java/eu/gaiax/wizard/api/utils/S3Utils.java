@@ -7,7 +7,7 @@ package eu.gaiax.wizard.api.utils;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -17,16 +17,10 @@ import java.util.Date;
  * The type S 3 utils.
  */
 @Service
+@RequiredArgsConstructor
 public class S3Utils {
     private final AmazonS3 s3Client;
     private final AWSSettings awsSettings;
-
-    @Autowired
-    public S3Utils(AmazonS3 s3Client, AWSSettings awsSettings) {
-        this.s3Client = s3Client;
-        this.awsSettings = awsSettings;
-    }
-
 
     /**
      * Upload file.
