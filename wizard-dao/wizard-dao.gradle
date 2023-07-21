@@ -3,9 +3,7 @@ plugins {
 }
 
 dependencies {
-    api(project(":wizard-api"))
     api 'org.springframework.boot:spring-boot-starter-data-jpa'
-//    api "com.smartsensesolutions:commons-dao:${commonsDaoVersion}"
 }
 
 jar {

@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
+    api(project(":wizard-api"))
     api(project(":wizard-dao"))
-    api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-quartz'
     implementation 'org.json:json:20230227'
 
