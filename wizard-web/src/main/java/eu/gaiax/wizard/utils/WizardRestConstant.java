@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 public class WizardRestConstant {
     public static final String GET_ENTERPRISE_FILES = "/.well-known/{fileName}";
     public static final String REGISTER = "/register";
+    public static final String SEND_REQUIRED_ACTIONS_EMAIL = "/email-required-actions";
     public static final String ENTERPRISE = "/enterprises";//ER
     public static final String ENTERPRISE_LIST = ENTERPRISE + "/list";//AR
     public static final String ENTERPRISE_BY_ID = ENTERPRISE + "/{id}";//AR

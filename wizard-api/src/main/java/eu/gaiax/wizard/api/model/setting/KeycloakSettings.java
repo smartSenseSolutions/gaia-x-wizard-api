@@ -1,29 +1,22 @@
 package eu.gaiax.wizard.api.model.setting;
 
-import lombok.Getter;
-import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * The type Keycloak settings.
  */
-@ConfigurationProperties(prefix = "keycloak")
-@Configuration
-@Getter
-@Setter
-public class KeycloakSettings {
+@ConfigurationProperties(prefix = "wizard.keycloak")
+public record KeycloakSettings(
 
-    private String authServer;
+    String authServer,
 
-    private String realm;
+    String realm,
 
-    private String clientId;
+    String clientId,
 
-    private String clientSecret;
+    String clientSecret,
 
-    private String webAuthRedirectUrl;
-
-    private Integer actionTokenLifespan;
+    Integer actionTokenLifespan
+) {
 }
 

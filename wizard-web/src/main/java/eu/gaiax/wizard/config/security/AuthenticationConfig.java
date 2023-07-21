@@ -18,7 +18,14 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import static eu.gaiax.wizard.utils.RoleConstant.ADMIN_ROLE;
 import static eu.gaiax.wizard.utils.RoleConstant.ENTERPRISE_ROLE;
-import static eu.gaiax.wizard.utils.WizardRestConstant.*;
+import static eu.gaiax.wizard.utils.WizardRestConstant.CATALOGUE;
+import static eu.gaiax.wizard.utils.WizardRestConstant.CREATE_PARTICIPANT_JSON;
+import static eu.gaiax.wizard.utils.WizardRestConstant.CREATE_SUBDOMAIN;
+import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE;
+import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE_BY_ID;
+import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE_LIST;
+import static eu.gaiax.wizard.utils.WizardRestConstant.REGISTER;
+import static eu.gaiax.wizard.utils.WizardRestConstant.SEND_REQUIRED_ACTIONS_EMAIL;
 
 @Slf4j
 @EnableWebSecurity
@@ -36,12 +43,12 @@ public class AuthenticationConfig {
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authRequest -> authRequest
                         .requestMatchers("/", "/docs/api-docs/**", "/ui/swagger-ui/**", "/actuator/health/**", "/error").permitAll()
-                        .requestMatchers("/login").permitAll()
                         .requestMatchers("/ingress/**").permitAll()
                         .requestMatchers("/did/**").permitAll()
                         .requestMatchers("/certificate/**").permitAll()
                         .requestMatchers("/.well-known/**").permitAll()
                         .requestMatchers(REGISTER).permitAll()
+                        .requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
                         .requestMatchers(CREATE_PARTICIPANT_JSON).permitAll()
                         .requestMatchers(CREATE_SUBDOMAIN).permitAll()
                         .requestMatchers(ENTERPRISE_LIST).hasRole(ADMIN_ROLE)
@@ -61,7 +68,7 @@ public class AuthenticationConfig {
         return web -> web.ignoring()
                 .requestMatchers(new AntPathRequestMatcher("**"));
     }
-    
+
 }
 
 

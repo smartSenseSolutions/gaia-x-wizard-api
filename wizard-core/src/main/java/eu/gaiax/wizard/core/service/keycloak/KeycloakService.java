@@ -1,10 +1,7 @@
 package eu.gaiax.wizard.core.service.keycloak;
 
-import eu.gaiax.wizard.api.client.KeycloakClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.KeycloakRequiredActionsEnum;
-import eu.gaiax.wizard.api.model.RequiredActionsTokenDto;
-import eu.gaiax.wizard.api.model.RequiredActionsTokenRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.KeycloakSettings;
 import jakarta.ws.rs.core.Response;
@@ -13,6 +10,7 @@ import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
@@ -34,21 +32,19 @@ public class KeycloakService {
 
     private final KeycloakSettings keycloakSettings;
 
-    private final KeycloakClient keycloakClient;
-
     protected Keycloak getKeycloak() {
         return KeycloakBuilder.builder()
-          .clientId(keycloakSettings.getClientId())
-          .clientSecret(keycloakSettings.getClientSecret())
-          .realm(keycloakSettings.getRealm())
-          .serverUrl(keycloakSettings.getAuthServer())
+            .clientId(keycloakSettings.clientId())
+            .clientSecret(keycloakSettings.clientSecret())
+            .realm(keycloakSettings.realm())
+            .serverUrl(keycloakSettings.authServer())
           .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
           .build();
     }
 
     protected RealmResource getRealmResource() {
         Keycloak keycloak = getKeycloak();
-        return keycloak.realm(keycloakSettings.getRealm());
+        return keycloak.realm(keycloakSettings.realm());
     }
 
     public void addUser(String legalName, String email, Long enterpriseId) {
@@ -75,12 +71,31 @@ public class KeycloakService {
         }
     }
 
-    public String getRequiredActionsUri(String email) {
+    public void sendRequiredActionsEmail(String email) {
+        UserRepresentation userRepresentation = getKeycloakUserByEmail(email);
+        UserResource userResource = getRealmResource().users().get(userRepresentation.getId());
+        userResource.executeActionsEmail(List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()), keycloakSettings.actionTokenLifespan());
+    }
+
+    public UserRepresentation getKeycloakUserByEmail(String email) {
+        LOGGER.debug("getKeycloakUserByEmail: email={}", email);
+
+        RealmResource realmResource = getRealmResource();
+        UsersResource usersResource = realmResource.users();
+        List<UserRepresentation> users = usersResource.search(email);
+        if (CollectionUtils.isEmpty(users)) {
+            return null;
+        } else {
+            return users.get(0);
+        }
+    }
+
+    /*public String getRequiredActionsUri(String email) {
         try {
             String requiredActionsToken = getRequiredActionsToken(email).token();
-            return keycloakSettings.getAuthServer() +
+            return keycloakSettings.authServer() +
               "/realms/" +
-              keycloakSettings.getRealm() +
+              keycloakSettings.realm() +
               StringPool.REQUIRED_ACTIONS_PATH +
               requiredActionsToken;
         } catch (Exception e) {
@@ -98,27 +113,16 @@ public class KeycloakService {
           userRepresentation.getId(),
           email,
           Collections.singletonList(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()),
-          keycloakSettings.getWebAuthRedirectUrl(),
-          keycloakSettings.getActionTokenLifespan()
+          keycloakSettings.webAuthRedirectUrl(),
+          keycloakSettings.actionTokenLifespan()
         );
 
-        return keycloakClient.generateRequireActionsToken(keycloakSettings.getRealm(), requiredActionsTokenRequest, getAccessToken()).getBody();
-    }
-
-    public UserRepresentation getKeycloakUserByEmail(String email) {
-        LOGGER.debug("getKeycloakUserByEmail: email={}", email);
-
-        RealmResource realmResource = getRealmResource();
-        UsersResource usersResource = realmResource.users();
-        List<UserRepresentation> users = usersResource.search(email);
-        if (CollectionUtils.isEmpty(users)) {
-            return null;
-        } else {
-            return users.get(0);
-        }
+        return keycloakClient.generateRequireActionsToken(keycloakSettings.realm(), requiredActionsTokenRequest, getAccessToken()).getBody();
     }
 
     private String getAccessToken() {
         return "Bearer " + getKeycloak().tokenManager().getAccessTokenString();
+
     }
+     */
 }
