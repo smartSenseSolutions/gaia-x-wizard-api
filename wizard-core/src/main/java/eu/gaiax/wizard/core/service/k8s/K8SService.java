@@ -82,7 +82,7 @@ public class K8SService {
 
             key = s3Util.getObject(enterpriseCertificate.getPrivateKey(), "private.key");
             //Step 1: create secret using SSL certificate
-            ApiClient client = Config.fromToken(k8SSettings.getBasePath(), k8SSettings.getToken(), false);
+            ApiClient client = Config.fromToken(k8SSettings.basePath(), k8SSettings.token(), false);
             Configuration.setDefaultApiClient(client);
 
 
@@ -128,7 +128,7 @@ public class K8SService {
 
             //service backend
             V1IngressServiceBackend backend = new V1IngressServiceBackend();
-            backend.setName(k8SSettings.getServiceName());
+            backend.setName(k8SSettings.serviceName());
             V1ServiceBackendPort port = new V1ServiceBackendPort();
             port.setNumber(8080);
             backend.setPort(port);

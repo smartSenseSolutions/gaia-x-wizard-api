@@ -19,7 +19,7 @@ import java.util.Map;
 /**
  * The interface Signer client.
  */
-@FeignClient(value = "Signerapi", url = "${signer.host}")
+@FeignClient(value = "Signerapi", url = "${wizard.signer.host}")
 public interface SignerClient {
 
     /**

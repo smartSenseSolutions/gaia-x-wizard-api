@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author Nitin
  * @version 1.0
  */
-@ConfigurationProperties(prefix = "aws")
+@ConfigurationProperties(prefix = "wizard.aws")
 public record AWSSettings(String bucket,
                           String region,
                           String accessKey,
