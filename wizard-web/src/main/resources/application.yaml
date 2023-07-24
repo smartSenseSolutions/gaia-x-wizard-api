@@ -29,19 +29,16 @@ wizard:
     token:
     serviceName:
   keycloak:
-    authServer: localhost:9090
-    realm: gaia-x
-    clientId:
-    clientSecret:
-    webAuthRedirectUrl:
-    actionTokenLifespan:
+    auth-server:
+    realm:
+    client-id:
+    client-secret:
+    web-auth-redirect-url:
+    action-token-lifespan:
   security:
     enabled: true
-    realm: Gaia-x
-    clientId: pr-gaia-x-wizard
-    auth-server-url: http://localhost:8080
-    authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
-    tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
+    authUrl: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/auth
+    tokenUrl: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
     corsOrigins: "*"
   signer:
@@ -95,8 +92,8 @@ spring:
       resourceserver:
         jwt:
           #Issuer-uri indicates the iss claims from jwt token
-          issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
-          jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
+          issuer-uri: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}
+          jwk-set-uri: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/certs
 
   jpa:
     show-sql: false
@@ -138,7 +135,7 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      clientId: pu-gaia-x-wizard
+      clientId: account-console
       clientSecret:
     disable-swagger-default-url: true
     path: /ui/swagger-ui

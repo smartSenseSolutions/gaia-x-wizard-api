@@ -56,6 +56,7 @@ public class RegistrationService {
      */
     @Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
     public Enterprise registerEnterprise(RegisterRequest registerRequest) throws SchedulerException {
+
         //check legal name
         Validate.isTrue(this.enterpriseRepository.existsByLegalName(registerRequest.getLegalName())).launch("duplicate.legal.name");
 
@@ -82,7 +83,7 @@ public class RegistrationService {
             .build());
 
         // add enterprise to keycloak
-        this.keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail(), enterprise.getId());
+        this.keycloakService.addUser(registerRequest.getLegalName(), registerRequest.getEmail(), 12L);
         this.keycloakService.sendRequiredActionsEmail(registerRequest.getEmail());
 
         //create job to create subdomain

@@ -34,12 +34,11 @@ public class KeycloakService {
 
     protected Keycloak getKeycloak() {
         return KeycloakBuilder.builder()
-            .clientId(keycloakSettings.clientId())
-            .clientSecret(keycloakSettings.clientSecret())
-            .realm(keycloakSettings.realm())
-            .serverUrl(keycloakSettings.authServer())
-          .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
-          .build();
+                .clientId(keycloakSettings.clientId())
+                .clientSecret(keycloakSettings.clientSecret())
+                .realm(keycloakSettings.realm())
+                .serverUrl(keycloakSettings.authServer())
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS).build();
     }
 
     protected RealmResource getRealmResource() {
@@ -56,11 +55,11 @@ public class KeycloakService {
         userRepresentation.setEnabled(true);
         userRepresentation.setEmail(email);
         userRepresentation.setFirstName(legalName);
-
+        userRepresentation.setRealmRoles(Collections.singletonList("6de065d3-306f-4670-b528-d07d789efa65"));
         Map<String, List<String>> customAttributesMap = new HashMap<>();
         customAttributesMap.put(StringPool.ENTERPRISE_ID, Collections.singletonList(String.valueOf(enterpriseId)));
         userRepresentation.setAttributes(customAttributesMap);
-
+        userRepresentation.setGroups(Collections.singletonList("enterprise"));
         RealmResource realmResource = getRealmResource();
         UsersResource usersResource = realmResource.users();
 
