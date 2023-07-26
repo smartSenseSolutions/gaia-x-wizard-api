@@ -9,16 +9,16 @@ import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.RegisterRequest;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
-import eu.gaiax.wizard.core.service.domain.DomainService;
+/*import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.enterprise.EnterpriseService;
-import eu.gaiax.wizard.core.service.enterprise.RegistrationService;
+import eu.gaiax.wizard.core.service.enterprise.RegistrationService;*/
 import eu.gaiax.wizard.core.service.k8s.K8SService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
-import eu.gaiax.wizard.core.service.ssl.CertificateService;
+/*import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.entity.ServiceOffer;
-import eu.gaiax.wizard.dao.entity.ServiceOfferView;
+import eu.gaiax.wizard.dao.entity.ServiceOfferView;*/
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,20 +47,22 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequiredArgsConstructor
 public class GaiaXController extends BaseResource {
 
-    private final RegistrationService registrationService;
+   /* private final RegistrationService registrationService;
 
     private final DomainService domainService;
 
-    private final CertificateService certificateService;
+    private final CertificateService certificateService;*/
 
     private final K8SService k8SService;
 
+/*
     private final EnterpriseService enterpriseService;
+*/
 
     private final SignerService signerService;
 
     private final CredentialService credentialService;
-
+/*
     @Operation(summary = "Get .well-known files, this is public API")
     @GetMapping(path = GET_ENTERPRISE_FILES)
     @Tag(name = "Well-known")
@@ -215,5 +217,5 @@ public class GaiaXController extends BaseResource {
     @GetMapping(path = EXPORT_KEYS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> exportKeys(Principal principal) {
         return CommonResponse.of(this.enterpriseService.exportKeys(this.getEnterpriseId(principal)));
-    }
+    }*/
 }

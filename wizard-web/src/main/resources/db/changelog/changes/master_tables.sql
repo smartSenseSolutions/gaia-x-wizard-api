@@ -1,5 +1,7 @@
 --liquibase formatted sql
 --changeset Neha:1
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE registration_type_master(
     id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     type VARCHAR(255) NOT NULL,
@@ -2128,5 +2130,3 @@ INSERT INTO standard_master(type, active) VALUES
 ('PDPA2012', true),
 ('CCPA2018', true),
 ('VCDPA2021', true);
-
-

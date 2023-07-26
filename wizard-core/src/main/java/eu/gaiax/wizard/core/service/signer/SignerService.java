@@ -14,10 +14,10 @@ import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
-import eu.gaiax.wizard.dao.entity.Enterprise;
+/*import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.repository.EnterpriseCredentialRepository;
-import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import eu.gaiax.wizard.dao.repository.EnterpriseRepository;*/
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -36,6 +36,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SignerService {
+/*
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SignerService.class);
 
@@ -51,11 +52,13 @@ public class SignerService {
 
     private final EnterpriseCredentialRepository enterpriseCredentialRepository;
 
-    /**
+    */
+/**
      * Create participant json.
      *
      * @param enterpriseId the enterprise id
-     */
+     *//*
+
     public void createParticipantJson(long enterpriseId) {
         File file = new File("/tmp/participant.json");
         Enterprise enterprise = enterpriseRepository.findById(enterpriseId).orElseThrow(BadDataException::new);
@@ -96,11 +99,13 @@ public class SignerService {
         }
     }
 
-    /**
+    */
+/**
      * Create did.
      *
      * @param enterpriseId the enterprise id
-     */
+     *//*
+
     public void createDid(long enterpriseId) {
         File file = new File("/tmp/did.json");
         Enterprise enterprise = enterpriseRepository.findById(enterpriseId).orElseThrow(BadDataException::new);
@@ -133,4 +138,5 @@ public class SignerService {
             LOGGER.error("Can not create participant job for enterprise -{}", enterpriseId, e);
         }
     }
+*/
 }
