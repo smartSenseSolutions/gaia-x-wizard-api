@@ -1,7 +1,7 @@
 --liquibase formatted sql
 --changeset Dilip:1
 CREATE TABLE service_offer(
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     credential_id UUID NOT NULL,
     name varchar(50) NOT NULL,
     description varchar(1000) NULL,
@@ -13,7 +13,7 @@ CREATE TABLE service_offer(
 );
 
 CREATE TABLE label_level_answer(
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     participant_id UUID NOT NULL,
     service_offer_id UUID NOT NULL,
     question_id UUID NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE label_level_answer(
 );
 
 CREATE TABLE label_level_upload_files(
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     participant_id UUID NOT NULL,
     service_offer_id UUID NOT NULL,
     file_path varchar(200) NOT NULL,

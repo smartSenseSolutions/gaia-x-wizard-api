@@ -1,5 +1,7 @@
 --liquibase formatted sql
 --changeset Neha:1
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 CREATE TABLE registration_type_master(
     id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     type VARCHAR(255) NOT NULL,
@@ -2128,23 +2130,3 @@ INSERT INTO standard_master(type, active) VALUES
 ('PDPA2012', true),
 ('CCPA2018', true),
 ('VCDPA2021', true);
-
---changeset Dilip:1
-CREATE TABLE label_level_type_master(
-    id UUID PRIMARY KEY NOT NULL,
-    type VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    created_at timestamp(6) NULL,
-    updated_at timestamp(6) NULL
-);
-
-CREATE TABLE label_level_question_master(
-    id UUID PRIMARY KEY NOT NULL,
-    type_id UUID NOT NULL,
-    question VARCHAR(255) NOT NULL,
-    active Boolean NOT NULL,
-    level_number varchar(5) NOT NULL,
-    created_at timestamp(6) NULL,
-    updated_at timestamp(6) NULL,
-    CONSTRAINT fk_label_level_type_id FOREIGN KEY (type_id) REFERENCES label_level_type_master(id)
-);

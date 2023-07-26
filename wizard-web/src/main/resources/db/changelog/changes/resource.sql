@@ -1,7 +1,7 @@
 --liquibase formatted sql
 --changeset Dilip:1
 CREATE TABLE resource(
-    id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     credential_id UUID NOT NULL,
     name varchar(50) NOT NULL,
     description varchar(1000) NULL,
