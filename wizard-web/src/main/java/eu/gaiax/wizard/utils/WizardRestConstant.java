@@ -22,5 +22,20 @@ public class WizardRestConstant {
     public static final String CATALOGUE = "/catalogue";//ER
     public static final String CREATE_VP = ENTERPRISE + "/vc/{name}/vp";//ER
     public static final String SERVICE_OFFER_DETAILS = ENTERPRISE + "/service-offers/{offerId}/details";//ER
+    
     public static final String EXPORT_KEYS = ENTERPRISE + "/keys/export"; //ER
+
+    public static final String ACCESS_TYPE_FILTER = "/access-type/filter";
+
+    public static final String ENTITY_TYPE_FILTER = "/entity-type/filter";
+
+    public static final String FORMAT_TYPE_FILTER = "/format-type/filter";
+
+    public static final String REGISTRATION_TYPE_FILTER = "/registration-type/filter";
+
+    public static final String REQUEST_TYPE_FILTER = "/request-type/filter";
+
+    public static final String STANDARD_TYPE_FILTER = "/standard-type/filter";
+
+
 }
