@@ -14,10 +14,10 @@ import java.util.UUID;
 @Setter
 @Builder
 public class LabelLevelQuestionMaster extends SuperEntity {
-    @Column(name = "type_id", nullable = false)
+    @Column(name = "type_id", insertable = false, updatable = false)
     private UUID typeId;
-    @OneToOne
-    @JoinColumn(name = "type_id", referencedColumnName = "id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "type_id", nullable = false, referencedColumnName = "id")
     private LabelLevelTypeMaster type;
     @Column(name = "question", unique = true, nullable = false)
     private String question;

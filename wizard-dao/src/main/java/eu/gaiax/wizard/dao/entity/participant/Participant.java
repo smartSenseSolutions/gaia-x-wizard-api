@@ -21,9 +21,9 @@ public class Participant extends SuperEntity {
     private String legalName;
     @Column(name = "short_name")
     private String shortName;
-    @Column(name = "entity_type_id", updatable = false)
+    @Column(name = "entity_type_id", insertable = false, updatable = false)
     private String entityTypeId;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "entity_type_id", referencedColumnName = "id")
     private EntityTypeMaster entityType;
     @Column(name = "sub_domain")

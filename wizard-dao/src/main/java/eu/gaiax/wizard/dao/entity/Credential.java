@@ -20,11 +20,11 @@ public class Credential extends SuperEntity {
     private String vcJson;
     @Column(name = "type", nullable = false)
     private String type;
-    @Column(name = "participant_id", nullable = false, updatable = false)
+    @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
     @Column(name = "metadata")
     private String metadata;
-    @ManyToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", referencedColumnName = "id", nullable = false)
     private Participant participant;
 }

@@ -15,14 +15,14 @@ import java.util.UUID;
 @Setter
 @Builder
 public class LabelLevelFiles extends SuperEntity {
-    @Column(name = "participant_id", nullable = false, updatable = false)
+    @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", referencedColumnName = "id", nullable = false)
     private Participant participant;
-    @Column(name = "service_offer_id", nullable = false, updatable = false)
+    @Column(name = "service_offer_id", insertable = false, updatable = false)
     private UUID serviceOfferId;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_offer_id", referencedColumnName = "id", nullable = false)
     private ServiceOffer serviceOffer;
     @Column(name = "file_path")

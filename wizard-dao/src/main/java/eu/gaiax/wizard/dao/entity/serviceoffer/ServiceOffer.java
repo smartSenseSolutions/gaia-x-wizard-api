@@ -21,13 +21,14 @@ public class ServiceOffer extends SuperEntity {
     private String name;
     @Column(name = "description")
     private String description;
-    @Column(name = "credential_id", nullable = false, updatable = false)
+    @Column(name = "credential_id", insertable = false, updatable = false)
     private UUID credentialId;
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "credential_id", nullable = false, referencedColumnName = "id")
     private Credential credential;
-    @Column(name = "participant_id", nullable = false, updatable = false)
+    @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
 }
