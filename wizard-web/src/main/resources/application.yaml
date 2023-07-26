@@ -55,6 +55,14 @@ wizard:
         threadCount: 10
   management:
     port: 8090
+  vault:
+    host:
+    port:
+    scheme:
+    authentication:
+    roleId:
+    secretId:
+    secret-path:
 
 spring:
   liquibase:
@@ -97,6 +105,15 @@ spring:
           #Issuer-uri indicates the iss claims from jwt token
           issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
           jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
+  cloud:
+    vault:
+      host: ${wizard.vault.host}
+      port: ${wizard.vault.port}
+      scheme: ${wizard.vault.scheme}
+      authentication: ${wizard.vault.authentication}
+      app-role:
+        roleId: ${wizard.vault.roleId}
+        secretId: ${wizard.vault.secretId}
 
   jpa:
     show-sql: false
