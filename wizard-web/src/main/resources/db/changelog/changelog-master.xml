@@ -10,4 +10,5 @@
     <include file="/db/changelog/changes/sample.sql"/>
     <include file="/db/changelog/changes/init.sql"/>
     <include file="/db/changelog/changes/quartz.sql"/>
+    <include file="/db/changelog/changes/master_tables.sql"/>
 </databaseChangeLog>

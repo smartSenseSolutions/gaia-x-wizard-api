@@ -17,10 +17,29 @@ import java.util.List;
  */
 @Repository
 public interface ServiceOfferViewRepository extends JpaRepository<ServiceOfferView, Long> {
+    /**
+     * Gets by enterprise id.
+     *
+     * @param enterpriseId the enterprise id
+     * @return the by enterprise id
+     */
     List<ServiceOfferView> getByEnterpriseId(long enterpriseId);
 
+    /**
+     * Gets all service offers.
+     *
+     * @param enterpriseId the enterprise id
+     * @return the all service offers
+     */
     @Query("from ServiceOfferView where enterpriseId <> :enterpriseId")
     List<ServiceOfferView> getAllServiceOffers(@Param("enterpriseId") long enterpriseId);
 
+    /**
+     * Gets by enterprise id and id.
+     *
+     * @param enterpriseId the enterprise id
+     * @param id           the id
+     * @return the by enterprise id and id
+     */
     ServiceOfferView getByEnterpriseIdAndId(long enterpriseId, long id);
 }
