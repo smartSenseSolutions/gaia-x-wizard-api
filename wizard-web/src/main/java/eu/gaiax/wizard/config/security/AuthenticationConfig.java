@@ -18,14 +18,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import static eu.gaiax.wizard.utils.RoleConstant.ADMIN_ROLE;
 import static eu.gaiax.wizard.utils.RoleConstant.ENTERPRISE_ROLE;
-import static eu.gaiax.wizard.utils.WizardRestConstant.CATALOGUE;
-import static eu.gaiax.wizard.utils.WizardRestConstant.CREATE_PARTICIPANT_JSON;
-import static eu.gaiax.wizard.utils.WizardRestConstant.CREATE_SUBDOMAIN;
-import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE;
-import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE_BY_ID;
-import static eu.gaiax.wizard.utils.WizardRestConstant.ENTERPRISE_LIST;
-import static eu.gaiax.wizard.utils.WizardRestConstant.REGISTER;
-import static eu.gaiax.wizard.utils.WizardRestConstant.SEND_REQUIRED_ACTIONS_EMAIL;
+import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 
 @Slf4j
 @EnableWebSecurity
@@ -51,6 +44,8 @@ public class AuthenticationConfig {
                         .requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
                         .requestMatchers(CREATE_PARTICIPANT_JSON).permitAll()
                         .requestMatchers(CREATE_SUBDOMAIN).permitAll()
+                        .requestMatchers(ACCESS_TYPE_FILTER, ENTITY_TYPE_FILTER, FORMAT_TYPE_FILTER,
+                                REGISTRATION_TYPE_FILTER, REQUEST_TYPE_FILTER, STANDARD_TYPE_FILTER).permitAll()
                         .requestMatchers(ENTERPRISE_LIST).hasRole(ADMIN_ROLE)
                         .requestMatchers(ENTERPRISE_BY_ID).hasRole(ADMIN_ROLE)
                         .requestMatchers(ENTERPRISE).hasRole(ENTERPRISE_ROLE)
