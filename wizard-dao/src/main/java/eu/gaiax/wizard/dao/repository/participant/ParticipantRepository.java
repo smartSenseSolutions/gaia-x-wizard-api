@@ -8,4 +8,7 @@ import java.util.UUID;
 
 @Repository
 public interface ParticipantRepository extends BaseRepository<Participant, UUID> {
+    Participant getByEmail(String email);
+
+    Participant getByDid(String did);
 }

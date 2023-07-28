@@ -27,10 +27,14 @@ public class Participant extends SuperEntity {
     @JoinColumn(name = "entity_type_id", referencedColumnName = "id")
     private EntityTypeMaster entityType;
     @Column(name = "sub_domain")
-    private String subDomain;
+    private String domain;
     @Column(name = "private_key_id")
     private String privateKeyId;
     @Column(name = "participant_type")
     private String participantType;
+    @Column(name = "status")
+    private int status;
+    @Column(name = "credential")
+    private String credential;
 
 }
