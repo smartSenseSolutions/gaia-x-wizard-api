@@ -29,16 +29,19 @@ wizard:
     token:
     serviceName:
   keycloak:
-    auth-server:
-    realm:
-    client-id:
-    client-secret:
-    web-auth-redirect-url:
-    action-token-lifespan:
+    authServer: localhost:9090
+    realm: gaia-x
+    clientId:
+    clientSecret:
+    webAuthRedirectUrl:
+    actionTokenLifespan:
   security:
     enabled: true
-    authUrl: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/auth
-    tokenUrl: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/token
+    realm: Gaia-x
+    clientId: pr-gaia-x-wizard
+    auth-server-url: http://localhost:8080
+    authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
+    tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
     corsOrigins: "*"
   signer:
@@ -52,6 +55,14 @@ wizard:
         threadCount: 10
   management:
     port: 8090
+  vault:
+    host:
+    port:
+    scheme:
+    authentication:
+    roleId:
+    secretId:
+    secret-path:
 
 spring:
   liquibase:
@@ -92,8 +103,17 @@ spring:
       resourceserver:
         jwt:
           #Issuer-uri indicates the iss claims from jwt token
-          issuer-uri: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}
-          jwk-set-uri: ${wizard.keycloak.auth-server}/realms/${wizard.keycloak.realm}/protocol/openid-connect/certs
+          issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
+          jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
+  cloud:
+    vault:
+      host: ${wizard.vault.host}
+      port: ${wizard.vault.port}
+      scheme: ${wizard.vault.scheme}
+      authentication: ${wizard.vault.authentication}
+      app-role:
+        roleId: ${wizard.vault.roleId}
+        secretId: ${wizard.vault.secretId}
 
   jpa:
     show-sql: false
@@ -135,7 +155,7 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      clientId: account-console
+      clientId: pu-gaia-x-wizard
       clientSecret:
     disable-swagger-default-url: true
     path: /ui/swagger-ui

@@ -35,10 +35,19 @@ subprojects {
         implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${openApiVersion}"
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+        implementation 'org.springframework.vault:spring-vault-core:3.0.4'
+
+
         developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
         compileOnly 'org.projectlombok:lombok'
         annotationProcessor 'org.projectlombok:lombok'
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
     }
 
     tasks.named('test') {
