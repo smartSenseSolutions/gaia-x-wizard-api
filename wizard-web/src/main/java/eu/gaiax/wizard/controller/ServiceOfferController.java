@@ -22,10 +22,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ServiceOfferController {
 
     private final ServiceOfferService serviceOfferService;
+
     @Tag(name = "Catalogue")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = SERVICE_OFFERING, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOffer> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,"did"));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,"email"));
     }
 }

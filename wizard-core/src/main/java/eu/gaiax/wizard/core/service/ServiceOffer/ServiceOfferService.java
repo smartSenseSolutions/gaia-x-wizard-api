@@ -39,13 +39,13 @@ public class ServiceOfferService {
     private final ContextConfig contextConfig;
     private final CommonService commonService;
 
-    public ServiceOffer createServiceOffering(CreateServiceOfferingRequest request,String did) {
+    public ServiceOffer createServiceOffering(CreateServiceOfferingRequest request,String email) {
         Map<String,Object> response=new HashMap<>();
-        Participant participant=participantRepository.findByDid(did);
+        Participant participant=participantRepository.findByEmail(email);
         if(participant==null){
             throw new BadDataException("No data found");
         }
-        Credential participantCred=credentialService.getByParticipantId(request.getId());
+        Credential participantCred=credentialService.getByParticipantId(participant.getId());
         VerifiableCredential verifiableCredential= VerifiableCredential.builder()
                 .context(contextConfig.getServiceOffer())
                 .type(StringPool.VERIFIABLE_CREDENTIAL)
