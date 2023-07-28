@@ -1,6 +1,6 @@
 kind: Service
 apiVersion: v1
-metadata:
+ metadata:
   name: smartsense-gaia-x-api
 spec:
   selector:

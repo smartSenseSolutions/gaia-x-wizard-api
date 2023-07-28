@@ -63,6 +63,8 @@ public class StringPool {
 
     public static final String REQUIRED_ACTIONS_PATH = "/login-actions/action-token?key=";
 
+    public static final String VERIFIABLE_CREDENTIAL="VerifiableCredential";
+
     private StringPool() {
     }
 }

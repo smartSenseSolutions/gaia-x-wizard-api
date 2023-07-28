@@ -11,6 +11,8 @@ import eu.gaiax.wizard.dao.repository.CredentialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 /**
  * The type Credential service.
  */
@@ -69,4 +71,7 @@ public class CredentialService {
                 .build());
     }
 
+    public Credential getByParticipantId(UUID participantId){
+        return credentialRepository.findByParticipantId(participantId);
+    }
 }

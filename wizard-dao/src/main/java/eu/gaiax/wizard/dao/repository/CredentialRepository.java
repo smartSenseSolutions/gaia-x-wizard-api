@@ -7,5 +7,6 @@ import org.springframework.stereotype.Repository;
 import java.util.UUID;
 
 @Repository
-public interface CredentialRepository extends BaseRepository<Credential, UUID> {
+public interface CredentialRepository extends BaseRepository<Credential, UUID>{
+    Credential findByParticipantId(UUID participantId);
 }
