@@ -87,8 +87,5 @@ public class ServiceOfferService {
         }
         return null;
     }
-    private void generateContext(){
-
-    }
 
 }
