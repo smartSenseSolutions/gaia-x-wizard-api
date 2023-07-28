@@ -10,12 +10,14 @@ import eu.gaiax.wizard.core.service.data_master.LabelLevelService;
 import eu.gaiax.wizard.core.service.data_master.RegistrationTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.RequestTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
+import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.dao.entity.data_master.AccessTypeMaster;
 import eu.gaiax.wizard.dao.entity.data_master.EntityTypeMaster;
 import eu.gaiax.wizard.dao.entity.data_master.FormatTypeMaster;
 import eu.gaiax.wizard.dao.entity.data_master.RegistrationTypeMaster;
 import eu.gaiax.wizard.dao.entity.data_master.RequestTypeMaster;
 import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
+import eu.gaiax.wizard.dao.entity.data_master.SubdivisionCodeMaster;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,7 @@ import static eu.gaiax.wizard.utils.WizardRestConstant.ACCESS_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.ENTITY_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.FORMAT_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.LABEL_LEVEL_QUESTIONS;
+import static eu.gaiax.wizard.utils.WizardRestConstant.LOCATION_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.REGISTRATION_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.REQUEST_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.STANDARD_TYPE_FILTER;
@@ -51,6 +54,8 @@ public class DataMasterController extends BaseResource {
     private final StandardTypeMasterService standardTypeMasterService;
 
     private final LabelLevelService labelLevelService;
+
+    private final SubdivisionCodeMasterService subdivisionCodeMasterService;
 
     @PostMapping(ACCESS_TYPE_FILTER)
     public CommonResponse<Page<AccessTypeMaster>> filterAccessTypeMaster(@RequestBody FilterRequest filterRequest) {
@@ -85,6 +90,11 @@ public class DataMasterController extends BaseResource {
     @GetMapping(LABEL_LEVEL_QUESTIONS)
     public CommonResponse<List<LabelLevelTypeInterface>> getLabelLevelQuestions() {
         return CommonResponse.of(this.labelLevelService.getLabelLevelTypeAndQuestionList());
+    }
+
+    @PostMapping(LOCATION_FILTER)
+    public CommonResponse<Page<SubdivisionCodeMaster>> filterSubdivisionCodeMaster(@RequestBody FilterRequest filterRequest) {
+        return CommonResponse.of(this.subdivisionCodeMasterService.filter(filterRequest));
     }
 
 }
