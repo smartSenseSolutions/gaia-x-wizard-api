@@ -22,10 +22,6 @@ import jakarta.persistence.Id;
 @Builder
 public class AccessTypeMaster extends SuperEntity implements BaseEntity {
 
-    @Id
-    @Column(name = "id")
-    private String id;
-
     @Column(name = "type")
     private String type;
 

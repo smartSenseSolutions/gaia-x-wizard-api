@@ -22,10 +22,6 @@ import lombok.Setter;
 @Builder
 public class SubdivisionCodeMaster extends SuperEntity implements BaseEntity {
 
-    @Id
-    @Column(name = "id")
-    private String id;
-
     @Column(name = "country_code")
     private String countryCode;
 
