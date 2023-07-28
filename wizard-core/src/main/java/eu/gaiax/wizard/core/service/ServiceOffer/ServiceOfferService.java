@@ -41,7 +41,7 @@ public class ServiceOfferService {
 
     public ServiceOffer createServiceOffering(CreateServiceOfferingRequest request,String email) {
         Map<String,Object> response=new HashMap<>();
-        Participant participant=participantRepository.findByEmail(email);
+        Participant participant=participantRepository.getByEmail(email);
         if(participant==null){
             throw new BadDataException("No data found");
         }
@@ -72,8 +72,7 @@ public class ServiceOfferService {
             LOGGER.debug("Service vc not created",e.getMessage());
         }
         try {
-
-            Credential serviceOffVc=credentialService.createCredential(CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), response.toString(),participant.getId(),"url",null);
+            Credential serviceOffVc=credentialService.createCredential(response.toString(),null,CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "",participant);
             ServiceOffer serviceOffer= ServiceOffer.builder()
                     .name(request.getName())
                     .credentialId(serviceOffVc.getId())
