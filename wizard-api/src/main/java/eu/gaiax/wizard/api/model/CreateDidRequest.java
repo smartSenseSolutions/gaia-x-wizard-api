@@ -5,17 +5,5 @@
 package eu.gaiax.wizard.api.model;
 
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-
-/**
- * The type Create did request.
- */
-@Getter
-@Setter
-@Builder
-public class CreateDidRequest {
-
-    private String domain;
+public record CreateDidRequest(String domain) {
 }

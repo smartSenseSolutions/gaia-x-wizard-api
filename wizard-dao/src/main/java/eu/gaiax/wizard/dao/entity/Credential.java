@@ -19,7 +19,7 @@ public class Credential extends SuperEntity {
     @Column(name = "vc_json", nullable = false)
     private String vcJson;
     @Column(name = "type", nullable = false)
-    private String type;
+    private String credentialType;
     @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
     @Column(name = "metadata")

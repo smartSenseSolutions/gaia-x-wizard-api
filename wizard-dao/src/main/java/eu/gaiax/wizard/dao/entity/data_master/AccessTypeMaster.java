@@ -6,7 +6,12 @@ import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import jakarta.persistence.Id;
 
 @Entity
 @Table(name = "access_type_master")
@@ -17,10 +22,13 @@ import lombok.*;
 @Builder
 public class AccessTypeMaster extends SuperEntity implements BaseEntity {
 
+    @Id
+    @Column(name = "id")
+    private String id;
 
     @Column(name = "type")
     private String type;
 
-    @Column(name = "is_active")
+    @Column(name = "active")
     private Boolean active;
 }

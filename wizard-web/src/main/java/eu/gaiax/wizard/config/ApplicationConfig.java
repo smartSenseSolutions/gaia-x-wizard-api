@@ -6,12 +6,15 @@ package eu.gaiax.wizard.config;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.services.route53.AmazonRoute53;
+import com.amazonaws.services.route53.AmazonRoute53ClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.springframework.beans.factory.annotation.Value;
@@ -139,5 +142,35 @@ public class ApplicationConfig implements WebMvcConfigurer {
                 }).build();
     }
 
+    @Bean
+    public AmazonRoute53 amazonRoute53() {
+        return AmazonRoute53ClientBuilder.standard().withCredentials(new AWSCredentialsProvider() {
+                    @Override
+                    public AWSCredentials getCredentials() {
+                        return new AWSCredentials() {
+                            @Override
+                            public String getAWSAccessKeyId() {
+                                return ApplicationConfig.this.awsSettings.accessKey();
+                            }
 
+                            @Override
+                            public String getAWSSecretKey() {
+                                return ApplicationConfig.this.awsSettings.secretKey();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public void refresh() {
+                        //Do nothing
+                    }
+                })
+                .withRegion(this.awsSettings.region())
+                .build();
+    }
+
+    @Bean
+    public SpecificationUtil specificationUtil() {
+        return new SpecificationUtil();
+    }
 }
