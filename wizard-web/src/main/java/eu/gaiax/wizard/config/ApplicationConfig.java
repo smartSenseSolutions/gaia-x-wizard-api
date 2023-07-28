@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.springframework.beans.factory.annotation.Value;
@@ -168,5 +169,8 @@ public class ApplicationConfig implements WebMvcConfigurer {
                 .build();
     }
 
-
+    @Bean
+    public SpecificationUtil specificationUtil() {
+        return new SpecificationUtil();
+    }
 }

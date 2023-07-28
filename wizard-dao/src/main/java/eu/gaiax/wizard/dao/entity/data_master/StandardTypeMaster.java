@@ -20,6 +20,6 @@ public class StandardTypeMaster extends SuperEntity implements BaseEntity {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "is_active")
+    @Column(name = "active")
     private Boolean active;
 }
