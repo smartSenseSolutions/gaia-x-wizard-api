@@ -31,4 +31,6 @@ public class ServiceOffer extends SuperEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
+    @Column(name = "veracity_data")
+    private String veracityData ;
 }
