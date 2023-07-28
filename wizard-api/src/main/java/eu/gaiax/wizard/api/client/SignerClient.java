@@ -4,9 +4,11 @@
 
 package eu.gaiax.wizard.api.client;
 
+import com.amazonaws.SignableRequest;
 import eu.gaiax.wizard.api.model.CreateDidRequest;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
 import eu.gaiax.wizard.api.model.CreateVPRequest;
+import eu.gaiax.wizard.api.model.ServiceOffer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.VerifyRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -58,5 +60,9 @@ public interface SignerClient {
      */
     @PostMapping(path = "verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> verify(@RequestBody VerifyRequest request);
+
+    @PostMapping(path = "createServiceOfferVc", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> createServiceOfferVc(@RequestBody SignerServiceRequest request);
+
 
 }

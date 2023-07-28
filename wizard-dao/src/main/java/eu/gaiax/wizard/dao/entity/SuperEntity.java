@@ -15,6 +15,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * The type Super entity.
@@ -26,11 +27,10 @@ import java.util.Date;
 @AllArgsConstructor
 public class SuperEntity implements BaseEntity {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")
-    private String id;
+    private UUID id;
 
     @JsonIgnore
     @CreationTimestamp

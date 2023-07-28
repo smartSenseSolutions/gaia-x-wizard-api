@@ -12,4 +12,57 @@
     <include file="/db/changelog/changes/participant.sql"/>
     <include file="/db/changelog/changes/resource.sql"/>
     <include file="/db/changelog/changes/service_offer.sql"/>
+
+
+    <changeSet author="Neha" id="1">
+        <sql>
+            CREATE TABLE subdivision_code_master(
+            id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            country_code VARCHAR(5) NULL,
+            subdivision_code VARCHAR(10) NOT NULL,
+            name VARCHAR(255) NULL,
+            active Boolean NOT NULL DEFAULT true,
+            created_at timestamp(6) NOT NULL DEFAULT NOW(),
+            updated_at timestamp(6) NOT NULL DEFAULT NOW()
+            );
+        </sql>
+
+        <loadData catalogName="iso-3166-2"
+                  file="masterData/subdivisions.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="subdivision_code_master">
+            <column header="country_code"
+                    name="country_code"
+                    type="VARCHAR(5)"/>
+            <column header="subdivision_code"
+                    name="subdivision_code"
+                    type="VARCHAR(10)"/>
+            <column header="name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet author="Neha" id="2">
+        <sql>
+            CREATE TABLE format_type_master(
+            id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            type VARCHAR(255) NOT NULL,
+            active Boolean NOT NULL DEFAULT true,
+            created_at timestamp(6) NOT NULL DEFAULT NOW(),
+            updated_at timestamp(6) NOT NULL DEFAULT NOW()
+            );
+        </sql>
+
+        <loadData catalogName="iso-3166-2"
+                  file="masterData/iana_media_type.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="type"
+                    name="type"
+                    type="VARCHAR(255)"/>
+        </loadData>
+    </changeSet>
 </databaseChangeLog>
