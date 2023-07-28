@@ -11,10 +11,10 @@ import eu.gaiax.wizard.api.model.setting.K8SSettings;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
-import eu.gaiax.wizard.dao.entity.Enterprise;
+/*import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCertificate;
 import eu.gaiax.wizard.dao.repository.EnterpriseCertificateRepository;
-import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
+import eu.gaiax.wizard.dao.repository.EnterpriseRepository;*/
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
@@ -49,16 +49,21 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class K8SService {
+/*
 
     private static final Logger LOGGER = LoggerFactory.getLogger(K8SService.class);
-    /**
+    */
+/**
      * The constant DEFAULT.
-     */
+     *//*
+
     public static final String DEFAULT = "default";
 
-    private final EnterpriseRepository enterpriseRepository;
+  */
+/*  private final EnterpriseRepository enterpriseRepository;
 
     private final EnterpriseCertificateRepository enterpriseCertificateRepository;
+*//*
 
     private final S3Utils s3Util;
 
@@ -66,11 +71,13 @@ public class K8SService {
 
     private final ScheduleService scheduleService;
 
-    /**
+    */
+/**
      * Create ingress.
      *
      * @param enterpriseId the enterprise id
-     */
+     *//*
+
     public void createIngress(long enterpriseId) {
         File crt = null;
         File key = null;
@@ -183,4 +190,5 @@ public class K8SService {
             enterprise.setStatus(RegistrationStatus.DID_JSON_CREATION_FAILED.getStatus());
         }
     }
+*/
 }

@@ -5,14 +5,19 @@
 package eu.gaiax.wizard.core.service.job;
 
 import eu.gaiax.wizard.api.model.StringPool;
+/*
 import eu.gaiax.wizard.core.service.domain.DomainService;
+*/
 import eu.gaiax.wizard.core.service.k8s.K8SService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
+/*
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
+*/
 import lombok.RequiredArgsConstructor;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.quartz.QuartzJobBean;
@@ -25,6 +30,11 @@ import org.springframework.stereotype.Component;
 @DisallowConcurrentExecution
 @RequiredArgsConstructor
 public class ScheduledJobBean extends QuartzJobBean {
+    @Override
+    protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
+
+    }
+/*
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledJobBean.class);
 
@@ -56,4 +66,5 @@ public class ScheduledJobBean extends QuartzJobBean {
         }
         LOGGER.info("job completed");
     }
+*/
 }

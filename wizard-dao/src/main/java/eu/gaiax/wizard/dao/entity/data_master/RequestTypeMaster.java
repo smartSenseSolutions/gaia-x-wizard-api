@@ -6,12 +6,7 @@ import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import jakarta.persistence.Id;
+import lombok.*;
 
 @Entity
 @Table(name = "request_type_master")
@@ -21,10 +16,6 @@ import jakarta.persistence.Id;
 @AllArgsConstructor
 @Builder
 public class RequestTypeMaster extends SuperEntity implements BaseEntity {
-
-    @Id
-    @Column(name = "id")
-    private String id;
 
     @Column(name = "type")
     private String type;
