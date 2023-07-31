@@ -157,7 +157,7 @@ public class CertificateService {
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), did);
 
             //save files in vault
-            this.uploadCertificatesToVault(did, domainChainFile, csrFile, keyfile, pkcs8File);
+            this.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
 //            this.s3Utils.uploadFile(certificateChainS3Key, domainChainFile);
 //            this.s3Utils.uploadFile(csrS3Key, csrFile);
 //            this.s3Utils.uploadFile(keyS3Key, keyfile);
@@ -348,29 +348,29 @@ public class CertificateService {
 
     }
 
-    private void uploadCertificatesToVault(String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
+    private void uploadCertificatesToVault(String domainName, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
         // this.s3Utils.uploadFile(certificateChainS3Key, domainChainFile);
         ////            this.s3Utils.uploadFile(csrS3Key, csrFile);
         ////            this.s3Utils.uploadFile(keyS3Key, keyfile);
         ////            this.s3Utils.uploadFile(pkcs8FileS3Key, pkcs8File);
-        this.uploadCertificatesToVault(secretName,
+        this.uploadCertificatesToVault(domainName, secretName,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));
     }
 
-    public void uploadCertificatesToVault(String secretName, String domainChain, String csr, String key, String pkcs8Key) throws IOException {
+    public void uploadCertificatesToVault(String domain, String secretName, String domainChain, String csr, String key, String pkcs8Key) throws IOException {
         Map<String, Object> data = new HashMap<>();
         if (StringUtils.hasText(domainChain)) {
-            data.put("domainChain", domainChain);
+            data.put("x509CertificateChain.pem", domainChain);
         }
         if (StringUtils.hasText(csr)) {
-            data.put("csr", csr);
+            data.put(domain + ".csr", csr);
         }
         if (StringUtils.hasText(key)) {
-            data.put("key", key);
+            data.put(domain + ".key", key);
         }
         if (StringUtils.hasText(pkcs8Key)) {
-            data.put("pkcs8Key", pkcs8Key);
+            data.put("pkcs8_" + domain + ".key", pkcs8Key);
         }
         this.vault.put(secretName, data);
     }

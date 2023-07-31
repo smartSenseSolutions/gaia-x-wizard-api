@@ -71,7 +71,11 @@ public class CredentialService {
                 .build());
     }
 
-    public Credential getByParticipantId(UUID participantId){
-        return credentialRepository.findByParticipantId(participantId);
+    public Credential getByParticipantId(UUID participantId) {
+        return this.credentialRepository.findByParticipantId(participantId);
+    }
+
+    public Credential getByParticipantWithCredentialType(UUID participantId, String credentialType) {
+        return this.credentialRepository.findByParticipantIdAndCredentialType(participantId, credentialType);
     }
 }

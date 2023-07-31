@@ -10,6 +10,9 @@ CREATE TABLE participant (
     sub_domain varchar(100) NULL,
     private_key_id varchar(100) NULL,
     participant_type varchar(100) NULL,
+    own_did_solution Boolean NOT NULL,
+    status INTEGER NULL,
+    credential TEXT NULL,
 	created_at timestamp(6) NULL,
 	updated_at timestamp(6) NULL
 );
