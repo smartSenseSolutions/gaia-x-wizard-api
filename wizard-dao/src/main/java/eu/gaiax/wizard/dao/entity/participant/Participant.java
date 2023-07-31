@@ -36,5 +36,7 @@ public class Participant extends SuperEntity {
     private int status;
     @Column(name = "credential")
     private String credential;
+    @Column(name = "own_did_solution")
+    private boolean ownDidSolution;
 
 }
