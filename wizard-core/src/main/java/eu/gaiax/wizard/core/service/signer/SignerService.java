@@ -51,11 +51,15 @@ public class SignerService {
             String hostedPath = domain + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
             this.credentialService.createCredential(participantString, hostedPath, "Participant", null, participant);
+/*
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
+*/
             log.debug("participant json created for enterprise->{} , json ->{}", participant.getId(), participantString);
         } catch (Exception e) {
             log.error("Error while creating participant json for enterprise -{}", participant.getId(), e);
+/*
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
+*/
         } finally {
             this.participantRepository.save(participant);
             CommonUtils.deleteFile(file);
@@ -71,12 +75,16 @@ public class SignerService {
             String didString = this.objectMapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("did"));
             FileUtils.writeStringToFile(file, didString, Charset.defaultCharset());
             this.s3Utils.uploadFile(participant.getDid() + "/did.json", file);
+/*
             participant.setStatus(RegistrationStatus.DID_JSON_CREATED.getStatus());
+*/
             log.debug("Did created for enterprise->{} , did ->{}", participant.getDid(), didString);
             this.createParticipantCreationJob(participant);
         } catch (Exception e) {
             log.error("Error while creating did json for enterprise -{}", participant.getDid(), e);
+/*
             participant.setStatus(RegistrationStatus.DID_JSON_CREATION_FAILED.getStatus());
+*/
         } finally {
             this.participantRepository.save(participant);
             CommonUtils.deleteFile(file);
@@ -86,7 +94,9 @@ public class SignerService {
     private void createParticipantCreationJob(Participant participant) {
         try {
             this.scheduleService.createJob(participant.getDid(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
+/*
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
+*/
         } catch (Exception e) {
             log.error("Can not create participant job for enterprise -{}", participant.getDid(), e);
         }

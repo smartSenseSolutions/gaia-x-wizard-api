@@ -31,7 +31,6 @@ public class S3Utils {
     public void uploadFile(String objectName, File file) {
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
-
     /**
      * Gets pre signed url.
      *
