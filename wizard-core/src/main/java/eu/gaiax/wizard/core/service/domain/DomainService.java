@@ -50,12 +50,27 @@ public class DomainService {
         request.setHostedZoneId(this.awsSettings.hostedZoneId());
         ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
 
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            log.error("Interrupted!", e);
-            Thread.currentThread().interrupt();
+        if (action.name().equalsIgnoreCase("CREATE")) {
+            String status = result.getChangeInfo().getStatus();
+            String changeId = result.getChangeInfo().getId();
+            int count = 0;
+            log.debug("status  ->{} count - >{}", status, ++count);
+
+            while (!status.equalsIgnoreCase(ChangeStatus.INSYNC.name()) && count <= 12) {
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    log.error("Interrupted!", e);
+                    Thread.currentThread().interrupt();
+                }
+                GetChangeRequest getChangeRequest = new GetChangeRequest()
+                        .withId(changeId);
+                ChangeInfo changeInfo = this.amazonRoute53.getChange(getChangeRequest).getChangeInfo();
+                status = changeInfo.getStatus();
+                log.debug("status  ->{} count - >{}", status, ++count);
+            }
         }
+
         log.info("TXT record updated -> {}, result-> {}", domainName, result);
     }
 

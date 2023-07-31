@@ -3,12 +3,12 @@ package eu.gaiax.wizard.core.service.hashing;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
-import org.jetbrains.annotations.NotNull;
+import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.stream.IntStream;
+import java.util.Base64;
 
 @Component
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -25,22 +25,19 @@ public class HashingService {
         return generateHash(SHA_512, content);
     }
 
+    public static String encodeToBase64(String content) {
+        return Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static String decodeToBase64(String content) {
+        return new String(Base64.getDecoder().decode(content.getBytes(StandardCharsets.UTF_8)));
+    }
+
     @SneakyThrows
     private static String generateHash(String algorithm, String tncContent) {
         MessageDigest digest = MessageDigest.getInstance(algorithm);
-        return prepareHash(tncContent, digest);
+        byte[] hash = digest.digest(tncContent.getBytes(StandardCharsets.UTF_8));
+        return Hex.encodeHexString(hash);
     }
 
-    @NotNull
-    private static String prepareHash(String tncContent, MessageDigest digest) {
-        byte[] hash = digest.digest(tncContent.getBytes(StandardCharsets.UTF_8));
-        StringBuilder hexString = new StringBuilder();
-        IntStream.range(0, hash.length).mapToObj(i -> Integer.toHexString(0xff & hash[i])).forEach(hex -> {
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        });
-        return hexString.toString();
-    }
 }
