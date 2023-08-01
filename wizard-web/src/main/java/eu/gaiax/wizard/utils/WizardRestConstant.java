@@ -37,6 +37,8 @@ public class WizardRestConstant {
 
     public static final String STANDARD_TYPE_FILTER = "/standard-type/filter";
 
+    public static final String MASTER_DATA_FILTER = "/master-data/filter";
+
     public static final String LABEL_LEVEL_QUESTIONS = "/label-level-questions";
 
     public static final String LOCATION_FILTER = "/location/filter";

@@ -6,15 +6,13 @@ import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "entity_type_master")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class EntityTypeMaster extends SuperEntity implements BaseEntity {
 
     @Column(name = "type")

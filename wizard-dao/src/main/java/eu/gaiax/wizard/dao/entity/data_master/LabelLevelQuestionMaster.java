@@ -9,14 +9,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
@@ -25,14 +21,7 @@ import java.util.UUID;
 @Table(name = "label_level_question_master")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class LabelLevelQuestionMaster extends SuperEntity implements BaseEntity {
-
-    @Id
-    @Column(name = "id")
-    private UUID id;
 
     @Column(name = "type_id", insertable = false, updatable = false)
     private UUID typeId;
@@ -60,7 +49,7 @@ public class LabelLevelQuestionMaster extends SuperEntity implements BaseEntity 
     private boolean active;
 
     public LabelLevelQuestionMaster(UUID id, String criterionNumber, String question) {
-        this.id = id;
+        super(id);
         this.criterionNumber = criterionNumber;
         this.question = question;
     }

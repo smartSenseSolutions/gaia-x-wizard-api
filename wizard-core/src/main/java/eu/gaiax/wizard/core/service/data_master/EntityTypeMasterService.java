@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.EntityTypeMasterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service(value = "entityTypeMaster")
 @RequiredArgsConstructor
 public class EntityTypeMasterService extends BaseService<EntityTypeMaster, String> {
 
@@ -18,11 +18,11 @@ public class EntityTypeMasterService extends BaseService<EntityTypeMaster, Strin
 
     @Override
     protected BaseRepository<EntityTypeMaster, String> getRepository() {
-        return entityTypeMasterRepository;
+        return this.entityTypeMasterRepository;
     }
 
     @Override
     protected SpecificationUtil<EntityTypeMaster> getSpecificationUtil() {
-        return specificationUtil;
+        return this.specificationUtil;
     }
 }

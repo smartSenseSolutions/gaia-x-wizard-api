@@ -1,12 +1,14 @@
 package eu.gaiax.wizard.controller;
 
 import com.smartsensesolutions.java.commons.FilterRequest;
+import com.smartsensesolutions.java.commons.base.service.BaseService;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.LabelLevelTypeInterface;
 import eu.gaiax.wizard.core.service.data_master.AccessTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.EntityTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.FormatTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.LabelLevelService;
+import eu.gaiax.wizard.core.service.data_master.MasterDataServiceFactory;
 import eu.gaiax.wizard.core.service.data_master.RegistrationTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.RequestTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
@@ -32,6 +34,7 @@ import static eu.gaiax.wizard.utils.WizardRestConstant.ENTITY_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.FORMAT_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.LABEL_LEVEL_QUESTIONS;
 import static eu.gaiax.wizard.utils.WizardRestConstant.LOCATION_FILTER;
+import static eu.gaiax.wizard.utils.WizardRestConstant.MASTER_DATA_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.REGISTRATION_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.REQUEST_TYPE_FILTER;
 import static eu.gaiax.wizard.utils.WizardRestConstant.STANDARD_TYPE_FILTER;
@@ -56,6 +59,8 @@ public class DataMasterController extends BaseResource {
     private final LabelLevelService labelLevelService;
 
     private final SubdivisionCodeMasterService subdivisionCodeMasterService;
+
+    private final MasterDataServiceFactory masterDataServiceFactory;
 
     @PostMapping(ACCESS_TYPE_FILTER)
     public CommonResponse<Page<AccessTypeMaster>> filterAccessTypeMaster(@RequestBody FilterRequest filterRequest) {
@@ -85,6 +90,16 @@ public class DataMasterController extends BaseResource {
     @PostMapping(STANDARD_TYPE_FILTER)
     public CommonResponse<Page<StandardTypeMaster>> filterStandardTypeMaster(@RequestBody FilterRequest filterRequest) {
         return CommonResponse.of(this.standardTypeMasterService.filter(filterRequest));
+    }
+
+    @PostMapping(MASTER_DATA_FILTER)
+    public CommonResponse<Page> filterTypeMaster(@RequestBody FilterRequest filterRequest) {
+        String dataType = "";
+        if (filterRequest.getCriteria().stream().anyMatch(filterCriteria -> filterCriteria.getColumn().equals("dataType"))) {
+            dataType = filterRequest.getCriteria().stream().filter(filterCriteria -> filterCriteria.getColumn().equals("dataType")).findFirst().get().getColumn();
+        }
+        BaseService service = this.masterDataServiceFactory.getInstance(dataType);
+        return CommonResponse.of(service.filter(filterRequest));
     }
 
     @GetMapping(LABEL_LEVEL_QUESTIONS)

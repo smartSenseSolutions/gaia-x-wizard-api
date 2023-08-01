@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.RequestTypeMasterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service(value = "requestTypeMaster")
 @RequiredArgsConstructor
 public class RequestTypeMasterService extends BaseService<RequestTypeMaster, String> {
 
@@ -18,11 +18,11 @@ public class RequestTypeMasterService extends BaseService<RequestTypeMaster, Str
 
     @Override
     protected BaseRepository<RequestTypeMaster, String> getRepository() {
-        return registrationTypeMasterRepository;
+        return this.registrationTypeMasterRepository;
     }
 
     @Override
     protected SpecificationUtil<RequestTypeMaster> getSpecificationUtil() {
-        return specificationUtil;
+        return this.specificationUtil;
     }
 }

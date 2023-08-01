@@ -5,7 +5,6 @@ import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -26,10 +25,6 @@ import java.util.UUID;
 @Builder
 public class LabelLevelTypeMaster extends SuperEntity implements BaseEntity {
 
-    @Id
-    @Column(name = "id")
-    private UUID id;
-
     @Column(name = "name")
     private String name;
 
@@ -40,7 +35,7 @@ public class LabelLevelTypeMaster extends SuperEntity implements BaseEntity {
     private List<LabelLevelQuestionMaster> labelLevelQuestionMasterList;
 
     public LabelLevelTypeMaster(UUID id, String name, List<LabelLevelQuestionMaster> labelLevelQuestionMasterList) {
-        this.id = id;
+        super(id);
         this.name = name;
         this.labelLevelQuestionMasterList = labelLevelQuestionMasterList;
     }
