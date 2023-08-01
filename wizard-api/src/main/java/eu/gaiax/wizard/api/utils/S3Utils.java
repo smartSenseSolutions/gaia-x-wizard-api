@@ -31,6 +31,9 @@ public class S3Utils {
     public void uploadFile(String objectName, File file) {
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
+    public String getUploadUrl(String objectName) {
+        return s3Client.getUrl(this.awsSettings.bucket(), objectName).toString();
+    }
     /**
      * Gets pre signed url.
      *
@@ -42,6 +45,7 @@ public class S3Utils {
         long expTimeMillis = expiration.getTime();
         expTimeMillis += 10000; // 10 seconds
         expiration.setTime(expTimeMillis);
+
         return this.s3Client.generatePresignedUrl(this.awsSettings.bucket(), objectName, expiration).toString();
     }
 

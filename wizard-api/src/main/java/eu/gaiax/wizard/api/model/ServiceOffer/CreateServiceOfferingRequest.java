@@ -21,6 +21,8 @@ public class CreateServiceOfferingRequest {
     private UUID id;
     private String description;
     private String privateKey;
+    private String participantJson;
     private String verificationMethod;
+    private boolean storeVault=false;
     private Map<String, Object> credentialSubject;
 }

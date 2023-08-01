@@ -189,7 +189,7 @@ public class ParticipantService {
     }
 
     @SneakyThrows
-    public void validateParticipant(ParticipantValidatorRequest request) {
+    public Participant validateParticipant(ParticipantValidatorRequest request) {
         //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
         //TODO assume that we got the did  from signer tool
         final String did = "did";
@@ -208,6 +208,7 @@ public class ParticipantService {
         if (request.store()) {
             this.certificateService.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), null, null, request.privateKey(), null);
         }
+        return participant;
     }
 
     public String getParticipantFile(String host, String fileName) {

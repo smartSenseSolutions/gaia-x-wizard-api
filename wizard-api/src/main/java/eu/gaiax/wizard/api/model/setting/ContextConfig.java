@@ -8,5 +8,5 @@ import java.util.List;
 public record ContextConfig(List<String> serviceOffer,
                             List<String> participant,
                             List<String> registrationNumber,
-                            List<String> tnc) {
+                            List<String> tnc, List<String> ODRLPolicy) {
 }
