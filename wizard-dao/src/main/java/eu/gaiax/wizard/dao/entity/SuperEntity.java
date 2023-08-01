@@ -33,7 +33,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SuperEntity implements BaseEntity {
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")

@@ -7,14 +7,7 @@ package eu.gaiax.wizard.core.service.job;
 
 import eu.gaiax.wizard.api.model.StringPool;
 import lombok.RequiredArgsConstructor;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.SimpleTrigger;
-import org.quartz.TriggerBuilder;
+import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,7 +32,7 @@ public class ScheduleService {
      */
     public void deleteJob(JobKey jobKey) {
         try {
-            scheduler.deleteJob(jobKey);
+            this.scheduler.deleteJob(jobKey);
             LOGGER.debug("Job deleted for group-{}, name-{}", jobKey.getGroup(), jobKey.getName());
         } catch (SchedulerException e) {
             LOGGER.error("Can not delete job with group-{}, name-{}", jobKey.getGroup(), jobKey.getName());
@@ -49,17 +42,17 @@ public class ScheduleService {
     /**
      * Create job.
      *
-     * @param enterpriseId the enterprise id
-     * @param type         the type
-     * @param count        the count
+     * @param did   the did
+     * @param type  the type
+     * @param count the count
      * @throws SchedulerException the scheduler exception
      */
-    public void createJob(long enterpriseId, String type, int count) throws SchedulerException {
+    public void createJob(String did, String type, int count) throws SchedulerException {
         JobDetail job = JobBuilder.newJob(ScheduledJobBean.class)
                 .withIdentity(UUID.randomUUID().toString(), type)
                 .storeDurably()
                 .requestRecovery()
-                .usingJobData(StringPool.ENTERPRISE_ID, enterpriseId)
+                .usingJobData(StringPool.DID, did)
                 .usingJobData(StringPool.JOB_TYPE, type)
                 .build();
 
@@ -69,7 +62,7 @@ public class ScheduleService {
                 .startAt(new Date(System.currentTimeMillis() + 10000)) //start after 10 sec
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(count).withIntervalInSeconds(30))
                 .build();
-        scheduler.scheduleJob(job, activateEnterpriseUserTrigger);
-        LOGGER.debug("{}: job created for enterprise id->{}", type, enterpriseId);
+        this.scheduler.scheduleJob(job, activateEnterpriseUserTrigger);
+        LOGGER.debug("{}: job created for enterprise id->{}", type, did);
     }
 }

@@ -5,14 +5,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import java.security.Principal;
 import java.util.Objects;
 
-import static eu.gaiax.wizard.api.model.StringPool.ENTERPRISE_ID;
-
 public abstract class BaseResource {
 
-    public Long getEnterpriseId(Principal principal) {
+    public Object requestForClaim(String claim, Principal principal) {
         if (Objects.isNull(principal)) {
-            return 1L;
+            return "test@email.com";
         }
-        return (Long) ((JwtAuthenticationToken) principal).getTokenAttributes().get(ENTERPRISE_ID);
+        return ((JwtAuthenticationToken) principal).getTokenAttributes().get(claim);
     }
 }

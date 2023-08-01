@@ -4,10 +4,6 @@
 
 package eu.gaiax.wizard.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import eu.gaiax.wizard.api.model.CommonResponse;
-import eu.gaiax.wizard.api.model.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.RegisterRequest;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 /*import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.enterprise.EnterpriseService;
@@ -19,29 +15,8 @@ import eu.gaiax.wizard.dao.entity.Enterprise;
 import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
 import eu.gaiax.wizard.dao.entity.ServiceOffer;
 import eu.gaiax.wizard.dao.entity.ServiceOfferView;*/
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.quartz.SchedulerException;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.io.IOException;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static eu.gaiax.wizard.utils.WizardRestConstant.*;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor

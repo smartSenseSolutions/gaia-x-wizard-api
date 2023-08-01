@@ -63,6 +63,12 @@ wizard:
     roleId:
     secretId:
     secret-path:
+  gaia-x:
+    registryService: https://registry.gaia-x.eu/v1
+  context:
+    participant:
+    registrationNumber:
+    tnc:
 
 spring:
   liquibase:

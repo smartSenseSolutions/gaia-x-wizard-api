@@ -37,6 +37,7 @@ public class StringPool {
      * The constant ENTERPRISE_ID.
      */
     public static final String ENTERPRISE_ID = "enterpriseId";
+    public static final String DID = "did";
     /**
      * The constant JOB_TYPE.
      */
@@ -61,6 +62,8 @@ public class StringPool {
     public static final String TERMS_AND_CONDITIONS_HASH = "hash_value"; //pragma: allowlist secret
 
     public static final String REQUIRED_ACTIONS_PATH = "/login-actions/action-token?key=";
+
+    public static final String VERIFIABLE_CREDENTIAL="VerifiableCredential";
 
     private StringPool() {
     }
