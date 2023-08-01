@@ -4,7 +4,6 @@
 
 package eu.gaiax.wizard.core.service.job;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -21,8 +20,6 @@ import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * The type Scheduled job bean.
@@ -52,12 +49,8 @@ public class ScheduledJobBean extends QuartzJobBean {
                     this.certificateService.createSSLCertificate(participant, participant.getDid(), participant.getDomain(), jobDetail.getKey());
             case StringPool.JOB_TYPE_CREATE_INGRESS -> this.k8SService.createIngress(participant);
             case StringPool.JOB_TYPE_CREATE_DID -> this.signerService.createDid(participant);
-            case StringPool.JOB_TYPE_CREATE_PARTICIPANT -> {
-                TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
-                };
-                Map<String, Object> credential = this.mapper.readValue(participant.getCredential(), typeReference);
-                this.signerService.createParticipantJson(participant, credential, participant.getDomain(), participant.getDid());
-            }
+            case StringPool.JOB_TYPE_CREATE_PARTICIPANT ->
+                    this.signerService.createParticipantJson(participant, participant.getDid(), participant.isOwnDidSolution());
             default -> log.error("Invalid job type -> {}", jobType);
         }
         log.info("job completed");

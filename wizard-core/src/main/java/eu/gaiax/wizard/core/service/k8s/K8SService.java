@@ -45,7 +45,7 @@ public class K8SService {
 
     public void createIngress(Participant participant) {
         try {
-            Map<String, Object> certificates = this.vault.get(participant.getDid());
+            Map<String, Object> certificates = this.vault.get(participant.getId().toString());
             //Step 1: create secret using SSL certificate
             ApiClient client = Config.fromToken(this.k8SSettings.basePath(), this.k8SSettings.token(), false);
             Configuration.setDefaultApiClient(client);
@@ -58,8 +58,8 @@ public class K8SService {
             secret.setType("kubernetes.io/tls");
 
 
-            String certString = (String) certificates.get("csr");
-            String keyString = (String) certificates.get("key");
+            String certString = (String) certificates.get(participant.getDomain() + ".csr");
+            String keyString = (String) certificates.get(participant.getDomain() + ".key");
             log.debug("certString  -> {}", certString);
             log.debug("keyString  -> {}", keyString);
 
@@ -77,6 +77,9 @@ public class K8SService {
             annotations.put("nginx.ingress.kubernetes.io/proxy-connect-timeout", "600");
             annotations.put("nginx.ingress.kubernetes.io/proxy-send-timeout", "600");
             annotations.put("nginx.ingress.kubernetes.io/proxy-read-timeout", "600");
+
+            //TODO need to add letsencrypt-prod  as configuration
+            annotations.put("cert-manager.io/cluster-issuer", "letsencrypt-prod");
 
 
             //Step 2: Create ingress

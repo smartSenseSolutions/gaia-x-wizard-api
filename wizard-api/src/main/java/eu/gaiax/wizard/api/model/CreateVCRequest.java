@@ -9,5 +9,5 @@ import java.util.Map;
 /**
  * The type Create participant request.
  */
-public record CreateVCRequest(String domain, String templateId, String did, Map<String, Object> credentials) {
+public record CreateVCRequest(String privateKey, String issuer, String verificationMethod, Map<String, Object> vcs) {
 }

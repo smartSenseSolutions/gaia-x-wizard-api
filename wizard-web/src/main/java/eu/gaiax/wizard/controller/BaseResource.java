@@ -9,7 +9,7 @@ public abstract class BaseResource {
 
     public Object requestForClaim(String claim, Principal principal) {
         if (Objects.isNull(principal)) {
-            return 1L;
+            return "test@email.com";
         }
         return ((JwtAuthenticationToken) principal).getTokenAttributes().get(claim);
     }

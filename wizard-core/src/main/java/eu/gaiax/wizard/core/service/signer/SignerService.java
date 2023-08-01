@@ -4,18 +4,22 @@
 
 package eu.gaiax.wizard.core.service.signer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.model.CreateDidRequest;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
+import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
+import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -40,15 +44,26 @@ public class SignerService {
     private final S3Utils s3Utils;
     private final ObjectMapper objectMapper;
     private final ScheduleService scheduleService;
+    private final Vault vault;
+    private final ContextConfig contextConfig;
 
-    public void createParticipantJson(Participant participant, Map<String, Object> credential, String domain, String did) {
+
+    public void createParticipantJson(Participant participant, String key, boolean ownDid) {
         File file = new File("/tmp/participant.json");
         try {
-            CreateVCRequest request = new CreateVCRequest(domain, "LegalParticipant", did, credential);
+            String privateKey = key;
+            if (ownDid) {
+                privateKey = (String) this.vault.get(key).get("key");
+            }
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            Map<String, Object> credentials = this.objectMapper.convertValue(participant.getCredential(), typeReference);
+            //TODO need to verify for the verification method
+            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), participant.getDid(), participant.getDid(), credentials);
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             String participantString = this.objectMapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("verifiableCredential"));
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
-            String hostedPath = domain + "/participant.json";
+            String hostedPath = participant.getDid() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
             this.credentialService.createCredential(participantString, hostedPath, "Participant", null, participant);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
