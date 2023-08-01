@@ -2,10 +2,12 @@ package eu.gaiax.wizard.core.service.participant;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
+import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -36,6 +39,7 @@ public class ParticipantService {
     private final CertificateService certificateService;
     private final CredentialService credentialService;
     private final ObjectMapper mapper;
+    private final KeycloakService keycloakService;
 
     //TODO need to finalize the onboarding request from frontend team
     @SneakyThrows
@@ -112,4 +116,7 @@ public class ParticipantService {
         }
     }
 
+    public Map<String, Object> checkIfParticipantRegistered(String email) {
+        return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
+    }
 }

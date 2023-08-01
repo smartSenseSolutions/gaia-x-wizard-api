@@ -41,5 +41,6 @@ public class WizardRestConstant {
 
     public static final String LOCATION_FILTER = "/location/filter";
 
+    public static final String CHECK_REGISTRATION = "/check-registration";
 
 }
