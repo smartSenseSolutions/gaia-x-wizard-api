@@ -41,8 +41,7 @@ public class AuthenticationConfig {
                         .requestMatchers(REGISTER).permitAll().requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
                         .requestMatchers(CREATE_PARTICIPANT_JSON).permitAll()
                         .requestMatchers(CREATE_SUBDOMAIN).permitAll()
-                        .requestMatchers(ACCESS_TYPE_FILTER, ENTITY_TYPE_FILTER, FORMAT_TYPE_FILTER, LOCATION_FILTER,
-                                REGISTRATION_TYPE_FILTER, REQUEST_TYPE_FILTER, STANDARD_TYPE_FILTER, LABEL_LEVEL_QUESTIONS).permitAll()
+                        .requestMatchers(MASTER_DATA_FILTER, LABEL_LEVEL_QUESTIONS).permitAll()
                         .requestMatchers(ENTERPRISE_LIST).hasRole(ADMIN_ROLE).requestMatchers(ENTERPRISE_BY_ID).hasRole(ADMIN_ROLE)
                         .requestMatchers(ENTERPRISE).hasRole(ENTERPRISE_ROLE)
                         .requestMatchers(ENTERPRISE + "/**").hasRole(ENTERPRISE_ROLE)

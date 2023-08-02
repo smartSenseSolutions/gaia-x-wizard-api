@@ -13,9 +13,6 @@ import java.util.UUID;
 @Table(name = "label_level_question_master")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class LabelLevelQuestionMaster extends SuperEntity implements BaseEntity {
 
     @Column(name = "type_id", insertable = false, updatable = false)
@@ -42,4 +39,10 @@ public class LabelLevelQuestionMaster extends SuperEntity implements BaseEntity 
 
     @Column(name = "active")
     private boolean active;
+
+    public LabelLevelQuestionMaster(UUID id, String criterionNumber, String question) {
+        super(id);
+        this.criterionNumber = criterionNumber;
+        this.question = question;
+    }
 }
