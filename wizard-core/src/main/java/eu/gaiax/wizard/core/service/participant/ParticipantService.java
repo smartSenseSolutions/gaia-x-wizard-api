@@ -2,6 +2,7 @@ package eu.gaiax.wizard.core.service.participant;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
@@ -23,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -45,6 +47,7 @@ public class ParticipantService {
     private final CertificateService certificateService;
     private final CredentialService credentialService;
     private final Vault vault;
+    private final SignerClient signerClient;
     private final ObjectMapper mapper;
 
     //TODO need to finalize the onboarding request from frontend team
@@ -192,6 +195,8 @@ public class ParticipantService {
     public Participant validateParticipant(ParticipantValidatorRequest request) {
         //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
         //TODO assume that we got the did  from signer tool
+        ParticipantValidatorRequest participantValidatorRequest=new ParticipantValidatorRequest(request.participantJsonUrl)
+        ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify();
         final String did = "did";
         Participant participant = this.participantRepository.getByDid(did);
         if (Objects.isNull(participant)) {

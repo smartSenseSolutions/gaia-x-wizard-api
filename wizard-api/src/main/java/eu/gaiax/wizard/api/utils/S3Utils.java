@@ -5,6 +5,7 @@
 package eu.gaiax.wizard.api.utils;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Date;
+import java.util.List;
 
 /**
  * The type S 3 utils.
@@ -29,6 +31,7 @@ public class S3Utils {
      * @param file       the file
      */
     public void uploadFile(String objectName, File file) {
+        List<Bucket> buckets = s3Client.listBuckets();
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
     public String getUploadUrl(String objectName) {

@@ -15,7 +15,9 @@ public enum CredentialTypeEnum {
 
     RESOURCE("resource"),
 
-    TERM_CONDITION("term_condition");
+    TERM_CONDITION("term_condition"),
+    ODRL_POLICY("odrl_policy");
+
 
     private String credentialType;
 }

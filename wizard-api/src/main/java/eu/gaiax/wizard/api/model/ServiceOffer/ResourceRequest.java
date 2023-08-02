@@ -3,12 +3,8 @@ package eu.gaiax.wizard.api.model.ServiceOffer;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
-public class ResourceRequest {
+import java.util.Map;
 
-    @Email
-    @NotBlank
-    private String resourceName;
-    private String description;
-    private String aggregationUrl;
-
+public record ResourceRequest(String resourceName, String description, String aggregationUrl,String type,String subType,boolean publish) {
 }
+
