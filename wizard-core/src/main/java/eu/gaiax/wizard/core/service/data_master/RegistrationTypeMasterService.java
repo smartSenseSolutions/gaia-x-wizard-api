@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.RegistrationTypeMasterReposito
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service(value = "registrationTypeMaster")
+@Service(value = "registrationTypeMasterService")
 @RequiredArgsConstructor
 public class RegistrationTypeMasterService extends BaseService<RegistrationTypeMaster, String> {
 

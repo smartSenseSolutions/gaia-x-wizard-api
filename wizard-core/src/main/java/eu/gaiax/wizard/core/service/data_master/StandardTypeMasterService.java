@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.StandardTypeMasterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service(value = "standardTypeMaster")
+@Service(value = "standardTypeMasterService")
 @RequiredArgsConstructor
 public class StandardTypeMasterService extends BaseService<StandardTypeMaster, String> {
 

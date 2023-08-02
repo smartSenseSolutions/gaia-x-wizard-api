@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.FormatTypeMasterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service(value = "formatTypeMaster")
+@Service(value = "formatTypeMasterService")
 @RequiredArgsConstructor
 public class FormatTypeMasterService extends BaseService<FormatTypeMaster, String> {
 

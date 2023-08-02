@@ -8,7 +8,7 @@ import eu.gaiax.wizard.dao.repository.data_master.SubdivisionCodeMasterRepositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-@Service(value = "subdivisionTypeMaster")
+@Service(value = "subdivisionTypeMasterService")
 @RequiredArgsConstructor
 public class SubdivisionCodeMasterService extends BaseService<SubdivisionCodeMaster, String> {
 

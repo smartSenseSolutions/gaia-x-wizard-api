@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-@Service(value = "entityTypeMaster")
+@Service(value = "entityTypeMasterService")
 @RequiredArgsConstructor
 public class EntityTypeMasterService extends BaseService<EntityTypeMaster, UUID> {
 
