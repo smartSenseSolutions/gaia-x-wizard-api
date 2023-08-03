@@ -2,7 +2,6 @@ package eu.gaiax.wizard.core.service.keycloak;
 
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.KeycloakRequiredActionsEnum;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.KeycloakSettings;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
@@ -20,9 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +43,7 @@ public class KeycloakService {
         return keycloak.realm(this.keycloakSettings.realm());
     }
 
-    public void addUser(String legalName, String email, Long enterpriseId) {
+    public void addUser(String legalName, String email) {
         if (this.getKeycloakUserByEmail(email) != null) {
             return;
         }
@@ -55,10 +52,6 @@ public class KeycloakService {
         userRepresentation.setEnabled(true);
         userRepresentation.setEmail(email);
         userRepresentation.setFirstName(legalName);
-        userRepresentation.setRealmRoles(Collections.singletonList("6de065d3-306f-4670-b528-d07d789efa65"));
-        Map<String, List<String>> customAttributesMap = new HashMap<>();
-        customAttributesMap.put(StringPool.ENTERPRISE_ID, Collections.singletonList(String.valueOf(enterpriseId)));
-        userRepresentation.setAttributes(customAttributesMap);
         userRepresentation.setGroups(Collections.singletonList("enterprise"));
         RealmResource realmResource = this.getRealmResource();
         UsersResource usersResource = realmResource.users();
