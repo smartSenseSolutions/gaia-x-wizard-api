@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.Map;
 
@@ -56,8 +57,8 @@ public class ParticipantResource extends BaseResource {
             description = "This endpoint used to fetch well-known files."
     )
     @GetMapping(path = ".well-known/{fileName}")
-    public String getEnterpriseFiles(@PathVariable(name = "fileName") String fileName, @RequestHeader(name = HttpHeaders.HOST) String host) {
-        return this.participantService.getParticipantFile(host, fileName);
+    public String getEnterpriseFiles(@PathVariable(name = "fileName") String fileName, @RequestHeader(name = HttpHeaders.HOST) String host) throws IOException {
+        return this.participantService.getEnterpriseFiles(host, fileName);
     }
 
     @Operation(
@@ -68,4 +69,14 @@ public class ParticipantResource extends BaseResource {
     public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
         return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
     }
+
+    @Operation(
+            summary = "Get participant json files",
+            description = "This endpoint used to fetch participant json details."
+    )
+    @GetMapping(path = "{participantId}/{fileName}")
+    public String getLegalParticipantJson(@PathVariable(name = "participantId") String participantId, @PathVariable("fileName") String fileName) throws IOException {
+        return this.participantService.getLegalParticipantJson(participantId, fileName);
+    }
+
 }

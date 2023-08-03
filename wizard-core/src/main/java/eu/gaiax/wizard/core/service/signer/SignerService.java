@@ -52,18 +52,19 @@ public class SignerService {
         File file = new File("/tmp/participant.json");
         try {
             String privateKey = key;
-            if (ownDid) {
-                privateKey = (String) this.vault.get(key).get("key");
+            if (!ownDid) {
+                privateKey = (String) this.vault.get(key).get(participant.getDomain() + ".key");
             }
             TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
             };
-            Map<String, Object> credentials = this.objectMapper.convertValue(participant.getCredential(), typeReference);
+            Map<String, Object> credentials = this.objectMapper.readValue(participant.getCredential(), typeReference);
             //TODO need to verify for the verification method
             CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), participant.getDid(), participant.getDid(), credentials);
+            log.info("Participant Json ::-->> {}", this.objectMapper.writeValueAsString(request));
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             String participantString = this.objectMapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("verifiableCredential"));
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
-            String hostedPath = participant.getDid() + "/participant.json";
+            String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
             this.credentialService.createCredential(participantString, hostedPath, "Participant", null, participant);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
@@ -85,8 +86,9 @@ public class SignerService {
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createDid(createDidRequest);
             String didString = this.objectMapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("did"));
             FileUtils.writeStringToFile(file, didString, Charset.defaultCharset());
-            this.s3Utils.uploadFile(participant.getDid() + "/did.json", file);
+            this.s3Utils.uploadFile(participant.getId() + "/did.json", file);
             participant.setStatus(RegistrationStatus.DID_JSON_CREATED.getStatus());
+            participant.setDid("did:web:" + domain);
             log.debug("Did created for enterprise->{} , did ->{}", participant.getDid(), didString);
             this.createParticipantCreationJob(participant);
         } catch (Exception e) {
