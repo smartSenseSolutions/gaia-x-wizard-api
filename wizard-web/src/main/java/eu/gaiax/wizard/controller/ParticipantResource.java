@@ -1,6 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
@@ -22,6 +23,7 @@ import java.security.Principal;
 import java.util.Map;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.CHECK_REGISTRATION;
+import static eu.gaiax.wizard.utils.WizardRestConstant.PARTICIPANT_CONFIG;
 
 @RestController
 @RequiredArgsConstructor
@@ -68,4 +70,14 @@ public class ParticipantResource extends BaseResource {
     public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
         return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
     }
+
+    @Operation(
+            summary = "Participant config",
+            description = "This endpoint returns participant's general configuration."
+    )
+    @GetMapping(PARTICIPANT_CONFIG)
+    public CommonResponse<ParticipantConfigDTO> getConfig(@RequestParam(name = "email") String email) {
+        return CommonResponse.of(this.participantService.getParticipantConfig(email));
+    }
+
 }

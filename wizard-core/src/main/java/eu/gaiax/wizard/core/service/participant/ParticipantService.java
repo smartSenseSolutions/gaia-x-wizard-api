@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.Validate;
@@ -231,5 +232,18 @@ public class ParticipantService {
 
     public Map<String, Object> checkIfParticipantRegistered(String email) {
         return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
+    }
+
+    public ParticipantConfigDTO getParticipantConfig(String uuid) {
+        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
+        Validate.isNull(participant).launch("Invalid participant ID");
+        ParticipantConfigDTO participantConfigDTO = new ObjectMapper().convertValue(participant, ParticipantConfigDTO.class);
+
+        Credential credential = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+        if (credential != null) {
+            participantConfigDTO.setLegalParticipantUrl(credential.getVcUrl());
+        }
+
+        return participantConfigDTO;
     }
 }
