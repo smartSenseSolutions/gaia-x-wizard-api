@@ -180,14 +180,14 @@ public class ServiceOfferService {
         FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
         String hostedPath = id + "/" + serviceName + ".json";
         this.s3Utils.uploadFile(hostedPath, file);
-        return this.s3Utils.getPreSignedUrl(hostedPath);
+        return this.s3Utils.getPreSignedUrl(serviceName+".json");
     }
 
     private String hostODRLPolicy(String hostPolicyJson, String hostedPath, String policyName) throws IOException {
         File file = new File("/tmp/" + policyName + ".json");
         FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
         this.s3Utils.uploadFile(hostedPath + ".json", file);
-        return this.s3Utils.getPreSignedUrl(hostedPath + ".json");
+        return this.s3Utils.getPreSignedUrl(policyName + ".json");
     }
 
     private String singService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
