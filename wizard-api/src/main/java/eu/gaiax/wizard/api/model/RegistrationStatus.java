@@ -28,6 +28,7 @@ public enum RegistrationStatus {
      * Certificate created registration status.
      */
     CERTIFICATE_CREATED(4),
+    CERTIFICATE_CREATION_IN_PROCESS(12),
 
     /**
      * Certificate creation failed registration status.
@@ -75,6 +76,6 @@ public enum RegistrationStatus {
      * @return the status
      */
     public int getStatus() {
-        return status;
+        return this.status;
     }
 }

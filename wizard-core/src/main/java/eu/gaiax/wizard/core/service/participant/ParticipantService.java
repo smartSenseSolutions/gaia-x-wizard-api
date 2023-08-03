@@ -2,6 +2,9 @@ package eu.gaiax.wizard.core.service.participant;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
+import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
@@ -43,7 +46,7 @@ import java.util.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ParticipantService {
+public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Value("${wizard.domain}")
     private String domain;
@@ -58,6 +61,7 @@ public class ParticipantService {
     private final Vault vault;
     private final ObjectMapper mapper;
     private final KeycloakService keycloakService;
+    private final SpecificationUtil<Participant> specificationUtil;
 
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
@@ -120,7 +124,7 @@ public class ParticipantService {
         participantCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#0");
         participantCredentialSubject.put("type", "gx:LegalParticipant");
         String registrationId = this.formParticipantJsonUrl(participant.getId()) + "#1";
-        participantCredentialSubject.put("gx:legalRegistrationNumber", registrationId);
+        participantCredentialSubject.put("gx:legalRegistrationNumber", Map.of("id", registrationId));
 
         legalParticipant.put("credentialSubject", participantCredentialSubject);
 
@@ -140,7 +144,7 @@ public class ParticipantService {
         tncCredentialSubject.put("@Context", this.contextConfig.tnc());
         tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
         //TODO manage the TNC
-        tncCredentialSubject.put("gx:termsAndConditions", "The PARTICIPANT signing the Self-Description agrees as follows:\\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\\n\\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).");
+        tncCredentialSubject.put("gx:termsAndConditions", "The PARTICIPANT signing the Self-Description agrees as follows:\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\n\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).");
 
         tncVc.put("credentialSubject", tncCredentialSubject);
 
@@ -192,7 +196,7 @@ public class ParticipantService {
     private void participantWithoutDidSolution(Participant participant) {
         //Here Quartz will manage the further flow with JobBean.
         //Quartz schedule for the ssl certificate, ingress and did creation process.
-        this.domainService.createSubDomain(participant);
+        this.domainService.createSubDomain(participant.getId());
     }
 
     @SneakyThrows
@@ -243,4 +247,19 @@ public class ParticipantService {
         return FileUtils.readFileToString(file, Charset.defaultCharset());
     }
 
+    public Participant changeStatus(UUID participantId, int status) {
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(EntityNotFoundException::new);
+        participant.setStatus(status);
+        return this.create(participant);
+    }
+
+    @Override
+    protected BaseRepository<Participant, UUID> getRepository() {
+        return this.participantRepository;
+    }
+
+    @Override
+    protected SpecificationUtil<Participant> getSpecificationUtil() {
+        return this.specificationUtil;
+    }
 }

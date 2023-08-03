@@ -38,6 +38,7 @@ public class StringPool {
      */
     public static final String ENTERPRISE_ID = "enterpriseId";
     public static final String DID = "did";
+    public static final String PARTICIPANT_ID = "id";
     /**
      * The constant JOB_TYPE.
      */
