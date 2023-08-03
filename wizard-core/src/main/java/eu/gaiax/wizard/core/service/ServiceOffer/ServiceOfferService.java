@@ -208,37 +208,9 @@ public class ServiceOfferService {
                         .build()).build();
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
         verifiableCredentialList.add(verifiableCredential);
-
-        String key="-----BEGIN PRIVATE KEY-----\n" +
-                "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCuvaGi9ZbtTL8V\n" +
-                "I/VT25jHg8tmKPonyhEP7Dtf7YPC18WBbD0hIlwnMrgnM8txCIrY4X//YNx2BC4+\n" +
-                "pg9mT1WEosydlOrLkYIoKN4GaRc+ihI5Eu8/gQY651xR1Sexw+oCTe4yXmU9CSoM\n" +
-                "lH2Q0AVlWf6khWP/io9Y4jREvj8Ig9Ta0zrKByetFRG69pqtGUOEZ+1QYo8+LGWC\n" +
-                "E8kZOAvQPbo0uAipqcYwZiE8yhPAVjwg6DKrq1xomUfJ1bGSn5qhQD9dU8c8+iPG\n" +
-                "L1KgwZI0iLarAXYfzNhYdFW7ma0FYyoBhmH6ETW4dM7MBBc/soVd0Q65f93O8Gft\n" +
-                "Ovb7GIeLAgMBAAECggEAEb170v0G8RmJDr7jUbuqI5tMQ5dmajK4D7tGfeMxrM7W\n" +
-                "JOEVxa7k1y/thUFbZqLc4c7m/UjaqPqcrUyTpKnqPzh9+IOdYMRph+U6QUFbFETV\n" +
-                "O8kh0/sn5EQH2eD/kisXL1u1EpUFxzAOfk92/gQ4gAUmdpJ6R//LtNTmRJJh+N2q\n" +
-                "CvFcJ5ZiMRjORRC8Baf0ru+a9eS6HCslwi+Gp6KGG3YaNkWZ9LtlYZ0UNKEp9cJc\n" +
-                "XsxeKHUga5cc/A0otYVJMwzQEzq4gNXVqAlCKbkopHcSZc35IJ2GxVH70C7S47Cl\n" +
-                "ABXCpBhqGlUpWlMuUi/ED1uDImpKVDX5xUeuKjeROQKBgQC2QQ337x8dHjAdcVzX\n" +
-                "XKYqkptfXpKvFPyg84Dsade7OrhYg7yEN0bovXRZwqZhlGZ6G1T+05+aUDgYfgeJ\n" +
-                "APR6EGSOTcOllA5CYvt4BKoCeA35TlcM064uUC6Zde9DIfUkCu+Q+W5pTjYvj7JC\n" +
-                "FHhonERyOFIwFPRBrIZ5TDxVUwKBgQD1ckxFB/DrH8GtSPcy0mcx/x6vefio+JnK\n" +
-                "i96R19Os/BcGmrFdiOZ8rnfk7CYY581urTmX9xXJL4p3c5V+GB99R7ITNh+yGLg6\n" +
-                "Com0mJ3n0n+rfqAt5//UfxiAdG2PogADW3aQmWcYajIq+x7sX/5UlHjL6Omf2xnf\n" +
-                "cnTVpKLF6QKBgEI7EeBvvVbPiZypfZulx5zg+iWGMLf/YG79DnTbYdJgXG2OMgu6\n" +
-                "KsKZVpbn7Z64VyU4mYKhVPa3ACumYQagmjdhjalJCTg6vZPSdKAA0edjyXA3z9qR\n" +
-                "clLSQJz0BqbWyEb40mZUvpL2ISrXhWgOGFOrthPr87IVa04SbCvYUHSRAoGAAOFP\n" +
-                "CrRTldRAUom/cSw1+ITsrD5ouNpjWsmTm7xFYwpoXrqxRh+Wi/3oKib6n/48y1fN\n" +
-                "rBDTwCvueC0u7QvTGRTnu4/nHzFdf7/H7KDbeBhWItxKYL/DOBTYlqVUOz6ed2Sd\n" +
-                "kTkrmHfRBDxwSPKzK8R4hmqoY81aU2XKq3Vyq/kCgYEArzs+PGFuzLZYRfwfNfNo\n" +
-                "bSua8DRsvs8mME5nWxOBFqsAxfNPkMWaa7nQRREapOQmV2QGpiqAy75KEH2Kb/Jx\n" +
-                "B3T7HBO+BzRklYjITTEEf4rk3mD9VgTiuhypvImrYNZLp2rJ78DkCtPMfA3/AbXK\n" +
-                "+ftrB5XnFUi5xRs9mKMyJ/4=\n" +
-                "-----END PRIVATE KEY-----";
+        ;
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .privateKey(HashingService.encodeToBase64(key))
+                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
                 .legalParticipantURL(participantCred.getVcUrl())
                 .verificationMethod(request.getVerificationMethod())
