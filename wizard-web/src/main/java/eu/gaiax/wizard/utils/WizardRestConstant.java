@@ -29,4 +29,6 @@ public class WizardRestConstant {
 
     public static final String LABEL_LEVEL_QUESTIONS = "/label-level-questions";
 
+    public static final String CHECK_REGISTRATION = "/check-registration";
+
 }

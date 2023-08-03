@@ -5,10 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
+import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
@@ -30,7 +32,12 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -46,6 +53,7 @@ public class ParticipantService {
     private final CredentialService credentialService;
     private final Vault vault;
     private final ObjectMapper mapper;
+    private final KeycloakService keycloakService;
 
     //TODO need to finalize the onboarding request from frontend team
     @SneakyThrows
@@ -219,5 +227,9 @@ public class ParticipantService {
         Object certificate = certificates.get(fileName);
         Validate.isNull(certificate).launch("Can not find subdomain -> " + host);
         return (String) certificate;
+    }
+
+    public Map<String, Object> checkIfParticipantRegistered(String email) {
+        return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
     }
 }

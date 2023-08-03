@@ -38,7 +38,7 @@ public class AuthenticationConfig {
                         .requestMatchers("/", "/docs/api-docs/**", "/ui/swagger-ui/**", "/actuator/health/**", "/error").permitAll()
                         .requestMatchers("/ingress/**").permitAll().requestMatchers("/did/**").permitAll()
                         .requestMatchers("/certificate/**").permitAll().requestMatchers("/.well-known/**").permitAll()
-                        .requestMatchers(REGISTER).permitAll().requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
+                        .requestMatchers(CHECK_REGISTRATION, REGISTER).permitAll().requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
                         .requestMatchers(CREATE_PARTICIPANT_JSON).permitAll()
                         .requestMatchers(CREATE_SUBDOMAIN).permitAll()
                         .requestMatchers(MASTER_DATA_FILTER, LABEL_LEVEL_QUESTIONS).permitAll()
