@@ -68,7 +68,7 @@ public class K8SService {
 
 
             api.createNamespacedSecret(DEFAULT, secret, null, null, null, null);
-            log.debug("tls secret created for enterprise -{} domain ->{}", participant.getEmail(), participant.getDomain());
+            log.debug("tls secret created for participant -{} domain ->{}", participant.getId(), participant.getDomain());
 
             ///annotations
             Map<String, String> annotations = new HashMap<>();
@@ -132,10 +132,10 @@ public class K8SService {
 
             participant.setStatus(RegistrationStatus.INGRESS_CREATED.getStatus());
 
-            log.debug("Ingress created for enterprise -> {} and domain ->{}", participant.getDid(), participant.getDomain());
+            log.debug("Ingress created for participant -> {} and domain ->{}", participant.getId(), participant.getDomain());
             this.createDidCreationJob(participant);
         } catch (Exception e) {
-            log.error("Can not create ingress for enterprise -> {}", participant.getDid(), e);
+            log.error("Can not create ingress for participant -> {}", participant.getId(), e);
             participant.setStatus(RegistrationStatus.INGRESS_CREATION_FAILED.getStatus());
         } finally {
             this.participantRepository.save(participant);

@@ -50,7 +50,7 @@ public class ScheduledJobBean extends QuartzJobBean {
             case StringPool.JOB_TYPE_CREATE_INGRESS -> this.k8SService.createIngress(participant);
             case StringPool.JOB_TYPE_CREATE_DID -> this.signerService.createDid(participant);
             case StringPool.JOB_TYPE_CREATE_PARTICIPANT ->
-                    this.signerService.createParticipantJson(participant, participant.getDid(), participant.isOwnDidSolution());
+                    this.signerService.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
             default -> log.error("Invalid job type -> {}", jobType);
         }
         log.info("job completed");
