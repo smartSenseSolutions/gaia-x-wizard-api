@@ -12,22 +12,23 @@ import java.util.Map;
 @Setter
 @Builder
 public class VerifiableCredential {
-    @JsonProperty("@context")
-    private List<String> context;
 
-    private String templateId;
+    private ServiceOffering serviceOffering;
+    @Getter
+    @Setter
+    @Builder
+    public static class ServiceOffering {
+        @JsonProperty("@context")
+        private List<String> context;
 
-    private String privateKeyID;
+        private String type;
 
-    private String legalParticipate;
+        private String id;
 
-    private String type;
+        private String issuer;
 
-    private String id;
+        private String issuanceDate;
 
-    private String issuer;
-
-    private String issuanceDate;
-
-    private Map<String,Object> credentialSubject;
+        private Map<String, Object> credentialSubject;
+    }
 }

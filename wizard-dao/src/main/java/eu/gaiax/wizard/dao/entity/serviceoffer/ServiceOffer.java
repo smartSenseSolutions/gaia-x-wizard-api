@@ -23,12 +23,15 @@ public class ServiceOffer extends SuperEntity {
     private String description;
     @Column(name = "credential_id", insertable = false, updatable = false)
     private UUID credentialId;
-    @OneToOne(fetch = FetchType.LAZY)
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Adjust the cascade type as per your use case
     @JoinColumn(name = "credential_id", nullable = false, referencedColumnName = "id")
     private Credential credential;
+
     @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
-    @OneToOne(fetch = FetchType.LAZY)
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Adjust the cascade type as per your use case
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
     @Column(name = "veracity_data")

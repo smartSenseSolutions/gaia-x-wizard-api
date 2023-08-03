@@ -69,6 +69,8 @@ wizard:
     participant:
     registrationNumber:
     tnc:
+    serviceOffer:
+    ODRLPolicy:
   domain:
 
 spring:

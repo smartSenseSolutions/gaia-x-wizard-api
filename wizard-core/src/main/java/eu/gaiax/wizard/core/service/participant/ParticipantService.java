@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
+import eu.gaiax.wizard.api.client.SignerClient;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -31,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -62,7 +66,13 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final ObjectMapper mapper;
     private final KeycloakService keycloakService;
     private final SpecificationUtil<Participant> specificationUtil;
-
+    private final SignerClient signerClient;
+    private static final List<String> policies = Arrays.asList(
+            "integrityCheck",
+            "holderSignature",
+            "complianceSignature",
+            "complianceCheck"
+    );
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
         EntityTypeMaster entityType = this.entityTypeMasterRepository.findById(UUID.fromString(request.entityType())).orElse(null);
@@ -200,9 +210,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     @SneakyThrows
-    public void validateParticipant(ParticipantValidatorRequest request) {
+    public Participant validateParticipant(ParticipantValidatorRequest request) {
         //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
         //TODO assume that we got the did  from signer tool
+        ParticipantVerifyRequest participantValidatorRequest=new ParticipantVerifyRequest(request.participantJsonUrl(),policies);
+        ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify(participantValidatorRequest);
+        if(!signerResponse.getStatusCode().is2xxSuccessful()){
+            throw new BadDataException();
+        }
         final String did = "did";
         Participant participant = this.participantRepository.getByDid(did);
         if (Objects.isNull(participant)) {
@@ -219,7 +234,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         if (request.store()) {
             this.certificateService.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), null, null, request.privateKey(), null);
         }
+        return participant;
     }
+
 
     public String getEnterpriseFiles(String host, String fileName) throws IOException {
         log.info("getParticipantFile -> Fetch file from host {} and fileName {}", host, fileName);
