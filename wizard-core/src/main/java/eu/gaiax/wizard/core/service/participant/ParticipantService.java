@@ -38,12 +38,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -102,8 +97,8 @@ public class ParticipantService {
         }
     }
 
-    private String formParticipantJsonUrl(String uuid) {
-        return "https://wizard-api.smart-x.smartsenselabs.com/" + uuid + "/participant.json";
+    private String formParticipantJsonUrl(UUID participantId) {
+        return "https://wizard-api.smart-x.smartsenselabs.com/" + participantId.toString() + "/participant.json";
     }
 
     //TODO this method will add the information about the context,T&C vc, type,id,issuerDate,issuer
@@ -122,9 +117,9 @@ public class ParticipantService {
         legalParticipant.put("issuanceDate", issuanceDate);
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
-        participantCredentialSubject.put("id", "#0");
+        participantCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#0");
         participantCredentialSubject.put("type", "gx:LegalParticipant");
-        final String registrationId = "#1";
+        String registrationId = this.formParticipantJsonUrl(participant.getId()) + "#1";
         participantCredentialSubject.put("gx:legalRegistrationNumber", registrationId);
 
         legalParticipant.put("credentialSubject", participantCredentialSubject);
@@ -143,7 +138,8 @@ public class ParticipantService {
         Map<String, Object> tncCredentialSubject = new HashMap<>();
         tncCredentialSubject.put("type", "gx:GaiaXTermsAndConditions");
         tncCredentialSubject.put("@Context", this.contextConfig.tnc());
-        tncCredentialSubject.put("id", "#2");
+        tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
+        //TODO manage the TNC
         tncCredentialSubject.put("gx:termsAndConditions", "The PARTICIPANT signing the Self-Description agrees as follows:\\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\\n\\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).");
 
         tncVc.put("credentialSubject", tncCredentialSubject);
