@@ -1,5 +1,5 @@
 server:
-  port: ${APPLICATION_PORT:8080}
+  port: ${wizard.server.port}
   shutdown: graceful
   compression:
     enabled: true
@@ -44,6 +44,8 @@ wizard:
     tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
     corsOrigins: "*"
+  server:
+    port: 8080
   signer:
     host:
   quartz:

@@ -10,8 +10,8 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -46,7 +46,13 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -68,12 +74,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final KeycloakService keycloakService;
     private final SpecificationUtil<Participant> specificationUtil;
     private final SignerClient signerClient;
-    private static final List<String> policies = Arrays.asList(
-            "integrityCheck",
-            "holderSignature",
-            "complianceSignature",
-            "complianceCheck"
-    );
+    private final ObjectMapper objectMapper;
+    private static final List<String> policies = Arrays.asList("integrityCheck", "holderSignature", "complianceSignature", "complianceCheck");
+
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
         EntityTypeMaster entityType = this.entityTypeMasterRepository.findById(UUID.fromString(request.entityType())).orElse(null);
@@ -83,9 +86,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
         //TODO need to remove particpant creation flow
         if (Objects.isNull(participant)) {
-            participant = this.participantRepository.save(Participant.builder()
-                    .ownDidSolution(false).shortName(request.shortName())
-                    .legalName(request.legalName()).email(email).build());
+            participant = this.participantRepository.save(Participant.builder().ownDidSolution(false).shortName(request.shortName()).legalName(request.legalName()).email(email).build());
         }
 
         Validate.isNull(participant).launch(new ParticipantNotFoundException("participant.not.found"));
@@ -214,17 +215,15 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     public Participant validateParticipant(ParticipantValidatorRequest request) {
         //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
         //TODO assume that we got the did  from signer tool
-        ParticipantVerifyRequest participantValidatorRequest=new ParticipantVerifyRequest(request.participantJsonUrl(),policies);
-        ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify(participantValidatorRequest);
-        if(!signerResponse.getStatusCode().is2xxSuccessful()){
+        ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(request.participantJsonUrl(), policies);
+        ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest);
+        if (!signerResponse.getStatusCode().is2xxSuccessful()) {
             throw new BadDataException();
         }
         final String did = "did";
         Participant participant = this.participantRepository.getByDid(did);
         if (Objects.isNull(participant)) {
-            participant = Participant.builder()
-                    .did(did)
-                    .build();
+            participant = Participant.builder().did(did).build();
         }
         participant = this.participantRepository.save(participant);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
@@ -283,8 +282,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
         Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
-        Validate.isNull(participant).launch("Invalid participant ID");
-        ParticipantConfigDTO participantConfigDTO = new ObjectMapper().convertValue(participant, ParticipantConfigDTO.class);
+        Validate.isNull(participant).launch(new EntityNotFoundException("Invalid participant ID"));
+        ParticipantConfigDTO participantConfigDTO = this.objectMapper.convertValue(participant, ParticipantConfigDTO.class);
 
         Credential credential = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
         if (credential != null) {

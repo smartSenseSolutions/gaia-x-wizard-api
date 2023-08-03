@@ -4,6 +4,7 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
@@ -18,7 +19,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -132,9 +139,17 @@ public class ParticipantResource extends BaseResource {
             summary = "Participant config",
             description = "This endpoint returns participant's general configuration."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Participant config fetched successfully."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access."),
+            @ApiResponse(responseCode = "403", description = "User does not have access to this API."),
+            @ApiResponse(responseCode = "404", description = "Participant not found.")
+    }
+    )
     @GetMapping(PARTICIPANT_CONFIG)
-    public CommonResponse<ParticipantConfigDTO> getConfig(@RequestParam(name = "email") String email) {
-        return CommonResponse.of(this.participantService.getParticipantConfig(email));
+    public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
+        String userId = (String) this.requestForClaim(StringPool.ID, principal);
+        return CommonResponse.of(this.participantService.getParticipantConfig(userId));
     }
 
 }
