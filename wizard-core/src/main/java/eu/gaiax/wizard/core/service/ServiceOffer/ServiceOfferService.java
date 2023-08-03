@@ -82,7 +82,7 @@ public class ServiceOfferService {
         Map<String, Object> response = new HashMap<>();
         validateServiceOfferRequest(request);
         Participant participant;
-        if (request.getParticipantJson() == null) {
+        if (email!=null) {
             participant = participantRepository.getByEmail(email);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJson(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());

@@ -52,11 +52,12 @@ public class ParticipantService {
     private final SignerClient signerClient;
     private final ObjectMapper mapper;
     private static final List<String> policies = Arrays.asList(
-            "integrity Check",
+            "integrityCheck",
             "holderSignature",
-            "compliance Signature",
-            "compliance Check"
+            "complianceSignature",
+            "complianceCheck"
     );
+
     //TODO need to finalize the onboarding request from frontend team
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
