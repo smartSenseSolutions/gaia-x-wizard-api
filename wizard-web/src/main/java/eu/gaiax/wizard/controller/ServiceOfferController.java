@@ -35,11 +35,17 @@ public class ServiceOfferController extends BaseResource {
     public CommonResponse<ServiceOffer> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,"mittal.vaghela+1@smartsensesolutions.com"));
     }
-
+/*    @Tag(name = "Service-Offering")
+    @Operation(summary = "Create Service offering for enterprise, role = enterprise")
+    @PostMapping(path = "/public-api/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<ServiceOffer> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,null));
+    }*/
     @Tag(name = "Resources")
     @Operation(summary = "Create Resource")
     @PostMapping(path = "/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOffer> createResource(@Valid @RequestBody ResourceRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.resourceService.createResource(request,"mittal.vaghela@smartsensesolutions.com"));
     }
+
 }

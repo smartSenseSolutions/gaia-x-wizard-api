@@ -3,9 +3,11 @@ package eu.gaiax.wizard.core.service.participant;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -49,7 +51,12 @@ public class ParticipantService {
     private final Vault vault;
     private final SignerClient signerClient;
     private final ObjectMapper mapper;
-
+    private static final List<String> policies = Arrays.asList(
+            "integrity Check",
+            "holderSignature",
+            "compliance Signature",
+            "compliance Check"
+    );
     //TODO need to finalize the onboarding request from frontend team
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
@@ -195,8 +202,11 @@ public class ParticipantService {
     public Participant validateParticipant(ParticipantValidatorRequest request) {
         //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
         //TODO assume that we got the did  from signer tool
-        ParticipantValidatorRequest participantValidatorRequest=new ParticipantValidatorRequest(request.participantJsonUrl)
-        ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify();
+        ParticipantVerifyRequest participantValidatorRequest=new ParticipantVerifyRequest(request.participantJsonUrl(),policies);
+        ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify(participantValidatorRequest);
+        if(!signerResponse.getStatusCode().is2xxSuccessful()){
+            throw new BadDataException();
+        }
         final String did = "did";
         Participant participant = this.participantRepository.getByDid(did);
         if (Objects.isNull(participant)) {
