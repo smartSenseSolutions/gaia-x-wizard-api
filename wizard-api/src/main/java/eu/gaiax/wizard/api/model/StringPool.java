@@ -66,6 +66,7 @@ public class StringPool {
     public static final String VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
     public static final String USER_REGISTERED = "userRegistered";
+    public static final String ID = "id";
 
     private StringPool() {
     }
