@@ -33,7 +33,8 @@ public class ServiceOfferController extends BaseResource {
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = "/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOffer> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,"mittal.vaghela+1@smartsensesolutions.com"));
+        //todo email changes remaining get from auth
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,request.getEmail()));
     }
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")

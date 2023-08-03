@@ -18,6 +18,7 @@ import java.util.UUID;
 @Setter
 public class CreateServiceOfferingRequest {
     private String name;
+    private String email;
     private UUID id;
     private String description;
     private String privateKey;
