@@ -2,6 +2,7 @@ package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.ServiceOffer.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.ServiceOffer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.ServiceOffer.ResourceRequest;
 import eu.gaiax.wizard.core.service.ServiceOffer.ResourceService;
 import eu.gaiax.wizard.core.service.ServiceOffer.ServiceOfferService;
@@ -49,4 +50,10 @@ public class ServiceOfferController extends BaseResource {
         return CommonResponse.of(this.resourceService.createResource(request,"mittal.vaghela@smartsensesolutions.com"));
     }
 
+    @Tag(name = "Service-Offering")
+    @Operation(summary = "Create ODRLPolicy")
+    @PostMapping(path = "/public-api/policy/ODRL", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest, Principal principal) throws IOException {
+        return CommonResponse.of(this.serviceOfferService.createODRLPolicy(odrlPolicyRequest));
+    }
 }

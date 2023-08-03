@@ -218,7 +218,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         if(!signerResponse.getStatusCode().is2xxSuccessful()){
             throw new BadDataException();
         }
-        final String did = "did";
+        final String did = request.issuer();
         Participant participant = this.participantRepository.getByDid(did);
         if (Objects.isNull(participant)) {
             participant = Participant.builder()

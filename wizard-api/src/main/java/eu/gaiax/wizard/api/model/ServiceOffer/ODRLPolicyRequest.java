@@ -1,0 +1,6 @@
+package eu.gaiax.wizard.api.model.ServiceOffer;
+
+import java.util.List;
+
+public record ODRLPolicyRequest(List<String> rightOperand, String leftOperand, String target, String assigner, String domain, String serviceName) {
+}
