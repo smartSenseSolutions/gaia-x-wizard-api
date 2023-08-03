@@ -1,8 +1,10 @@
 package eu.gaiax.wizard.core.service.ssl;
 
+import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
+import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -28,6 +30,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -54,11 +57,14 @@ public class CertificateService {
     private final ParticipantRepository participantRepository;
     private final ScheduleService scheduleService;
 
-    public void createSSLCertificate(Participant participant, String did, String domain, JobKey jobKey) {
-        File domainChainFile = new File("/tmp/" + domain + "_chain.crt");
-        File csrFile = new File("/tmp/" + domain + ".csr");
-        File keyfile = new File("/tmp/" + domain + ".key");
-        File pkcs8File = new File("/tmp/pkcs8_" + domain + ".key");
+    public void createSSLCertificate(UUID participantId, JobKey jobKey) {
+        Participant participant = this.participantRepository.findById(participantId).orElse(null);
+        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
+
+        File domainChainFile = new File("/tmp/" + participant.getDomain() + "_chain.crt");
+        File csrFile = new File("/tmp/" + participant.getDomain() + ".csr");
+        File keyfile = new File("/tmp/" + participant.getDomain() + ".key");
+        File pkcs8File = new File("/tmp/pkcs8_" + participant.getDomain() + ".key");
 
         try {
 
@@ -77,7 +83,7 @@ public class CertificateService {
             KeyPair domainKeyPair = this.loadOrCreateDomainKeyPair(keyfile);
 
             // Order the certificate
-            Order order = acct.newOrder().domain(domain).create();
+            Order order = acct.newOrder().domain(participant.getDomain()).create();
 
             // Perform all required authorizations
             for (Authorization auth : order.getAuthorizations()) {
@@ -86,7 +92,7 @@ public class CertificateService {
 
             // Generate a CSR for all of the domains, and sign it with the domain key pair.
             CSRBuilder csrb = new CSRBuilder();
-            csrb.addDomain(domain);
+            csrb.addDomain(participant.getDomain());
             csrb.sign(domainKeyPair);
 
 
@@ -150,11 +156,11 @@ public class CertificateService {
             }
 
 
-            log.info("Success! The certificate for domains {} has been generated!", domain);
+            log.info("Success! The certificate for domains {} has been generated!", participant.getDomain());
             log.info("Certificate URL: {}", certificate.getLocation());
 
             //convert private key in pkcs8 format
-            this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), did);
+            this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
             //save files in vault
             this.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
@@ -165,14 +171,14 @@ public class CertificateService {
 
 
             //create Job tp create ingress and tls secret
-            this.scheduleService.createJob(did, StringPool.JOB_TYPE_CREATE_INGRESS, 0);
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_INGRESS, 0);
             if (jobKey != null) {
                 //delete job
                 this.scheduleService.deleteJob(jobKey);
             }
 
         } catch (Exception e) {
-            log.error("Can not create certificate for did ->{}, domain ->{}", did, participant.getDomain(), e);
+            log.error("Can not create certificate for did ->{}, domain ->{}", participant.getDomain(), participant.getDomain(), e);
             participant.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());
         } finally {
             this.participantRepository.save(participant);

@@ -5,19 +5,14 @@
 package eu.gaiax.wizard.config;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.exception.DuplicateEntityException;
-import eu.gaiax.wizard.api.exception.EntityCreationException;
-import eu.gaiax.wizard.api.exception.EntityModificationException;
-import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.exception.*;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.ErrorResponse;
 import eu.gaiax.wizard.api.model.ValidationErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
@@ -44,6 +39,7 @@ import java.util.Map;
  * The type Rest exception handler.
  */
 @RestControllerAdvice
+@Slf4j
 public class RestExceptionHandler {
 
     /**
@@ -56,7 +52,6 @@ public class RestExceptionHandler {
      */
     public static final String ERROR = "error";
     private final MessageSource messageSource;
-    private final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 
     /**
      * Instantiates a new Platform exception handler.
@@ -80,7 +75,7 @@ public class RestExceptionHandler {
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleException(Exception exception, HttpServletRequest request) {
 
         log.error("Internal server error, API={}, Method={}", request.getRequestURI(), request.getMethod(), exception);
-        String message = messageSource.getMessage(INTERNAL_SERVER_ERROR, new Object[]{}, LocaleContextHolder.getLocale());
+        String message = this.messageSource.getMessage(INTERNAL_SERVER_ERROR, new Object[]{}, LocaleContextHolder.getLocale());
 
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR.value()));
@@ -101,7 +96,7 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         String msg;
         try {
-            msg = messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
+            msg = this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             msg = exception.getMessage();
         }
@@ -123,7 +118,7 @@ public class RestExceptionHandler {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception.getMessage());
         String msg;
         try {
-            msg = messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
+            msg = this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             if (exception instanceof HttpMessageNotReadableException) {
                 msg = "Invalid data";
@@ -144,7 +139,7 @@ public class RestExceptionHandler {
      * @return ResponseEntity with error details
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler({EntityNotFoundException.class, AmazonS3Exception.class})
+    @ExceptionHandler({EntityNotFoundException.class, ParticipantNotFoundException.class, AmazonS3Exception.class})
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleNotFound(Exception exception) {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception);
         Map<String, Object> map = new HashMap<>();
@@ -162,7 +157,7 @@ public class RestExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleValidation(MethodArgumentNotValidException exception) {
         List<FieldError> fieldErrors = exception.getBindingResult().getAllErrors().stream().map(FieldError.class::cast).toList();
-        return handleValidationError(fieldErrors);
+        return this.handleValidationError(fieldErrors);
 
     }
 
@@ -191,7 +186,7 @@ public class RestExceptionHandler {
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleValidation(BindException exception) {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception.getMessage());
         List<FieldError> fieldErrors = exception.getBindingResult().getAllErrors().stream().map(FieldError.class::cast).toList();
-        return handleValidationError(fieldErrors);
+        return this.handleValidationError(fieldErrors);
 
     }
 

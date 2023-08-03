@@ -42,17 +42,17 @@ public class ScheduleService {
     /**
      * Create job.
      *
-     * @param did   the did
+     * @param id    the participantId
      * @param type  the type
      * @param count the count
      * @throws SchedulerException the scheduler exception
      */
-    public void createJob(String did, String type, int count) throws SchedulerException {
+    public void createJob(String id, String type, int count) throws SchedulerException {
         JobDetail job = JobBuilder.newJob(ScheduledJobBean.class)
                 .withIdentity(UUID.randomUUID().toString(), type)
                 .storeDurably()
                 .requestRecovery()
-                .usingJobData(StringPool.DID, did)
+                .usingJobData(StringPool.PARTICIPANT_ID, id)
                 .usingJobData(StringPool.JOB_TYPE, type)
                 .build();
 
@@ -63,6 +63,6 @@ public class ScheduleService {
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(count).withIntervalInSeconds(30))
                 .build();
         this.scheduler.scheduleJob(job, activateEnterpriseUserTrigger);
-        LOGGER.debug("{}: job created for enterprise id->{}", type, did);
+        LOGGER.debug("{}: job created for participant with id->{}", type, id);
     }
 }

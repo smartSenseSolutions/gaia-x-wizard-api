@@ -11,29 +11,19 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * The type Create service offering request.
+ * The type
+ * vice offering request.
  */
 @Getter
 @Setter
 public class CreateServiceOfferingRequest {
-
     private String name;
-
+    private String email;
     private UUID id;
-
     private String description;
-
     private String privateKey;
-
-/*    private String policy;
-
-    private String accessType;
-
-    private String requestType;
-
-    private String formatType;
-
-    private String terms;*/
-
+    private String participantJson;
+    private String verificationMethod;
+    private boolean storeVault=false;
     private Map<String, Object> credentialSubject;
 }

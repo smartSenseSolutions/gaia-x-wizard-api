@@ -18,26 +18,24 @@ import eu.gaiax.wizard.dao.entity.ServiceOfferView;*/
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
-@RequiredArgsConstructor
-public class GaiaXController extends BaseResource {
-
-   /* private final RegistrationService registrationService;
+public class GaiaXController extends BaseResource{
+/*
+   *//* private final RegistrationService registrationService;
 
     private final DomainService domainService;
 
-    private final CertificateService certificateService;*/
+    private final CertificateService certificateService;*//*
 
     private final K8SService k8SService;
 
-/*
+*//*
     private final EnterpriseService enterpriseService;
-*/
+*//*
 
     private final SignerService signerService;
 
     private final CredentialService credentialService;
-/*
+*//*
     @Operation(summary = "Get .well-known files, this is public API")
     @GetMapping(path = GET_ENTERPRISE_FILES)
     @Tag(name = "Well-known")
@@ -192,5 +190,5 @@ public class GaiaXController extends BaseResource {
     @GetMapping(path = EXPORT_KEYS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> exportKeys(Principal principal) {
         return CommonResponse.of(this.enterpriseService.exportKeys(this.getEnterpriseId(principal)));
-    }*/
+    }*//**/
 }

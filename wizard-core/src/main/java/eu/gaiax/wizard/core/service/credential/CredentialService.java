@@ -70,11 +70,6 @@ public class CredentialService {
                 .participant(participant)
                 .build());
     }
-
-    public Credential getByParticipantId(UUID participantId) {
-        return this.credentialRepository.findByParticipantId(participantId);
-    }
-
     public Credential getByParticipantWithCredentialType(UUID participantId, String credentialType) {
         return this.credentialRepository.findByParticipantIdAndCredentialType(participantId, credentialType);
     }

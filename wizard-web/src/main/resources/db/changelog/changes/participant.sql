@@ -28,3 +28,9 @@ CREATE TABLE credential (
     updated_at timestamp(6) NULL,
     CONSTRAINT fk_participant_id FOREIGN KEY (participant_id) REFERENCES participant(id)
 );
+
+--changeset Dilip:2
+ALTER TABLE participant ALTER COLUMN did DROP NOT NULL;
+
+--changeset Dilip:3
+ALTER TABLE credential ALTER COLUMN "type" TYPE varchar(100) USING "type"::varchar;
