@@ -36,7 +36,7 @@ wizard:
     webAuthRedirectUrl:
     actionTokenLifespan:
   security:
-    enabled: false
+    enabled: true
     realm: Gaia-x
     clientId: pr-gaia-x-wizard
     auth-server-url: http://localhost:8080
@@ -60,8 +60,8 @@ wizard:
     port:
     scheme:
     authentication:
-    roleId:
-    secretId:
+    role-id:
+    secret-id:
     secret-path:
   gaia-x:
     registryService: https://registry.gaia-x.eu/v1
@@ -71,6 +71,7 @@ wizard:
     tnc:
     serviceOffer:
     ODRLPolicy:
+  domain:
 
 spring:
   liquibase:
@@ -120,8 +121,8 @@ spring:
       scheme: ${wizard.vault.scheme}
       authentication: ${wizard.vault.authentication}
       app-role:
-        roleId: ${wizard.vault.roleId}
-        secretId: ${wizard.vault.secretId}
+        roleId: ${wizard.vault.role-id}
+        secretId: ${wizard.vault.secret-id}
 
   jpa:
     show-sql: false

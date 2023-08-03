@@ -34,21 +34,21 @@ public class KeycloakService {
 
     protected Keycloak getKeycloak() {
         return KeycloakBuilder.builder()
-            .clientId(keycloakSettings.clientId())
-            .clientSecret(keycloakSettings.clientSecret())
-            .realm(keycloakSettings.realm())
-            .serverUrl(keycloakSettings.authServer())
-          .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
-          .build();
+                .clientId(this.keycloakSettings.clientId())
+                .clientSecret(this.keycloakSettings.clientSecret())
+                .realm(this.keycloakSettings.realm())
+                .serverUrl(this.keycloakSettings.authServer())
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
+                .build();
     }
 
     protected RealmResource getRealmResource() {
-        Keycloak keycloak = getKeycloak();
-        return keycloak.realm(keycloakSettings.realm());
+        Keycloak keycloak = this.getKeycloak();
+        return keycloak.realm(this.keycloakSettings.realm());
     }
 
-    public void addUser(String legalName, String email, Long enterpriseId) {
-        if (getKeycloakUserByEmail(email) != null) {
+    public void addUser(String id, String legalName, String email, String role) {
+        if (this.getKeycloakUserByEmail(email) != null) {
             return;
         }
 
@@ -57,11 +57,12 @@ public class KeycloakService {
         userRepresentation.setEmail(email);
         userRepresentation.setFirstName(legalName);
 
-        Map<String, List<String>> customAttributesMap = new HashMap<>();
-        customAttributesMap.put(StringPool.ENTERPRISE_ID, Collections.singletonList(String.valueOf(enterpriseId)));
-        userRepresentation.setAttributes(customAttributesMap);
+        Map<String, List<String>> userAttributes = new HashMap<>();
+        userAttributes.put(StringPool.ID, Collections.singletonList(id));
+        userAttributes.put(StringPool.ROLE, Collections.singletonList(role));
+        userRepresentation.setAttributes(userAttributes);
 
-        RealmResource realmResource = getRealmResource();
+        RealmResource realmResource = this.getRealmResource();
         UsersResource usersResource = realmResource.users();
 
         Response response = usersResource.create(userRepresentation);
@@ -72,15 +73,15 @@ public class KeycloakService {
     }
 
     public void sendRequiredActionsEmail(String email) {
-        UserRepresentation userRepresentation = getKeycloakUserByEmail(email);
-        UserResource userResource = getRealmResource().users().get(userRepresentation.getId());
-        userResource.executeActionsEmail(List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()), keycloakSettings.actionTokenLifespan());
+        UserRepresentation userRepresentation = this.getKeycloakUserByEmail(email);
+        UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
+        userResource.executeActionsEmail(List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()), this.keycloakSettings.actionTokenLifespan());
     }
 
     public UserRepresentation getKeycloakUserByEmail(String email) {
         LOGGER.debug("getKeycloakUserByEmail: email={}", email);
 
-        RealmResource realmResource = getRealmResource();
+        RealmResource realmResource = this.getRealmResource();
         UsersResource usersResource = realmResource.users();
         List<UserRepresentation> users = usersResource.search(email);
         if (CollectionUtils.isEmpty(users)) {
@@ -125,4 +126,5 @@ public class KeycloakService {
 
     }
      */
+
 }

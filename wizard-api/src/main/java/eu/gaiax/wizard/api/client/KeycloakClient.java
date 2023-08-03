@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(value = "KeycloakClient", url = "${wizard.keycloak.authServer}")
+@FeignClient(value = "KeycloakClient", url = "${wizard.keycloak.auth-server}")
 public interface KeycloakClient {
 
     @PostMapping(path = "realms/{realm}/action-token/webauthn-actions-token", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

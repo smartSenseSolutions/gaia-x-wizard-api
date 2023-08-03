@@ -38,7 +38,11 @@ public class StringPool {
      * The constant ENTERPRISE_ID.
      */
     public static final String ENTERPRISE_ID = "enterpriseId";
+    /**
+     * The constant DID.
+     */
     public static final String DID = "did";
+    public static final String PARTICIPANT_ID = "id";
     /**
      * The constant JOB_TYPE.
      */
@@ -47,6 +51,10 @@ public class StringPool {
      * The constant ROLE.
      */
     public static final String ROLE = "role";
+    /**
+     * The constant ID.
+     */
+    public static final String ID = "id";
     /**
      * The constant EMAIL.
      */
@@ -62,9 +70,20 @@ public class StringPool {
      */
     public static final String TERMS_AND_CONDITIONS_HASH = "hash_value"; //pragma: allowlist secret
 
+    /**
+     * The constant REQUIRED_ACTIONS_PATH.
+     */
     public static final String REQUIRED_ACTIONS_PATH = "/login-actions/action-token?key=";
 
-    public static final String VERIFIABLE_CREDENTIAL="VerifiableCredential";
+    /**
+     * The constant VERIFIABLE_CREDENTIAL.
+     */
+    public static final String VERIFIABLE_CREDENTIAL = "VerifiableCredential";
+
+    /**
+     * The constant USER_REGISTERED.
+     */
+    public static final String USER_REGISTERED = "userRegistered";
 
     private StringPool() {
     }
