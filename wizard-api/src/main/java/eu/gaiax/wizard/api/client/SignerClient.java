@@ -23,7 +23,7 @@ public interface SignerClient {
     @PostMapping(path = "createWebDID", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createDid(@RequestBody CreateDidRequest createDidRequest);
 
-    @PostMapping(path = "/v1/LegalParticipantOnGaiaX", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/v1/gaia-x/legal-participant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createVc(@RequestBody CreateVCRequest request);
 
 

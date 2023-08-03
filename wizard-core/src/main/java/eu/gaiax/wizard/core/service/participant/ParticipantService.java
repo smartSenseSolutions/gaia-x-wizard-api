@@ -7,6 +7,7 @@ import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
+import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -24,11 +25,16 @@ import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -44,6 +50,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ParticipantService {
 
+    @Value("${wizard.domain}")
+    private String domain;
     private final ContextConfig contextConfig;
     private final ParticipantRepository participantRepository;
     private final EntityTypeMasterRepository entityTypeMasterRepository;
@@ -51,45 +59,36 @@ public class ParticipantService {
     private final DomainService domainService;
     private final CertificateService certificateService;
     private final CredentialService credentialService;
+    private final S3Utils s3Utils;
     private final Vault vault;
     private final ObjectMapper mapper;
     private final KeycloakService keycloakService;
 
-    //TODO need to finalize the onboarding request from frontend team
     @SneakyThrows
     public void onboardParticipant(ParticipantOnboardRequest request, String email) {
         EntityTypeMaster entityType = this.entityTypeMasterRepository.findById(UUID.fromString(request.entityType())).orElse(null);
         Validate.isNull(entityType).launch("invalid.entity.type");
         this.validateOnboardRequest(request);
         Participant participant = this.participantRepository.getByEmail(email);
+
         //TODO need to remove particpant creation flow
         if (Objects.isNull(participant)) {
             participant = this.participantRepository.save(Participant.builder()
                     .ownDidSolution(false).shortName(request.shortName())
-                    .legalName(request.legalName()).did("did:web:hella.proofsense.in").email(email).build());
+                    .legalName(request.legalName()).email(email).build());
         }
 
         Validate.isNull(participant).launch(new ParticipantNotFoundException("participant.not.found"));
-        //TODO needs to validate participant details
         Credential credentials = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
         Validate.isNotNull(credentials).launch("already.legal.participant");
-
-        //TODO need to update credential based on the final request --> https://jsonblob.com/1133307139513925632
-        //TODO add context in credential
-        //TODO add type in credential
-        participant.setDid("did:web:hella.proofsense.in");
+        participant.setDid(request.issuerDid());
         participant.setLegalName(request.legalName());
         participant.setShortName(request.shortName());
-        participant.setDomain(request.shortName() + ".smart-x.smartsenselabs.com");
+        participant.setDomain(request.shortName() + "." + this.domain);
         participant.setOwnDidSolution(request.ownDid());
         this.prepareCredential(request.credential(), participant);
         participant.setCredential(this.mapper.writeValueAsString(request.credential()));
         participant = this.participantRepository.save(participant);
-        //TODO Generate VC for Registration number
-        //TODO create VC for T&C
-        //TODO create participant Json
-        //TODO need to update the vault path for private key
-        //TODO need to save the json on credential table
         //Below method call will schedule the job for upcoming operation.
         //If user having own did solution then for those user we will create participant json directly else
         //we create the Subdomain, certificate, ingress and DID and participant json.
@@ -101,6 +100,10 @@ public class ParticipantService {
         if (request.store()) {
             this.certificateService.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), null, null, request.privateKey(), null);
         }
+    }
+
+    private String formParticipantJsonUrl(UUID participantId) {
+        return "https://wizard-api.smart-x.smartsenselabs.com/" + participantId.toString() + "/participant.json";
     }
 
     //TODO this method will add the information about the context,T&C vc, type,id,issuerDate,issuer
@@ -119,9 +122,9 @@ public class ParticipantService {
         legalParticipant.put("issuanceDate", issuanceDate);
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
-        participantCredentialSubject.put("id", "#0");
+        participantCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#0");
         participantCredentialSubject.put("type", "gx:LegalParticipant");
-        final String registrationId = "#1";
+        String registrationId = this.formParticipantJsonUrl(participant.getId()) + "#1";
         participantCredentialSubject.put("gx:legalRegistrationNumber", registrationId);
 
         legalParticipant.put("credentialSubject", participantCredentialSubject);
@@ -140,7 +143,8 @@ public class ParticipantService {
         Map<String, Object> tncCredentialSubject = new HashMap<>();
         tncCredentialSubject.put("type", "gx:GaiaXTermsAndConditions");
         tncCredentialSubject.put("@Context", this.contextConfig.tnc());
-        tncCredentialSubject.put("id", "#2");
+        tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
+        //TODO manage the TNC
         tncCredentialSubject.put("gx:termsAndConditions", "The PARTICIPANT signing the Self-Description agrees as follows:\\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\\n\\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).");
 
         tncVc.put("credentialSubject", tncCredentialSubject);
@@ -218,11 +222,14 @@ public class ParticipantService {
         }
     }
 
-    public String getParticipantFile(String host, String fileName) {
+    public String getEnterpriseFiles(String host, String fileName) throws IOException {
         log.info("getParticipantFile -> Fetch file from host {} and fileName {}", host, fileName);
         Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
         Participant participant = this.participantRepository.getByDomain(host);
         Validate.isNull(participant).launch("Can not find subdomain -> " + host);
+        if (fileName.equals("did.json")) {
+            return this.getLegalParticipantJson(participant.getId().toString(), fileName);
+        }
         Map<String, Object> certificates = this.vault.get(participant.getId().toString());
         Object certificate = certificates.get(fileName);
         Validate.isNull(certificate).launch("Can not find subdomain -> " + host);
@@ -232,4 +239,13 @@ public class ParticipantService {
     public Map<String, Object> checkIfParticipantRegistered(String email) {
         return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
     }
+
+    public String getLegalParticipantJson(String participantId, String filename) throws IOException {
+        log.info("getParticipantFile -> Fetch file from participantId {} and fileName {}", participantId, filename);
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+        Validate.isNull(participant).launch("Can not find participant -> " + participantId);
+        File file = this.s3Utils.getObject(participantId + "/" + filename, filename);
+        return FileUtils.readFileToString(file, Charset.defaultCharset());
+    }
+
 }
