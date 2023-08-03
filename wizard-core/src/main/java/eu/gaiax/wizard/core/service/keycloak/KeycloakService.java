@@ -47,6 +47,10 @@ public class KeycloakService {
         return keycloak.realm(this.keycloakSettings.realm());
     }
 
+    public void createParticipantUser(String id, String legalName, String email) {
+        this.addUser(id, legalName, email, "Participant");
+    }
+
     public void addUser(String id, String legalName, String email, String role) {
         if (this.getKeycloakUserByEmail(email) != null) {
             return;

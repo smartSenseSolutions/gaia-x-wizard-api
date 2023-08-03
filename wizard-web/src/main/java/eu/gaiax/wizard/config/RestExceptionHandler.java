@@ -139,7 +139,7 @@ public class RestExceptionHandler {
      * @return ResponseEntity with error details
      */
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler({EntityNotFoundException.class, ParticipantNotFoundException.class, AmazonS3Exception.class})
+    @ExceptionHandler({EntityNotFoundException.class, AmazonS3Exception.class})
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleNotFound(Exception exception) {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception);
         Map<String, Object> map = new HashMap<>();
