@@ -7,13 +7,12 @@ package eu.gaiax.wizard.core.service.signer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.client.SignerClient;
-import eu.gaiax.wizard.api.model.CreateDidRequest;
-import eu.gaiax.wizard.api.model.CreateVCRequest;
-import eu.gaiax.wizard.api.model.RegistrationStatus;
-import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
@@ -29,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * The type Signer service.
@@ -47,13 +47,18 @@ public class SignerService {
     private final Vault vault;
     private final ContextConfig contextConfig;
 
+    public void createParticipantJson(UUID participantId) {
+        Participant participant = this.participantRepository.findById(participantId).orElse(null);
+        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
+        this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
+    }
 
     public void createParticipantJson(Participant participant, String key, boolean ownDid) {
         File file = new File("/tmp/participant.json");
         try {
             String privateKey = key;
             if (!ownDid) {
-                privateKey = (String) this.vault.get(key).get(participant.getDomain() + ".key");
+                privateKey = (String) this.vault.get(key).get("pkcs8_" + participant.getDomain() + ".key");
             }
             TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
             };
@@ -62,11 +67,12 @@ public class SignerService {
             CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), participant.getDid(), participant.getDid(), credentials);
             log.info("Participant Json ::-->> {}", this.objectMapper.writeValueAsString(request));
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
-            String participantString = this.objectMapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("verifiableCredential"));
+            String participantString = this.objectMapper.writeValueAsString(responseEntity.getBody().get("data"));
+            log.info("Participant Json Details {}", participantString);
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
-            this.credentialService.createCredential(participantString, hostedPath, "Participant", null, participant);
+            this.credentialService.createCredential(participantString, hostedPath, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
             log.debug("participant json created for enterprise->{} , json ->{}", participant.getId(), participantString);
         } catch (Exception e) {
@@ -78,8 +84,10 @@ public class SignerService {
         }
     }
 
-    public void createDid(Participant participant) {
+    public void createDid(UUID participantId) {
         File file = new File("/tmp/did.json");
+        Participant participant = this.participantRepository.findById(participantId).orElse(null);
+        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
         try {
             String domain = participant.getDomain();
             CreateDidRequest createDidRequest = new CreateDidRequest(domain);
@@ -102,7 +110,7 @@ public class SignerService {
 
     private void createParticipantCreationJob(Participant participant) {
         try {
-            this.scheduleService.createJob(participant.getDid(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
         } catch (Exception e) {
             log.error("Can not create participant job for enterprise -{}", participant.getDid(), e);

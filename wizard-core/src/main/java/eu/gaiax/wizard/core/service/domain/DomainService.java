@@ -6,9 +6,11 @@ package eu.gaiax.wizard.core.service.domain;
 
 import com.amazonaws.services.route53.AmazonRoute53;
 import com.amazonaws.services.route53.model.*;
+import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
+import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -18,6 +20,7 @@ import org.quartz.SchedulerException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +96,9 @@ public class DomainService {
         log.info("TXT record created -> {} ", domainName);
     }
 
-    public void createSubDomain(Participant participant) {
+    public void createSubDomain(UUID participantId) {
+        Participant participant = this.participantRepository.findById(participantId).orElse(null);
+        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
         try {
             String domainName = participant.getDomain();
             ResourceRecord resourceRecord = new ResourceRecord();
@@ -129,7 +134,7 @@ public class DomainService {
 
     private void createCertificateCreationJob(Participant participant) {
         try {
-            this.scheduleService.createJob(participant.getDid(), StringPool.JOB_TYPE_CREATE_CERTIFICATE, 0); //try for 3 time for certificate
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_CERTIFICATE, 0); //try for 3 time for certificate
         } catch (SchedulerException e) {
             log.error("Can not create certificate creation job for enterprise->{}", participant.getDid(), e);
             participant.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());

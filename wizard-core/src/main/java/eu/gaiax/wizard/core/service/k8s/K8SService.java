@@ -4,10 +4,12 @@
 
 package eu.gaiax.wizard.core.service.k8s;
 
+import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.K8SSettings;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -43,7 +46,9 @@ public class K8SService {
     private final ScheduleService scheduleService;
 
 
-    public void createIngress(Participant participant) {
+    public void createIngress(UUID participantId) {
+        Participant participant = this.participantRepository.findById(participantId).orElse(null);
+        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
         try {
             Map<String, Object> certificates = this.vault.get(participant.getId().toString());
             //Step 1: create secret using SSL certificate
@@ -144,7 +149,7 @@ public class K8SService {
 
     private void createDidCreationJob(Participant participant) {
         try {
-            this.scheduleService.createJob(participant.getDid(), StringPool.JOB_TYPE_CREATE_DID, 0);
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_DID, 0);
         } catch (SchedulerException e) {
             log.error("Can not create did creation job for enterprise->{}", participant.getDid(), e);
             participant.setStatus(RegistrationStatus.DID_JSON_CREATION_FAILED.getStatus());

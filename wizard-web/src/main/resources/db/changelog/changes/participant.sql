@@ -31,3 +31,6 @@ CREATE TABLE credential (
 
 --changeset Dilip:2
 ALTER TABLE participant ALTER COLUMN did DROP NOT NULL;
+
+--changeset Dilip:3
+ALTER TABLE credential ALTER COLUMN "type" TYPE varchar(100) USING "type"::varchar;
