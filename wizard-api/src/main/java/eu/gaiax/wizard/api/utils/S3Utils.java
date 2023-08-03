@@ -43,6 +43,7 @@ public class S3Utils {
         long expTimeMillis = expiration.getTime();
         expTimeMillis += 10000; // 10 seconds
         expiration.setTime(expTimeMillis);
+
         return this.s3Client.generatePresignedUrl(this.awsSettings.bucket(), objectName, expiration).toString();
     }
 
