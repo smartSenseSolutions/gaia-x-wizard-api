@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.controller;
 
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
@@ -164,6 +165,8 @@ public class ParticipantResource extends BaseResource {
     @GetMapping(PARTICIPANT_CONFIG)
     public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
         String userId = (String) this.requestForClaim(StringPool.ID, principal);
+        Validate.isNull(userId).launch(new BadDataException("User ID not present in token"));
+
         return CommonResponse.of(this.participantService.getParticipantConfig(userId));
     }
 
