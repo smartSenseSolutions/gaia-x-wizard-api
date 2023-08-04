@@ -20,9 +20,10 @@ public class CreateServiceOfferingRequest {
     private String name;
     private String email;
     private UUID id;
+    private String issuer;
     private String description;
     private String privateKey;
-    private String participantJson;
+    private String participantJsonUrl;
     private String verificationMethod;
     private boolean storeVault=false;
     private Map<String, Object> credentialSubject;

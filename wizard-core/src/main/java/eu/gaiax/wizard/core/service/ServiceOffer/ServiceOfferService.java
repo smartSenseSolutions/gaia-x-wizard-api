@@ -1,15 +1,19 @@
 package eu.gaiax.wizard.core.service.ServiceOffer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
-import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ServiceOffer.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.ServiceOffer.ODRLPolicyRequest;
+import eu.gaiax.wizard.api.model.ServiceOffer.ServiceOfferResponse;
 import eu.gaiax.wizard.api.model.ServiceOffer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
+import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.CommonService;
@@ -27,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -55,10 +60,15 @@ public class ServiceOfferService {
     private final CommonService commonService;
     private final HashingService hashingService;
     private final S3Utils s3Utils;
-    private final String HOST_DOMAIN = "https://wizard-api.smart-x.smartsenselabs.com/.well-known";
+    @Value("${wizard.domain}")
+    private String domain;
+    @Value("${wizard.host.wizard}")
+    private String wizardHost;
+    @Value("${wizard.gaiax.tnc}")
+    private String tnc;
 
     @NotNull
-    private static List<Map<String, Object>> getMaps(List<String> country, String target, String assigner) {
+    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permission = new ArrayList<>();
         Map<String, Object> perMap = new HashMap<>();
         perMap.put("target", target);
@@ -66,10 +76,10 @@ public class ServiceOfferService {
         perMap.put("action", "view");
         List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("leftOperand", "verifiableCredential.credentialSubject.legalAddress.country");
+        constraintMap.put("leftOperand", leftOperand);
         constraintMap.put("operator", "isAnyOf");
         Map<String, Object> values = new HashMap<>();
-        values.put("values", country);
+        values.put("values", rightOperand);
         constraintMap.put("rightOperand", values);
         constraint.add(constraintMap);
         perMap.put("constraint", constraint);
@@ -78,44 +88,47 @@ public class ServiceOfferService {
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public ServiceOffer createServiceOffering(CreateServiceOfferingRequest request, String email) throws IOException {
+    public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String email) throws IOException {
         Map<String, Object> response = new HashMap<>();
-        this.validateServiceOfferRequest(request);
+        validateServiceOfferRequest(request);
         Participant participant;
         if (email != null) {
-            participant = this.participantRepository.getByEmail(email);
+            participant = participantRepository.getByEmail(email);
         } else {
-            //TODO needs to add DID
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJson(), request.getVerificationMethod(), request.getPrivateKey(), null, request.isStoreVault());
-            participant = this.participantService.validateParticipant(participantValidatorRequest);
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
+            participant = participantService.validateParticipant(participantValidatorRequest);
         }
 
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
 
-        List<ServiceOffer> serviceOffers = this.serviceOfferRepository.findByName(request.getName());
-        String serviceName = (serviceOffers.size() > 0 ? request.getName() + this.getRandomString() : request.getName());
+        List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
+        String serviceName = (serviceOffers.size() > 0 ? request.getName() + getRandomString() : request.getName());
 
-        String policyId = participant.getId() + "/" + serviceName + "/ODRLPolicy";
+        String policyId = participant.getId() + "/" + serviceName + "_policy";
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
-
-        String hostPolicyJson = this.createOrdrlPolicy(request, participant.getDid(), participant.getDid(), policyId);
-        if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
-            String policyUrl = this.hostODRLPolicy(hostPolicyJson, policyId, "ODRLPolicy#1");
-            if (credentialSubject.containsKey("gx:policy")) {
-                credentialSubject.put("gx:policy", this.HOST_DOMAIN + "/" + policyId + ".json");
+        if (request.getCredentialSubject().containsKey("gx:policy")) {
+            Map<String, List<String>> policy = objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
+            List<String> country = policy.get("gx:location");
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), participant.getDomain(), serviceName);
+            String hostPolicyJson = createODRLPolicy(odrlPolicyRequest);
+            if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
+                String policyUrl = this.wizardHost + policyId + ".json";
+                hostODRLPolicy(hostPolicyJson, policyId);
+                if (credentialSubject.containsKey("gx:policy")) {
+                    credentialSubject.put("gx:policy", policyUrl);
+                }
+                credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
             }
-            this.credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
         }
-        this.createTermsConditionHash(credentialSubject);
+        createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
-        String responseData = this.singService(participant, request, serviceName);
-        String hostUrl = this.hostServiceOffer(responseData, participant.getId(), serviceName);
+        String responseData = singService(participant, request, serviceName);
+        String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
-/*
-            String hostUrl="https://wizard-api.smart-x.smartsenselabs.com/d002ab48-64d6-41bc-83cd-87b43bebc6b6/Test/serv1";
-*/
-        Credential serviceOffVc = this.credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+        hostServiceOffer(responseData, participant.getId(), serviceName);
+
+        Credential serviceOffVc = credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         ServiceOffer serviceOffer = ServiceOffer.builder()
                 .name(request.getName())
                 .participant(participant)
@@ -125,48 +138,50 @@ public class ServiceOfferService {
         if (response.containsKey("veracityData")) {
             serviceOffer.setVeracityData(response.get("veracityData").toString());
         }
-        serviceOffer = this.serviceOfferRepository.save(serviceOffer);
-        return serviceOffer;
+        serviceOffer = serviceOfferRepository.save(serviceOffer);
+        TypeReference<List<Map<Object, Object>>> typeReference = new TypeReference<>() {
+        };
+        objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        List<Map<Object, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
+        ServiceOfferResponse serviceOfferResponse = ServiceOfferResponse.builder()
+                .vcUrl(serviceOffer.getCredential().getVcUrl())
+                .name(serviceOffer.getName())
+                .veracityData(serviceOffer.getVeracityData())
+                .vcJson(vc)
+                .description(serviceOffer.getDescription())
+                .build();
+        return serviceOfferResponse;
 
     }
 
     private String getRandomString() {
-        final String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
-        // Create a Random object
+        String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
-
-        // Generate a random 4-character string
         StringBuilder randomString = new StringBuilder(4);
         for (int i = 0; i < 4; i++) {
             int randomIndex = random.nextInt(possibleCharacters.length());
             char randomChar = possibleCharacters.charAt(randomIndex);
             randomString.append(randomChar);
         }
-        System.out.println(randomString.toString());
         return randomString.toString();
     }
 
 
-    private String createOrdrlPolicy(CreateServiceOfferingRequest request, String target, String assigner, String policyId) throws JsonProcessingException {
-        if (request.getCredentialSubject().containsKey("gx:policy")) {
-            Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
-            List<String> country = policy.get("gx:location");
-            Map<String, Object> ODRLPolicy = new HashMap<>();
-            //Add @context in the credential
-            ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
-            ODRLPolicy.put("type", "policy");
-            ODRLPolicy.put("id", this.HOST_DOMAIN + "/" + policyId);
-            List<Map<String, Object>> permission = getMaps(country, target, assigner);
-            ODRLPolicy.put("permission", permission);
-            return this.objectMapper.writeValueAsString(ODRLPolicy);
-        }
-        return null;
+    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest) throws IOException {
+        Map<String, Object> ODRLPolicy = new HashMap<>();
+        ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
+        ODRLPolicy.put("type", "policy");
+        ODRLPolicy.put("id", wizardHost + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "/" + "odrlPolicy.json");
+        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
+        ODRLPolicy.put("permission", permission);
+        String hostPolicyJson = objectMapper.writeValueAsString(ODRLPolicy);
+        return hostPolicyJson;
     }
+
 
     private void createTermsConditionHash(Map<String, Object> credentialSubject) throws IOException {
         if (credentialSubject.containsKey("gx:termsAndConditions")) {
-            Map<String, Object> termsAndConditions = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
+            Map<String, Object> termsAndConditions = objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
             if (termsAndConditions.containsKey("gx:URL")) {
                 String content = HashingService.fetchJsonContent(termsAndConditions.get("gx:URL").toString());
                 termsAndConditions.put("gx:hash", HashingService.generateSha256Hash(content));
@@ -175,35 +190,45 @@ public class ServiceOfferService {
         }
     }
 
-    private String hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName) throws IOException {
+    private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName){
         File file = new File("/tmp/" + serviceName + ".json");
-        FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
-        String hostedPath = id + "/" + serviceName + ".json";
-        this.s3Utils.uploadFile(hostedPath, file);
-        return this.s3Utils.getPreSignedUrl(serviceName + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
+            String hostedPath = id + "/" + serviceName + ".json";
+            this.s3Utils.uploadFile(hostedPath, file);
+        } catch (Exception e) {
+            LOGGER.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
-    private String hostODRLPolicy(String hostPolicyJson, String hostedPath, String policyName) throws IOException {
-        File file = new File("/tmp/" + policyName + ".json");
-        FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-        this.s3Utils.uploadFile(hostedPath + ".json", file);
-        return this.s3Utils.getPreSignedUrl(policyName + ".json");
+    private void hostODRLPolicy(String hostPolicyJson, String hostedPath) {
+        File file = new File("/tmp/" + hostedPath + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
+            this.s3Utils.uploadFile(hostedPath + ".json", file);
+        } catch (Exception e) {
+            LOGGER.error("Error while hosting service offer json for participant:{}", hostedPath, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
     private String singService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
-        Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-        String id = this.HOST_DOMAIN + "/" + participant.getId() + "/" + serviceName + ".json";
+        Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put("id", "https://greenworld.proofsense.in/.well-known/participant.json");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         VerifiableCredential verifiableCredential = VerifiableCredential.builder()
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
-                        .context(this.contextConfig.serviceOffer())
+                        .context(contextConfig.serviceOffer())
                         .type(StringPool.VERIFIABLE_CREDENTIAL)
                         .id(participant.getDid())
                         .issuer(participant.getDid())
-                        .issuanceDate(this.commonService.getCurrentFormattedDate())
+                        .issuanceDate(commonService.getCurrentFormattedDate())
                         .credentialSubject(request.getCredentialSubject())
                         .build()).build();
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
@@ -216,8 +241,8 @@ public class ServiceOfferService {
                 .vcs(verifiableCredential)
                 .build();
         try {
-            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
-            String serviceOfferingString = this.objectMapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            ResponseEntity<Map<String, Object>> signerResponse = signerClient.createServiceOfferVc(signerServiceRequest);
+            String serviceOfferingString = objectMapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
             LOGGER.debug("Send request to signer for service create vc");
             return serviceOfferingString;
         } catch (Exception e) {

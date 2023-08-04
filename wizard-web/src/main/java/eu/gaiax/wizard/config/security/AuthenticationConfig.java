@@ -38,6 +38,7 @@ public class AuthenticationConfig {
                         .requestMatchers("/", "/docs/api-docs/**", "/ui/swagger-ui/**", "/actuator/health/**", "/error").permitAll()
                         .requestMatchers("/ingress/**").permitAll().requestMatchers("/did/**").permitAll()
                         .requestMatchers("/certificate/**").permitAll().requestMatchers("/.well-known/**").permitAll()
+                        .requestMatchers("/gaiax/public/**").permitAll()
                         .requestMatchers(CHECK_REGISTRATION, REGISTER).permitAll().requestMatchers(SEND_REQUIRED_ACTIONS_EMAIL).permitAll()
                         .requestMatchers(CREATE_PARTICIPANT_JSON).permitAll()
                         .requestMatchers(CREATE_SUBDOMAIN).permitAll()
