@@ -104,16 +104,16 @@ public class ServiceOfferService {
         List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
         String serviceName = (serviceOffers.size() > 0 ? request.getName() + getRandomString() : request.getName());
 
-        String policyId = participant.getId() + "/" + serviceName + "_policy";
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
+            String policyId = participant.getId() + "/" + serviceName + "_policy";
+            String policyUrl = this.wizardHost + policyId + ".json";
             Map<String, List<String>> policy = objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), participant.getDomain(), serviceName);
-            String hostPolicyJson = createODRLPolicy(odrlPolicyRequest);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(),wizardHost, serviceName);
+            String hostPolicyJson = createODRLPolicy(odrlPolicyRequest,policyUrl);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
-                String policyUrl = this.wizardHost + policyId + ".json";
                 hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
                     credentialSubject.put("gx:policy", policyUrl);
@@ -167,11 +167,14 @@ public class ServiceOfferService {
     }
 
 
-    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest) throws IOException {
+    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest,String hostUrl) throws IOException {
         Map<String, Object> ODRLPolicy = new HashMap<>();
         ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
         ODRLPolicy.put("type", "policy");
-        ODRLPolicy.put("id", wizardHost + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "/" + "odrlPolicy.json");
+        if(hostUrl==null){
+            hostUrl=odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() +"_policy.json";
+        }
+        ODRLPolicy.put("id",hostUrl);
         List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
         ODRLPolicy.put("permission", permission);
         String hostPolicyJson = objectMapper.writeValueAsString(ODRLPolicy);
