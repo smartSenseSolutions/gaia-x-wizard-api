@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -58,8 +59,9 @@ public class SignerService {
         try {
             String privateKey = key;
             if (!ownDid) {
-                log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) needs to resolve from vault with key {}", key);
                 privateKey = (String) this.vault.get(key).get("pkcs8.key");
+                Validate.isFalse(StringUtils.hasText(privateKey)).launch(new EntityNotFoundException("keys.not.found"));
+                log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from vault with key {}", key);
             }
             TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
             };

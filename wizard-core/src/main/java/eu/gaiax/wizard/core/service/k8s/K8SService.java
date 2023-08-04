@@ -8,7 +8,6 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.K8SSettings;
-import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -39,8 +38,6 @@ public class K8SService {
 
     private final ParticipantRepository participantRepository;
     private final Vault vault;
-    private final S3Utils s3Util;
-
     private final K8SSettings k8SSettings;
 
     private final ScheduleService scheduleService;
@@ -79,10 +76,7 @@ public class K8SService {
             annotations.put("nginx.ingress.kubernetes.io/proxy-connect-timeout", "600");
             annotations.put("nginx.ingress.kubernetes.io/proxy-send-timeout", "600");
             annotations.put("nginx.ingress.kubernetes.io/proxy-read-timeout", "600");
-
-            //TODO need to add letsencrypt-prod  as configuration
-            annotations.put("cert-manager.io/cluster-issuer", "letsencrypt-prod");
-
+            annotations.put("cert-manager.io/cluster-issuer", this.k8SSettings.issuer());
 
             //Step 2: Create ingress
             NetworkingV1Api networkingV1Api = new NetworkingV1Api();

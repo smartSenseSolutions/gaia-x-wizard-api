@@ -11,11 +11,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "wizard.k8s")
 public record K8SSettings(
-
-    String basePath,
-
-    String token,
-
-    String serviceName
+        String basePath,
+        String token,
+        String serviceName,
+        String issuer
 ) {
 }

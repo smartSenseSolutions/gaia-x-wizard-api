@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -55,6 +56,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Value("${wizard.domain}")
     private String domain;
+    @Value("${wizard.host.wizard}")
+    private String wizardHost;
+    @Value("${wizard.gaiax.tnc}")
+    private String tnc;
     private final ContextConfig contextConfig;
     private final ParticipantRepository participantRepository;
     private final EntityTypeMasterRepository entityTypeMasterRepository;
@@ -75,6 +80,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             "complianceCheck"
     );
 
+    @Transactional
     @SneakyThrows
     public Participant registerParticipant(ParticipantRegisterRequest request) {
         log.debug("ParticipantService(registerParticipant) -> Participant registertation with email {}", request.email());
@@ -91,7 +97,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
                 .legalName(onboardRequest.legalName())
                 .shortName(onboardRequest.shortName())
                 .entityType(entityType)
-                .domain(onboardRequest.shortName() + "." + this.domain)
+                .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName() + "." + this.domain)
                 .participantType("REGISTERED")
                 .credential(this.mapper.writeValueAsString(onboardRequest.credential()))
                 .ownDidSolution(onboardRequest.ownDid())
@@ -126,11 +132,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
+        this.prepareCredentialSubjectForLegalParticipant(participant);
+        this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
             this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
         }
-        this.prepareCredentialSubjectForLegalParticipant(participant);
-        this.createLegalParticipantJson(participant, request.privateKey());
         return participant;
     }
 
@@ -155,7 +161,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     @SneakyThrows
-    private void prepareCredentialSubjectForLegalParticipant(Participant participant) {
+    private Map<String, Object> prepareCredentialSubjectForLegalParticipant(Participant participant) {
+        log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> Prepare credential subject for signer tool.");
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
         };
         Map<String, Object> credential = this.mapper.readValue(participant.getCredential(), typeReference);
@@ -192,8 +199,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         tncCredentialSubject.put("type", "gx:GaiaXTermsAndConditions");
         tncCredentialSubject.put("@Context", this.contextConfig.tnc());
         tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
-        //TODO manage the TNC
-        tncCredentialSubject.put("gx:termsAndConditions", "The PARTICIPANT signing the Self-Description agrees as follows:\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\n\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).");
+        tncCredentialSubject.put("gx:termsAndConditions", this.tnc.replaceAll("\\\\n", "\n"));
 
         tncVc.put("credentialSubject", tncCredentialSubject);
 
@@ -202,18 +208,22 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         credential.put("gaiaXTermsAndConditions", tncVc);
         participant.setCredential(this.mapper.writeValueAsString(credential));
         this.create(participant);
+        log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> CredentialSubject has been created successfully.");
+        return credential;
     }
 
     private String formParticipantJsonUrl(UUID participantId) {
-        return "https://wizard-api.smart-x.smartsenselabs.com/" + participantId.toString() + "/participant.json";
+        return this.wizardHost + participantId.toString() + "/participant.json";
     }
-
 
     private void validateOnboardedCredentialSubject(Object credentialSubject) {
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
         };
-        Object legalAddress = this.mapper.convertValue(credentialSubject, typeReference).get("gx:legalAddress");
-        Object headquarterAddress = this.mapper.convertValue(credentialSubject, typeReference).get("gx:headquarterAddress");
+        Map<String, Object> credentials = this.mapper.convertValue(credentialSubject, typeReference);
+        String legalName = (String) credentials.get("gx:legalName");
+        Validate.isFalse(StringUtils.hasText(legalName)).launch("invalid.legal.name");
+        Object legalAddress = credentials.get("gx:legalAddress");
+        Object headquarterAddress = credentials.get("gx:headquarterAddress");
         String legalCountry = (String) this.mapper.convertValue(legalAddress, typeReference).get("gx:countrySubdivisionCode");
         String headQuarterCountry = (String) this.mapper.convertValue(headquarterAddress, typeReference).get("gx:countrySubdivisionCode");
         Validate.isFalse(StringUtils.hasText(legalCountry)).launch("invalid.legal.address");
