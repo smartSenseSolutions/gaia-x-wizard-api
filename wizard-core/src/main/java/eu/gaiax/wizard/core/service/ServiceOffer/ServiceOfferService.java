@@ -1,5 +1,7 @@
 package eu.gaiax.wizard.core.service.ServiceOffer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
@@ -102,7 +104,7 @@ public class ServiceOfferService {
         List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
         String serviceName = (serviceOffers.size() > 0 ? request.getName() + getRandomString() : request.getName());
 
-        String policyId = participant.getId() + "/" + serviceName + "/ODRLPolicy";
+        String policyId = participant.getId() + "/" + serviceName + "_policy";
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
@@ -111,8 +113,8 @@ public class ServiceOfferService {
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), participant.getDomain(), serviceName);
             String hostPolicyJson = createODRLPolicy(odrlPolicyRequest);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
-                String policyUrl = this.wizardHost + "/" + participant.getId() + "/" + serviceName + "/" + policyId + ".json";
-                hostODRLPolicy(hostPolicyJson, policyId, "ODRLPolicy#0");
+                String policyUrl = this.wizardHost + policyId + ".json";
+                hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
                     credentialSubject.put("gx:policy", policyUrl);
                 }
@@ -122,7 +124,7 @@ public class ServiceOfferService {
         createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
         String responseData = singService(participant, request, serviceName);
-        String hostUrl = this.wizardHost + "/" + participant.getId() + "/" + serviceName + ".json";
+        String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         hostServiceOffer(responseData, participant.getId(), serviceName);
 
@@ -137,8 +139,17 @@ public class ServiceOfferService {
             serviceOffer.setVeracityData(response.get("veracityData").toString());
         }
         serviceOffer = serviceOfferRepository.save(serviceOffer);
-        Map<Object,Object> vc=objectMapper.convertValue(serviceOffer.getCredential().getVcJson(),Map.class);
-        ServiceOfferResponse serviceOfferResponse= ServiceOfferResponse.builder().build();
+        TypeReference<List<Map<Object, Object>>> typeReference = new TypeReference<>() {
+        };
+        objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        List<Map<Object, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
+        ServiceOfferResponse serviceOfferResponse = ServiceOfferResponse.builder()
+                .vcUrl(serviceOffer.getCredential().getVcUrl())
+                .name(serviceOffer.getName())
+                .veracityData(serviceOffer.getVeracityData())
+                .vcJson(vc)
+                .description(serviceOffer.getDescription())
+                .build();
         return serviceOfferResponse;
 
     }
@@ -160,7 +171,7 @@ public class ServiceOfferService {
         Map<String, Object> ODRLPolicy = new HashMap<>();
         ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
         ODRLPolicy.put("type", "policy");
-        ODRLPolicy.put("id", wizardHost+ odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "/" + "odrlPolicy.json");
+        ODRLPolicy.put("id", wizardHost + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "/" + "odrlPolicy.json");
         List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
         ODRLPolicy.put("permission", permission);
         String hostPolicyJson = objectMapper.writeValueAsString(ODRLPolicy);
@@ -179,24 +190,34 @@ public class ServiceOfferService {
         }
     }
 
-    private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName) throws IOException {
+    private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName){
         File file = new File("/tmp/" + serviceName + ".json");
-        FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
-        String hostedPath = id + "/" + serviceName + ".json";
-        this.s3Utils.uploadFile(hostedPath, file);
-        CommonUtils.deleteFile(file);
+        try {
+            FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
+            String hostedPath = id + "/" + serviceName + ".json";
+            this.s3Utils.uploadFile(hostedPath, file);
+        } catch (Exception e) {
+            LOGGER.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
-    private void hostODRLPolicy(String hostPolicyJson, String hostedPath, String policyName) throws IOException {
-        File file = new File("/tmp/" + hostedPath + "/" + policyName + ".json");
-        FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-        this.s3Utils.uploadFile(hostedPath + "/" + policyName + ".json", file);
-        CommonUtils.deleteFile(file);
+    private void hostODRLPolicy(String hostPolicyJson, String hostedPath) {
+        File file = new File("/tmp/" + hostedPath + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
+            this.s3Utils.uploadFile(hostedPath + ".json", file);
+        } catch (Exception e) {
+            LOGGER.error("Error while hosting service offer json for participant:{}", hostedPath, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
     private String singService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
         Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-        String id = this.wizardHost + "/" + participant.getId() + "/" + serviceName + ".json";
+        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put("id", "https://greenworld.proofsense.in/.well-known/participant.json");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
