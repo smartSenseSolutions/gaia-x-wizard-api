@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(value = "Signerapi", url = "${wizard.signer.host}")
+@FeignClient(value = "Signerapi", url = "${wizard.host.signer}")
 public interface SignerClient {
 
     @PostMapping(path = "createWebDID", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -32,6 +32,7 @@ public interface SignerClient {
 
     @PostMapping(path = "/v1/verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> verify(@RequestBody ParticipantVerifyRequest request);
+
     @PostMapping(path = "/v1/gaia-x/service-offering", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createServiceOfferVc(@RequestBody SignerServiceRequest request);
 
