@@ -1,5 +1,5 @@
 server:
-  port: ${APPLICATION_PORT:8080}
+  port: ${wizard.server.port}
   shutdown: graceful
   compression:
     enabled: true
@@ -30,17 +30,17 @@ wizard:
     serviceName:
     issuer:
   keycloak:
-    authServer: localhost:9090
-    realm: gaia-x
+    authServer:
+    realm:
     clientId:
     clientSecret:
     webAuthRedirectUrl:
     actionTokenLifespan:
   security:
     enabled: true
-    realm: Gaia-x
-    clientId: pr-gaia-x-wizard
-    auth-server-url: http://localhost:8080
+    realm: ${wizard.keycloak.realm}
+    clientId: ${wizard.keycloak.client-id}
+    auth-server-url: ${wizard.keycloak.auth-server}
     authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
     tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
@@ -48,6 +48,8 @@ wizard:
   host:
     signer:
     wizard:
+  server:
+    port: 8080
   quartz:
     scheduler:
       instanceName: smartSense
