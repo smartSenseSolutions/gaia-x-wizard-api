@@ -40,20 +40,22 @@ public class ServiceOfferController extends BaseResource {
     }
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
-    @PostMapping(path = "/public-api/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/public/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,null));
     }
+/*
     @Tag(name = "Resources")
     @Operation(summary = "Create Resource")
     @PostMapping(path = "/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOffer> createResource(@Valid @RequestBody ResourceRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.resourceService.createResource(request,"mittal.vaghela@smartsensesolutions.com"));
     }
+*/
 
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create ODRLPolicy")
-    @PostMapping(path = "/public-api/policy/ODRL", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/public/policy/ODRL", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest, Principal principal) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createODRLPolicy(odrlPolicyRequest));
     }
