@@ -91,6 +91,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNull(entityType).launch("invalid.entity.type");
         Participant participant = this.participantRepository.getByEmail(request.email());
         Validate.isNotNull(participant).launch("participant.already.registered");
+        Validate.isNotNull(this.participantRepository.getByLegalName(request.onboardRequest().legalName())).launch("legal.name.already.registered");
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .did(onboardRequest.issuerDid())
