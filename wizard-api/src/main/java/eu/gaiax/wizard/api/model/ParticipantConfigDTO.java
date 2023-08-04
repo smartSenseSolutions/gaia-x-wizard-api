@@ -12,6 +12,7 @@ public class ParticipantConfigDTO {
     private String legalName;
     private String participantType;
     private boolean ownDidSolution;
+    private Boolean privateKeyRequired;
     private String legalParticipantUrl;
 
 }

@@ -285,6 +285,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNull(participant).launch(new EntityNotFoundException("Invalid participant ID"));
         ParticipantConfigDTO participantConfigDTO = this.objectMapper.convertValue(participant, ParticipantConfigDTO.class);
 
+        if (participant.isOwnDidSolution()) {
+            participantConfigDTO.setPrivateKeyRequired(!StringUtils.hasText(participant.getPrivateKeyId()));
+        }
+
         Credential credential = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
         if (credential != null) {
             participantConfigDTO.setLegalParticipantUrl(credential.getVcUrl());
