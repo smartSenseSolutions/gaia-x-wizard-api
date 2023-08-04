@@ -28,6 +28,7 @@ wizard:
     basePath:
     token:
     serviceName:
+    issuer:
   keycloak:
     authServer: localhost:9090
     realm: gaia-x
@@ -44,8 +45,9 @@ wizard:
     tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
     corsOrigins: "*"
-  signer:
-    host:
+  host:
+    signer:
+    wizard:
   quartz:
     scheduler:
       instanceName: smartSense
@@ -72,6 +74,8 @@ wizard:
     serviceOffer:
     ODRLPolicy:
   domain:
+  gaiax:
+    tnc:
 
 spring:
   liquibase:

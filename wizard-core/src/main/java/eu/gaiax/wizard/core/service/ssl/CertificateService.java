@@ -1,6 +1,6 @@
 package eu.gaiax.wizard.core.service.ssl;
 
-import eu.gaiax.wizard.api.exception.ParticipantNotFoundException;
+import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -45,9 +45,6 @@ public class CertificateService {
     // RSA key size of generated key pairs
     private static final int KEY_SIZE = 2048;
 
-    public static final String CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE = "Can not convert file in pccs8 formate for enterprise->{}";
-
-
     private enum ChallengeType {
         DNS
     }
@@ -58,8 +55,9 @@ public class CertificateService {
     private final ScheduleService scheduleService;
 
     public void createSSLCertificate(UUID participantId, JobKey jobKey) {
+        log.info("CertificateService(createSSLCertificate) -> Initiate process to create a SSL certificate for participant {}", participantId);
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new ParticipantNotFoundException("Participant not found"));
+        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
         File domainChainFile = new File("/tmp/" + participant.getDomain() + "_chain.crt");
         File csrFile = new File("/tmp/" + participant.getDomain() + ".csr");
@@ -163,27 +161,25 @@ public class CertificateService {
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
             //save files in vault
-            this.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
-//            this.s3Utils.uploadFile(certificateChainS3Key, domainChainFile);
-//            this.s3Utils.uploadFile(csrS3Key, csrFile);
-//            this.s3Utils.uploadFile(keyS3Key, keyfile);
-//            this.s3Utils.uploadFile(pkcs8FileS3Key, pkcs8File);
+            this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
 
 
             //create Job tp create ingress and tls secret
             this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_INGRESS, 0);
+            log.info("CertificateService(createSSLCertificate) -> Ingress creation corn job has been scheduled.");
             if (jobKey != null) {
                 //delete job
                 this.scheduleService.deleteJob(jobKey);
             }
-
+            log.info("CertificateService(createSSLCertificate) -> Certificate has been created for participant {}", participantId);
         } catch (Exception e) {
-            log.error("Can not create certificate for did ->{}, domain ->{}", participant.getDomain(), participant.getDomain(), e);
+            log.error("CertificateService(createSSLCertificate) -> Can not create certificate for did ->{}, domain ->{}", participant.getDomain(), participant.getDomain(), e);
             participant.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());
         } finally {
             this.participantRepository.save(participant);
             //delete files
             CommonUtils.deleteFile(domainChainFile, csrFile, keyfile, pkcs8File);
+            log.info("CertificateService(createSSLCertificate) -> Participant details has been updated.");
         }
     }
 
@@ -191,11 +187,11 @@ public class CertificateService {
         try {
             int attempts = 10;
             while (order.getStatus() != Status.VALID && attempts-- > 0) {
-                log.debug("Waiting for order confirmation attempts->{}", attempts);
+                log.debug("CertificateService(checkOrderStatus) -> Waiting for order confirmation attempts->{}", attempts);
                 // Did the order fail?
                 if (order.getStatus() == Status.INVALID) {
-                    log.error("Order has failed, reason: {}", order.getError());
-                    throw new AcmeException("Order failed... Giving up.");
+                    log.error("CertificateService(checkOrderStatus) -> Order has failed, reason: {}", order.getError());
+                    throw new AcmeException("order.failed");
                 }
 
                 // Wait for a few seconds
@@ -212,13 +208,14 @@ public class CertificateService {
 
     private KeyPair loadOrCreateUserKeyPair() throws IOException {
         if (USER_KEY_FILE.exists()) {
+            log.info("CertificateService(loadOrCreateUserKeyPair) -> User keypair is already exists.");
             // If there is a key file, read it
             try (FileReader fr = new FileReader(USER_KEY_FILE)) {
                 return KeyPairUtils.readKeyPair(fr);
             }
 
         } else {
-            // If there is none, create a new key pair and save it
+            log.info("CertificateService(loadOrCreateUserKeyPair) -> Process for creating user key pair.");
             KeyPair userKeyPair = KeyPairUtils.createKeyPair(KEY_SIZE);
             try (FileWriter fw = new FileWriter(USER_KEY_FILE)) {
                 KeyPairUtils.writeKeyPair(userKeyPair, fw);
@@ -229,10 +226,12 @@ public class CertificateService {
 
     private KeyPair loadOrCreateDomainKeyPair(File domainChainFile) throws IOException {
         if (domainChainFile.exists()) {
+            log.info("CertificateService(loadOrCreateDomainKeyPair) -> Keypair is already exists.");
             try (FileReader fr = new FileReader(domainChainFile)) {
                 return KeyPairUtils.readKeyPair(fr);
             }
         } else {
+            log.info("CertificateService(loadOrCreateDomainKeyPair) -> Create new domain key pair.");
             KeyPair domainKeyPair = KeyPairUtils.createKeyPair(KEY_SIZE);
             try (FileWriter fw = new FileWriter(domainChainFile)) {
                 KeyPairUtils.writeKeyPair(domainKeyPair, fw);
@@ -247,13 +246,13 @@ public class CertificateService {
                 .agreeToTermsOfService()
                 .useKeyPair(accountKey)
                 .create(session);
-        log.info("Registered a new user, URL: {}", account.getLocation());
+        log.info("CertificateService(findOrRegisterAccount) -> Registered a new user, URL: {}", account.getLocation());
 
         return account;
     }
 
     private void authorize(Authorization auth) throws AcmeException {
-        log.info("Authorization for domain {}", auth.getIdentifier().getDomain());
+        log.info("CertificateService(authorize) -> Process for authorization for domain {}", auth.getIdentifier().getDomain());
         Dns01Challenge dnsChallenge = auth.findChallenge(Dns01Challenge.TYPE);
         String valuesToBeAdded = dnsChallenge.getDigest();
         String domain = Dns01Challenge.toRRName(auth.getIdentifier());
@@ -271,11 +270,13 @@ public class CertificateService {
             }
 
             if (challenge == null) {
-                throw new AcmeException("No challenge found");
+                log.error("CertificateService(authorize) -> Challenge is not found for domain {}", auth.getIdentifier().getDomain());
+                throw new AcmeException("challenge.not.found");
             }
 
             // If the challenge is already verified, there's no need to execute it again.
             if (challenge.getStatus() == Status.VALID) {
+                log.info("CertificateService(authorize) -> Challenge is already verified.");
                 return;
             }
 
@@ -287,7 +288,7 @@ public class CertificateService {
             try {
                 int attempts = 3;
                 while (challenge.getStatus() != Status.VALID && attempts-- > 0) {
-                    log.debug("Waiting for 30 sec before check of DNS record attempts -> {}", attempts);
+                    log.debug("CertificateService(authorize) -> Waiting for 30 sec before check of DNS record attempts -> {}", attempts);
                     // Wait for a few seconds
                     Thread.sleep(30000L);
 
@@ -296,21 +297,22 @@ public class CertificateService {
                 }
                 // Did the authorization fail?
                 if (challenge.getStatus() == Status.INVALID) {
-                    log.error("Challenge has failed, reason: {}", challenge.getError());
-                    throw new AcmeException("Challenge failed... Giving up.");
+                    log.error("CertificateService(authorize) -> Challenge is not valid and the reason: {}", challenge.getError());
+                    throw new AcmeException("invalid.challenge");
                 }
             } catch (InterruptedException ex) {
-                log.error("interrupted", ex);
+                log.error("CertificateService(authorize) -> Thread has been interrupted.", ex);
                 Thread.currentThread().interrupt();
             }
 
             // All reattempts are used up and there is still no valid authorization?
             if (challenge.getStatus() != Status.VALID) {
+                log.error("CertificateService(authorize) -> Failed to pass challenge for domain {}", auth.getIdentifier().getDomain());
                 throw new AcmeException("Failed to pass the challenge for domain "
                         + auth.getIdentifier().getDomain() + ", ... Giving up.");
             }
 
-            log.info("Challenge has been completed. Remember to remove the validation resource.");
+            log.info("CertificateService(authorize) -> Challenge has been completed for domain {}, Remember to remove the validation resource.", auth.getIdentifier().getDomain());
 
         } finally {
             this.domainService.deleteTxtRecordForSSLCertificate(domain, valuesToBeAdded);
@@ -322,9 +324,10 @@ public class CertificateService {
         // Find a single dns-01 challenge
         Dns01Challenge challenge = auth.findChallenge(Dns01Challenge.TYPE);
         if (challenge == null) {
+            log.error("CertificateService(dnsChallenge) -> Not able to found {} challenge, What to do now?", Dns01Challenge.TYPE);
             throw new AcmeException("Found no " + Dns01Challenge.TYPE + " challenge, don't know what to do...");
         }
-
+        log.error("CertificateService(dnsChallenge) -> Challenge {} is found", Dns01Challenge.TYPE);
         String valuesToBeAdded = challenge.getDigest();
         String domain = Dns01Challenge.toRRName(auth.getIdentifier());
 
@@ -337,47 +340,45 @@ public class CertificateService {
 
     private void convertKeyFileInPKCS8(String file, String outputFile, String did) {
         try {
+            log.info("CertificateService(uploadCertificatesToVault) -> Convert key file to pkcs8 format.");
             ProcessBuilder pb = new ProcessBuilder("openssl", "pkcs8", "-topk8", "-in", file, "-nocrypt", "-out", outputFile);
             Process p = pb.start();
             int exitCode = p.waitFor();
             if (exitCode == 0) {
-                log.debug("key file converted in pkcs8 format foe did id->{}", did);
+                log.debug("CertificateService(uploadCertificatesToVault) -> Convert key file to pkcs8 format successfully for did {}", did);
             } else {
-                log.error(CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE, did);
+                log.error("CertificateService(uploadCertificatesToVault) -> Can not convert key file to pkcs8 for did {}, receive exitcode {}", did, exitCode);
             }
         } catch (InterruptedException e) {
-            log.error(CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE, did, e);
+            log.error("CertificateService(uploadCertificatesToVault) -> Can not convert key file to pkcs8 for did {}", did, e);
             Thread.currentThread().interrupt();
         } catch (IOException e) {
-            log.error(CAN_NOT_CONVERT_FILE_IN_PCCS_8_FORMATE_FOR_ENTERPRISE, did, e);
+            log.error("CertificateService(uploadCertificatesToVault) -> Can not convert key file to pkcs8 for did {}", did, e);
         }
 
     }
 
-    private void uploadCertificatesToVault(String domainName, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
-        // this.s3Utils.uploadFile(certificateChainS3Key, domainChainFile);
-        ////            this.s3Utils.uploadFile(csrS3Key, csrFile);
-        ////            this.s3Utils.uploadFile(keyS3Key, keyfile);
-        ////            this.s3Utils.uploadFile(pkcs8FileS3Key, pkcs8File);
-        this.uploadCertificatesToVault(domainName, secretName,
+    private void uploadCertificatesToVault(String participantId, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
+        this.uploadCertificatesToVault(participantId, secretName,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));
     }
 
-    public void uploadCertificatesToVault(String domain, String secretName, String domainChain, String csr, String key, String pkcs8Key) throws IOException {
+    public void uploadCertificatesToVault(String participantId, String secretName, String domainChain, String csr, String key, String pkcs8Key) {
         Map<String, Object> data = new HashMap<>();
         if (StringUtils.hasText(domainChain)) {
             data.put("x509CertificateChain.pem", domainChain);
         }
         if (StringUtils.hasText(csr)) {
-            data.put(domain + ".csr", csr);
+            data.put(participantId + ".csr", csr);
         }
         if (StringUtils.hasText(key)) {
-            data.put(domain + ".key", key);
+            data.put(participantId + ".key", key);
         }
         if (StringUtils.hasText(pkcs8Key)) {
-            data.put("pkcs8_" + domain + ".key", pkcs8Key);
+            data.put("pkcs8.key", pkcs8Key);
         }
         this.vault.put(secretName, data);
+        log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
     }
 }
