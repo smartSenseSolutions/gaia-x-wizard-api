@@ -5,6 +5,7 @@
 package eu.gaiax.wizard.core.service.credential;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.CredentialRepository;
@@ -70,6 +71,11 @@ public class CredentialService {
                 .participant(participant)
                 .build());
     }
+
+    public Credential getLegalParticipantCredential(UUID participantId) {
+        return this.getByParticipantWithCredentialType(participantId, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+    }
+
     public Credential getByParticipantWithCredentialType(UUID participantId, String credentialType) {
         return this.credentialRepository.findByParticipantIdAndCredentialType(participantId, credentialType);
     }
