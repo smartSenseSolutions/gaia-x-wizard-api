@@ -1,9 +1,9 @@
-package eu.gaiax.wizard.core.service.ServiceOffer;
+package eu.gaiax.wizard.core.service.service_offer;
 
-import eu.gaiax.wizard.api.model.ServiceOffer.ResourceRequest;
+import eu.gaiax.wizard.api.model.service_offer.ResourceRequest;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
-import eu.gaiax.wizard.dao.entity.serviceoffer.ServiceOffer;
+import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.resource.ResourceRepository;
 import lombok.RequiredArgsConstructor;

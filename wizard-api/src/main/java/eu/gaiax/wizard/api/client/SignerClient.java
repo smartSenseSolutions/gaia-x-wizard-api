@@ -5,7 +5,7 @@
 package eu.gaiax.wizard.api.client;
 
 import eu.gaiax.wizard.api.model.*;
-import eu.gaiax.wizard.api.model.ServiceOffer.SignerServiceRequest;
+import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;

@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.api.model.ServiceOffer;
+package eu.gaiax.wizard.api.model.service_offer;
 
 import lombok.Builder;
 import lombok.Getter;
