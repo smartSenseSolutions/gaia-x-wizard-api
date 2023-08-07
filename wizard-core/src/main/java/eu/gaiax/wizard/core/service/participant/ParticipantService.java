@@ -9,6 +9,7 @@ import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
@@ -47,7 +48,13 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -73,6 +80,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final ObjectMapper mapper;
     private final SpecificationUtil<Participant> specificationUtil;
     private final SignerClient signerClient;
+    private final ObjectMapper objectMapper;
+
     private static final List<String> policies = Arrays.asList(
             "integrityCheck",
             "holderSignature",
@@ -91,6 +100,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNull(entityType).launch("invalid.entity.type");
         Participant participant = this.participantRepository.getByEmail(request.email());
         Validate.isNotNull(participant).launch("participant.already.registered");
+        Validate.isNotNull(this.participantRepository.getByLegalName(request.onboardRequest().legalName())).launch("legal.name.already.registered");
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .did(onboardRequest.issuerDid())
@@ -303,5 +313,22 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @Override
     protected SpecificationUtil<Participant> getSpecificationUtil() {
         return this.specificationUtil;
+    }
+
+    public ParticipantConfigDTO getParticipantConfig(String uuid) {
+        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
+        Validate.isNull(participant).launch(new EntityNotFoundException("Invalid participant ID"));
+        ParticipantConfigDTO participantConfigDTO = this.objectMapper.convertValue(participant, ParticipantConfigDTO.class);
+
+        if (participant.isOwnDidSolution()) {
+            participantConfigDTO.setPrivateKeyRequired(!StringUtils.hasText(participant.getPrivateKeyId()));
+        }
+
+        Credential credential = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+        if (credential != null) {
+            participantConfigDTO.setLegalParticipantUrl(credential.getVcUrl());
+        }
+
+        return participantConfigDTO;
     }
 }

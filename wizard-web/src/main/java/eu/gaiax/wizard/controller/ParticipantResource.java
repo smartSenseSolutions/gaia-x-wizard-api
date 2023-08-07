@@ -1,7 +1,10 @@
 package eu.gaiax.wizard.controller;
 
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
@@ -18,13 +21,21 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.CHECK_REGISTRATION;
+import static eu.gaiax.wizard.utils.WizardRestConstant.PARTICIPANT_CONFIG;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -139,4 +150,24 @@ public class ParticipantResource extends BaseResource {
         this.signerService.createParticipantJson(UUID.fromString(participantId));
         return CommonResponse.of(Map.of("message", "participant json creation started"));
     }
+
+    @Operation(
+            summary = "Participant config",
+            description = "This endpoint returns participant's general configuration."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Participant config fetched successfully."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access."),
+            @ApiResponse(responseCode = "403", description = "User does not have access to this API."),
+            @ApiResponse(responseCode = "404", description = "Participant not found.")
+    }
+    )
+    @GetMapping(PARTICIPANT_CONFIG)
+    public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
+        String userId = (String) this.requestForClaim(StringPool.ID, principal);
+        Validate.isNull(userId).launch(new BadDataException("User ID not present in token"));
+
+        return CommonResponse.of(this.participantService.getParticipantConfig(userId));
+    }
+
 }

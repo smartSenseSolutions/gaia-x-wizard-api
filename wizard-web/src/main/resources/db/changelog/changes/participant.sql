@@ -34,3 +34,8 @@ ALTER TABLE participant ALTER COLUMN did DROP NOT NULL;
 
 --changeset Dilip:3
 ALTER TABLE credential ALTER COLUMN "type" TYPE varchar(100) USING "type"::varchar;
+
+--changeset Dilip:4
+ALTER TABLE participant ADD CONSTRAINT legal_name_unique UNIQUE (legal_name);
+ALTER TABLE participant ADD CONSTRAINT short_name_unique UNIQUE (short_name);
+ALTER TABLE participant ADD CONSTRAINT email_unique UNIQUE (email);

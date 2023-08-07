@@ -46,7 +46,9 @@ public class AuthenticationConfig {
                         .requestMatchers(ENTERPRISE_LIST).hasRole(ADMIN_ROLE).requestMatchers(ENTERPRISE_BY_ID).hasRole(ADMIN_ROLE)
                         .requestMatchers(ENTERPRISE).hasRole(ENTERPRISE_ROLE)
                         .requestMatchers(ENTERPRISE + "/**").hasRole(ENTERPRISE_ROLE)
-                        .requestMatchers(CATALOGUE).hasRole(ENTERPRISE_ROLE))
+                        .requestMatchers(CATALOGUE).hasRole(ENTERPRISE_ROLE)
+                        .requestMatchers(PARTICIPANT_CONFIG).hasRole(ENTERPRISE_ROLE)
+                )
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> jwt.jwtAuthenticationConverter(new CustomAuthenticationConverter(this.configProperties.clientId()))))
                 .build();
     }

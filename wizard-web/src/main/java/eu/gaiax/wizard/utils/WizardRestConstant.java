@@ -31,4 +31,7 @@ public class WizardRestConstant {
 
     public static final String CHECK_REGISTRATION = "/check-registration";
 
+    public static final String PARTICIPANT_CONFIG = "/participant/config";
+
+
 }

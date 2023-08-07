@@ -13,4 +13,6 @@ public interface ParticipantRepository extends BaseRepository<Participant, UUID>
     Participant getByDomain(String domain);
 
     Participant getByDid(String did);
+
+    Participant getByLegalName(String legalName);
 }
