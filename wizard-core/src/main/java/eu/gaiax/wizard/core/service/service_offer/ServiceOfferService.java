@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.ServiceOffer;
+package eu.gaiax.wizard.core.service.service_offer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -7,10 +7,10 @@ import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.ServiceOffer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.ServiceOffer.ODRLPolicyRequest;
-import eu.gaiax.wizard.api.model.ServiceOffer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.model.ServiceOffer.SignerServiceRequest;
+import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
+import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -23,7 +23,7 @@ import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
-import eu.gaiax.wizard.dao.entity.serviceoffer.ServiceOffer;
+import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.serviceoffer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
@@ -123,7 +123,7 @@ public class ServiceOfferService {
         }
         createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
-        String responseData = singService(participant, request, serviceName);
+        String responseData = signService(participant, request, serviceName);
         String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         hostServiceOffer(responseData, participant.getId(), serviceName);
@@ -218,11 +218,11 @@ public class ServiceOfferService {
         }
     }
 
-    private String singService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
+    private String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
         Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
         String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", "https://greenworld.proofsense.in/.well-known/participant.json");
+        providedBy.put("id", request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         VerifiableCredential verifiableCredential = VerifiableCredential.builder()
@@ -239,7 +239,7 @@ public class ServiceOfferService {
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
                 .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
-                .legalParticipantURL(participantCred.getVcUrl())
+                .legalParticipantURL(wizardHost+participantCred.getVcUrl())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
                 .build();

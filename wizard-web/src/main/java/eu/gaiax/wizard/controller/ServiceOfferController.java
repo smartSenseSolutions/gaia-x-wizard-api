@@ -1,13 +1,11 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.CommonResponse;
-import eu.gaiax.wizard.api.model.ServiceOffer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.ServiceOffer.ODRLPolicyRequest;
-import eu.gaiax.wizard.api.model.ServiceOffer.ResourceRequest;
-import eu.gaiax.wizard.api.model.ServiceOffer.ServiceOfferResponse;
-import eu.gaiax.wizard.core.service.ServiceOffer.ResourceService;
-import eu.gaiax.wizard.core.service.ServiceOffer.ServiceOfferService;
-import eu.gaiax.wizard.dao.entity.serviceoffer.ServiceOffer;
+import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
+import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.core.service.service_offer.ResourceService;
+import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
