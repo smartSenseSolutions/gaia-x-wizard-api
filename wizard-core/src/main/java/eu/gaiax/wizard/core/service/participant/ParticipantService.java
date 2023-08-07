@@ -12,7 +12,6 @@ import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
-import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -45,16 +44,7 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -63,11 +53,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Value("${wizard.domain}")
     private String domain;
-    @Value("${wizard.host.wizard}")
-    private String wizardHost;
-    @Value("${wizard.gaiax.tnc}")
-    private String tnc;
-    private final ContextConfig contextConfig;
     private final ParticipantRepository participantRepository;
     private final EntityTypeMasterRepository entityTypeMasterRepository;
     private final SignerService signerService;
@@ -142,7 +127,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
-        this.prepareCredentialSubjectForLegalParticipant(participant);
         this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
             this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
@@ -170,62 +154,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.domainService.createSubDomain(participant.getId());
     }
 
-    @SneakyThrows
-    private Map<String, Object> prepareCredentialSubjectForLegalParticipant(Participant participant) {
-        log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> Prepare credential subject for signer tool.");
-        TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
-        };
-        Map<String, Object> credential = this.mapper.readValue(participant.getCredential(), typeReference);
-        Map<String, Object> legalParticipant = this.mapper.convertValue(credential.get("legalParticipant"), typeReference);
-        Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get("legalRegistrationNumber"), typeReference);
-        //Add @context in the credential
-        legalParticipant.put("@context", this.contextConfig.participant());
-        legalParticipant.put("type", List.of("VerifiableCredential"));
-        legalParticipant.put("id", participant.getDid());
-        legalParticipant.put("issuer", participant.getDid());
-        String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        legalParticipant.put("issuanceDate", issuanceDate);
-
-        Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
-        participantCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#0");
-        participantCredentialSubject.put("type", "gx:LegalParticipant");
-        String registrationId = this.formParticipantJsonUrl(participant.getId()) + "#1";
-        participantCredentialSubject.put("gx:legalRegistrationNumber", Map.of("id", registrationId));
-
-        legalParticipant.put("credentialSubject", participantCredentialSubject);
-
-        legalRegistrationNumber.put("@context", this.contextConfig.registrationNumber());
-        legalRegistrationNumber.put("type", List.of("gx:legalRegistrationNumber"));
-        legalRegistrationNumber.put("id", registrationId);
-
-        Map<String, Object> tncVc = new TreeMap<>();
-        tncVc.put("@context", this.contextConfig.tnc());
-        tncVc.put("type", List.of("VerifiableCredential"));
-        tncVc.put("id", participant.getDid());
-        tncVc.put("issuer", participant.getDid());
-        tncVc.put("issuanceDate", issuanceDate);
-
-        Map<String, Object> tncCredentialSubject = new HashMap<>();
-        tncCredentialSubject.put("type", "gx:GaiaXTermsAndConditions");
-        tncCredentialSubject.put("@Context", this.contextConfig.tnc());
-        tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
-        tncCredentialSubject.put("gx:termsAndConditions", this.tnc.replaceAll("\\\\n", "\n"));
-
-        tncVc.put("credentialSubject", tncCredentialSubject);
-
-        credential.put("legalParticipant", legalParticipant);
-        credential.put("legalRegistrationNumber", legalRegistrationNumber);
-        credential.put("gaiaXTermsAndConditions", tncVc);
-        participant.setCredential(this.mapper.writeValueAsString(credential));
-        this.create(participant);
-        log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> CredentialSubject has been created successfully.");
-        return credential;
-    }
-
-    private String formParticipantJsonUrl(UUID participantId) {
-        return this.wizardHost + participantId.toString() + "/participant.json";
-    }
-
     private void validateOnboardedCredentialSubject(Object credentialSubject) {
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
         };
@@ -247,8 +175,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        //TODO need to confirm the endpoint from Signer tool which will validate the participant json. Work will start from monday.
-        //TODO assume that we got the did  from signer tool
         ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(request.participantJsonUrl(), policies);
         ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest);
         if (!signerResponse.getStatusCode().is2xxSuccessful()) {
