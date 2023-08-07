@@ -14,6 +14,6 @@ public class ServiceOfferResponse {
     private String name;
     private String description;
     private  String vcUrl;
-    private List<Map<Object,Object>> vcJson;
+    private List<Map<String,Object>> vcJson;
     private String veracityData ;
 }

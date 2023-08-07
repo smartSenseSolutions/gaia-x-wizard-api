@@ -139,10 +139,10 @@ public class ServiceOfferService {
             serviceOffer.setVeracityData(response.get("veracityData").toString());
         }
         serviceOffer = serviceOfferRepository.save(serviceOffer);
-        TypeReference<List<Map<Object, Object>>> typeReference = new TypeReference<>() {
+        TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
         };
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        List<Map<Object, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
+        List<Map<String, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
         ServiceOfferResponse serviceOfferResponse = ServiceOfferResponse.builder()
                 .vcUrl(serviceOffer.getCredential().getVcUrl())
                 .name(serviceOffer.getName())
