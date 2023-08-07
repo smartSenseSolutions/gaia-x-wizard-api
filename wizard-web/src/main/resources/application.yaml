@@ -34,8 +34,10 @@ wizard:
     realm:
     clientId:
     clientSecret:
+    publicClientId:
     webAuthRedirectUrl:
     actionTokenLifespan:
+    requiredActionsEmailRedirectionUrl:
   security:
     enabled: true
     realm: ${wizard.keycloak.realm}
@@ -170,7 +172,7 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      clientId: pu-gaia-x-wizard
+      clientId: ${wizard.keycloak.public-client-id}
       clientSecret:
     disable-swagger-default-url: true
     path: /ui/swagger-ui

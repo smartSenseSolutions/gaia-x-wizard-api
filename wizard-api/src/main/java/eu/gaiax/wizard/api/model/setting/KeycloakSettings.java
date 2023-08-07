@@ -1,6 +1,6 @@
 package eu.gaiax.wizard.api.model.setting;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.*;
 
 /**
  * The type Keycloak settings.
@@ -8,15 +8,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "wizard.keycloak")
 public record KeycloakSettings(
 
-    String authServer,
+        String authServer,
 
-    String realm,
+        String realm,
 
-    String clientId,
+        String clientId,
 
-    String clientSecret,
+        String clientSecret,
 
-    Integer actionTokenLifespan
+        Integer actionTokenLifespan,
+
+        String requiredActionsEmailRedirectionUrl,
+        String publicClientId
 ) {
 }
 
