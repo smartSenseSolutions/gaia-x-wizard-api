@@ -100,9 +100,9 @@ public class ServiceOfferService {
         }
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
-
+        String modifiedName = request.getName().replaceAll(" ", "_");
         List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
-        String serviceName = (serviceOffers.size() > 0 ? request.getName() + getRandomString() : request.getName());
+        String serviceName = (serviceOffers.size() > 0 ? modifiedName + getRandomString() : modifiedName);
 
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
@@ -139,10 +139,10 @@ public class ServiceOfferService {
             serviceOffer.setVeracityData(response.get("veracityData").toString());
         }
         serviceOffer = serviceOfferRepository.save(serviceOffer);
-        TypeReference<List<Map<Object, Object>>> typeReference = new TypeReference<>() {
+        TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
         };
         objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-        List<Map<Object, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
+        List<Map<String, Object>> vc = objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
         ServiceOfferResponse serviceOfferResponse = ServiceOfferResponse.builder()
                 .vcUrl(serviceOffer.getCredential().getVcUrl())
                 .name(serviceOffer.getName())
@@ -239,7 +239,7 @@ public class ServiceOfferService {
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
                 .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
-                .legalParticipantURL(wizardHost+participantCred.getVcUrl())
+                .legalParticipantURL(participantCred.getVcUrl())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
                 .build();
