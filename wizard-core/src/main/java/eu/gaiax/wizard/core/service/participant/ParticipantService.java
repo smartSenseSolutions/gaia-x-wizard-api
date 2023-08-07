@@ -48,13 +48,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -330,5 +324,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         return participantConfigDTO;
+    }
+
+    public void sendRegistrationLink(String email) {
+        this.keycloakService.sendRequiredActionsEmail(email);
+        log.info("registration email sent to email: {}", email);
     }
 }
