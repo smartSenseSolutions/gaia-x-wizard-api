@@ -38,6 +38,13 @@ public class ServiceOfferController extends BaseResource {
     }
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
+    @PostMapping(path = "/service-offers/validate", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public void validateServiceOfferRequest(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
+        //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
+       this.serviceOfferService.validateServiceOfferMainRequest(request);
+    }
+    @Tag(name = "Service-Offering")
+    @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = "/public/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,null));

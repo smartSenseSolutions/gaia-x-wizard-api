@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.core.service.service_offer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,11 +8,11 @@ import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
 import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -94,6 +95,8 @@ public class ServiceOfferService {
         Participant participant;
         if (email != null) {
             participant = participantRepository.getByEmail(email);
+            Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+            commonService.validateRequestUrl(participantCred.getVcUrl(), "participant.json.not.found");
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
             participant = participantService.validateParticipant(participantValidatorRequest);
@@ -104,15 +107,14 @@ public class ServiceOfferService {
         List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
         String serviceName = (serviceOffers.size() > 0 ? modifiedName + getRandomString() : modifiedName);
 
-
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
             String policyId = participant.getId() + "/" + serviceName + "_policy";
             String policyUrl = this.wizardHost + policyId + ".json";
             Map<String, List<String>> policy = objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(),wizardHost, serviceName);
-            String hostPolicyJson = createODRLPolicy(odrlPolicyRequest,policyUrl);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), wizardHost, serviceName);
+            String hostPolicyJson = createODRLPolicy(odrlPolicyRequest, policyUrl);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
@@ -167,14 +169,14 @@ public class ServiceOfferService {
     }
 
 
-    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest,String hostUrl) throws IOException {
+    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
         Map<String, Object> ODRLPolicy = new HashMap<>();
         ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
         ODRLPolicy.put("type", "policy");
-        if(hostUrl==null){
-            hostUrl=odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() +"_policy.json";
+        if (hostUrl == null) {
+            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
         }
-        ODRLPolicy.put("id",hostUrl);
+        ODRLPolicy.put("id", hostUrl);
         List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
         ODRLPolicy.put("permission", permission);
         String hostPolicyJson = objectMapper.writeValueAsString(ODRLPolicy);
@@ -193,7 +195,7 @@ public class ServiceOfferService {
         }
     }
 
-    private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName){
+    private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName) {
         File file = new File("/tmp/" + serviceName + ".json");
         try {
             FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
@@ -254,9 +256,56 @@ public class ServiceOfferService {
         return null;
     }
 
-    private void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
+    public void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
         Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
+    }
+
+    public void validateServiceOfferMainRequest(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
+        Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
+        Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
+        if (!request.getCredentialSubject().containsKey("gx:termsAndConditions")) {
+            throw new BadDataException("term.condition.not.found");
+        } else {
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            Map<String,Object> termsCondition=objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"),Map.class);
+            if(!termsCondition.containsKey("gx:URL")){
+                throw new BadDataException("term.condition.not.found");
+            }else{
+                commonService.validateRequestUrl(termsCondition.get("gx:URL").toString(), "term.condition.not.found");
+            }
+        }
+        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+            throw new BadDataException("aggregation.of.not.found");
+        } else {
+            commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+        }
+
+        if (!request.getCredentialSubject().containsKey("gx:dataAccountExport")) {
+            throw new BadDataException("data.account.export.not.found");
+        } else {
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            Map<String, Object> export = objectMapper.readValue(request.getCredentialSubject().get("gx:dataAccountExport").toString(), typeReference);
+            if (!export.containsKey("gx:requestType") || StringUtils.hasText(export.get("gx:requestType").toString())) {
+                throw new BadDataException("requestType.of.not.found");
+            }
+            if (!export.containsKey("gx:accessType") || StringUtils.hasText(export.get("gx:accessType").toString())) {
+                throw new BadDataException("accessType.of.not.found");
+            }
+            if (!export.containsKey("gx:formatType") || StringUtils.hasText(export.get("gx:formatType").toString())) {
+                throw new BadDataException("formatType.of.not.found");
+            }
+        }
+
+        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+            throw new BadDataException("aggregation.of.not.found");
+        } else {
+            commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+        }
     }
 }
