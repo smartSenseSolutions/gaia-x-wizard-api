@@ -1,21 +1,30 @@
 package eu.gaiax.wizard.core.service.keycloak;
 
-import eu.gaiax.wizard.api.exception.*;
-import eu.gaiax.wizard.api.model.*;
-import eu.gaiax.wizard.api.model.setting.*;
-import eu.gaiax.wizard.api.utils.*;
-import jakarta.ws.rs.core.*;
-import lombok.*;
-import org.keycloak.*;
-import org.keycloak.admin.client.*;
-import org.keycloak.admin.client.resource.*;
-import org.keycloak.representations.idm.*;
-import org.slf4j.*;
-import org.springframework.http.*;
-import org.springframework.stereotype.*;
-import org.springframework.util.*;
 
-import java.util.*;
+import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.model.KeycloakRequiredActionsEnum;
+import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.setting.KeycloakSettings;
+import eu.gaiax.wizard.api.utils.Validate;
+import jakarta.ws.rs.core.Response;
+import lombok.RequiredArgsConstructor;
+import org.keycloak.OAuth2Constants;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.KeycloakBuilder;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.UserRepresentation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

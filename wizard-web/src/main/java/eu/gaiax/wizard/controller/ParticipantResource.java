@@ -1,27 +1,32 @@
 package eu.gaiax.wizard.controller;
 
-import eu.gaiax.wizard.api.exception.*;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.*;
-import eu.gaiax.wizard.api.utils.*;
-import eu.gaiax.wizard.core.service.domain.*;
-import eu.gaiax.wizard.core.service.k8s.*;
-import eu.gaiax.wizard.core.service.participant.*;
-import eu.gaiax.wizard.core.service.participant.model.request.*;
-import eu.gaiax.wizard.core.service.signer.*;
-import eu.gaiax.wizard.core.service.ssl.*;
-import eu.gaiax.wizard.dao.entity.participant.*;
-import io.swagger.v3.oas.annotations.*;
-import io.swagger.v3.oas.annotations.responses.*;
-import lombok.*;
-import org.springframework.http.*;
+import eu.gaiax.wizard.api.utils.Validate;
+import eu.gaiax.wizard.core.service.domain.DomainService;
+import eu.gaiax.wizard.core.service.k8s.K8SService;
+import eu.gaiax.wizard.core.service.participant.ParticipantService;
+import eu.gaiax.wizard.core.service.participant.model.request.ParticipantCreationRequest;
+import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
+import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
+import eu.gaiax.wizard.core.service.signer.SignerService;
+import eu.gaiax.wizard.core.service.ssl.CertificateService;
+import eu.gaiax.wizard.dao.entity.participant.Participant;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.Map;
+import java.util.UUID;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
-import static org.springframework.http.MediaType.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor

@@ -1,6 +1,6 @@
 package eu.gaiax.wizard.api.model.setting;
 
-import org.springframework.boot.context.properties.*;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The type Keycloak settings.
