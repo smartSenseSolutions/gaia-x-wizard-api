@@ -100,9 +100,9 @@ public class ServiceOfferService {
         }
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
-
+        String modifiedName = request.getName().replaceAll(" ", "_");
         List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
-        String serviceName = (serviceOffers.size() > 0 ? request.getName() + getRandomString() : request.getName());
+        String serviceName = (serviceOffers.size() > 0 ? modifiedName + getRandomString() : modifiedName);
 
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
@@ -239,7 +239,7 @@ public class ServiceOfferService {
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
                 .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
-                .legalParticipantURL(wizardHost+participantCred.getVcUrl())
+                .legalParticipantURL(participantCred.getVcUrl())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
                 .build();
