@@ -79,9 +79,7 @@ public class ServiceOfferService {
         Map<String, Object> constraintMap = new HashMap<>();
         constraintMap.put("leftOperand", leftOperand);
         constraintMap.put("operator", "isAnyOf");
-        Map<String, Object> values = new HashMap<>();
-        values.put("values", rightOperand);
-        constraintMap.put("rightOperand", values);
+        constraintMap.put("rightOperand", rightOperand);
         constraint.add(constraintMap);
         perMap.put("constraint", constraint);
         permission.add(perMap);
@@ -104,7 +102,7 @@ public class ServiceOfferService {
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         String modifiedName = request.getName().replaceAll(" ", "_");
-        String serviceName =  modifiedName + getRandomString();
+        String serviceName =  "service_" + getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
@@ -158,7 +156,7 @@ public class ServiceOfferService {
     private String getRandomString() {
         String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
-        StringBuilder randomString = new StringBuilder(4);
+        StringBuilder randomString = new StringBuilder(5);
         for (int i = 0; i < 4; i++) {
             int randomIndex = random.nextInt(possibleCharacters.length());
             char randomChar = possibleCharacters.charAt(randomIndex);
