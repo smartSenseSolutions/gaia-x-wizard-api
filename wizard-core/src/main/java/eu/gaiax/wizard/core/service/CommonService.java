@@ -18,22 +18,23 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class CommonService {
-    private final SignerClient signerClient;
     private static final List<String> policies = Arrays.asList(
             "integrityCheck",
             "holderSignature",
             "complianceSignature",
             "complianceCheck"
     );
-    public String getCurrentFormattedDate(){
+    private final SignerClient signerClient;
+
+    public String getCurrentFormattedDate() {
         Instant currentInstant = Instant.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         String time = ZonedDateTime.ofInstant(currentInstant, ZoneOffset.UTC).format(formatter);
         return time;
     }
-    public void validateRequestUrl(String url,String message) {
-        ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(url, policies);
 
+    public void validateRequestUrl(String url, String message) {
+        ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(url, policies);
         ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest);
         if (!signerResponse.getStatusCode().is2xxSuccessful()) {
             throw new BadDataException(message);

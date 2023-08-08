@@ -104,8 +104,7 @@ public class ServiceOfferService {
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         String modifiedName = request.getName().replaceAll(" ", "_");
-        List<ServiceOffer> serviceOffers = serviceOfferRepository.findByName(request.getName());
-        String serviceName = (serviceOffers.size() > 0 ? modifiedName + getRandomString() : modifiedName);
+        String serviceName =  modifiedName + getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
@@ -269,8 +268,6 @@ public class ServiceOfferService {
         if (!request.getCredentialSubject().containsKey("gx:termsAndConditions")) {
             throw new BadDataException("term.condition.not.found");
         } else {
-            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
-            };
             Map<String,Object> termsCondition=objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"),Map.class);
             if(!termsCondition.containsKey("gx:URL")){
                 throw new BadDataException("term.condition.not.found");
@@ -301,7 +298,6 @@ public class ServiceOfferService {
                 throw new BadDataException("formatType.of.not.found");
             }
         }
-
         if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         } else {
