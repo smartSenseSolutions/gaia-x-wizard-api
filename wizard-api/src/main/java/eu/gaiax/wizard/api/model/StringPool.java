@@ -12,6 +12,9 @@ public class StringPool {
      * The constant JOB_TYPE_CREATE_SUB_DOMAIN.
      */
     public static final String JOB_TYPE_CREATE_SUB_DOMAIN = "JOB_TYPE_CREATE_SUB_DOMAIN";
+    /**
+     * The constant GAIA_X_BASE_PATH.
+     */
     public static final String GAIA_X_BASE_PATH = "/gaiax";
 
     /**
@@ -42,6 +45,9 @@ public class StringPool {
      * The constant DID.
      */
     public static final String DID = "did";
+    /**
+     * The constant PARTICIPANT_ID.
+     */
     public static final String PARTICIPANT_ID = "id";
     /**
      * The constant JOB_TYPE.
@@ -80,10 +86,21 @@ public class StringPool {
      */
     public static final String VERIFIABLE_CREDENTIAL = "VerifiableCredential";
 
+
+    /**
+     * The constant CREDENTIAL_SUBJECT.
+     */
+    public static final String CREDENTIAL_SUBJECT = "credentialSubject";
+
     /**
      * The constant USER_REGISTERED.
      */
     public static final String USER_REGISTERED = "userRegistered";
+
+    public static final String GX_LEGAL_ADDRESS = "gx:legalAddress";
+    public static final String GX_COUNTRY_SUBDIVISION = "gx:countrySubdivisionCode";
+    public static final String GX_POLICY = "gx:policy";
+    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
 
     private StringPool() {
     }

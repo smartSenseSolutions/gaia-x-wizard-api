@@ -1,9 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.CommonResponse;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +17,7 @@ import java.io.IOException;
 import java.security.Principal;
 
 import static eu.gaiax.wizard.api.model.StringPool.GAIA_X_BASE_PATH;
+import static eu.gaiax.wizard.utils.WizardRestConstant.SERVICE_OFFER_LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -34,8 +33,9 @@ public class ServiceOfferController extends BaseResource {
     @PostMapping(path = "/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,request.getEmail()));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, request.getEmail()));
     }
+
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = "/service-offers/validate", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
@@ -47,7 +47,7 @@ public class ServiceOfferController extends BaseResource {
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = "/public/service-offers", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request,null));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null));
     }
 /*
     @Tag(name = "Resources")
@@ -61,7 +61,16 @@ public class ServiceOfferController extends BaseResource {
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create ODRLPolicy")
     @PostMapping(path = "/public/policy/ODRL", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createODRLPolicy(odrlPolicyRequest,null));
+    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
+        return CommonResponse.of(this.serviceOfferService.createODRLPolicy(odrlPolicyRequest, null));
     }
+
+    @Tag(name = "Service-Offering")
+    @Operation(summary = "Get service locations from policy")
+    @PostMapping(path = SERVICE_OFFER_LOCATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<Object> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
+        ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
+        return CommonResponse.of(serviceOfferingLocationResponse);
+    }
+
 }
