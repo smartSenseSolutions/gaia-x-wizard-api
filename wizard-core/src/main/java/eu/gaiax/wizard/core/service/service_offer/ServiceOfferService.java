@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.core.service.service_offer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -96,9 +97,7 @@ public class ServiceOfferService {
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         String modifiedName = request.getName().replaceAll(" ", "_");
-        List<ServiceOffer> serviceOffers = this.serviceOfferRepository.findByName(request.getName());
-        String serviceName = (serviceOffers.size() > 0 ? modifiedName + this.getRandomString() : modifiedName);
-
+        String serviceName = modifiedName + this.getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey(StringPool.GX_POLICY)) {
@@ -249,10 +248,54 @@ public class ServiceOfferService {
         return null;
     }
 
-    private void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
+    public void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
         Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
+    }
+
+    public void validateServiceOfferMainRequest(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
+        Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
+        Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
+        if (!request.getCredentialSubject().containsKey("gx:termsAndConditions")) {
+            throw new BadDataException("term.condition.not.found");
+        } else {
+            Map<String, Object> termsCondition = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"), Map.class);
+            if (!termsCondition.containsKey("gx:URL")) {
+                throw new BadDataException("term.condition.not.found");
+            } else {
+                this.commonService.validateRequestUrl(termsCondition.get("gx:URL").toString(), "term.condition.not.found");
+            }
+        }
+        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+            throw new BadDataException("aggregation.of.not.found");
+        } else {
+            this.commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+        }
+
+        if (!request.getCredentialSubject().containsKey("gx:dataAccountExport")) {
+            throw new BadDataException("data.account.export.not.found");
+        } else {
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+            Map<String, Object> export = this.objectMapper.readValue(request.getCredentialSubject().get("gx:dataAccountExport").toString(), typeReference);
+            if (!export.containsKey("gx:requestType") || StringUtils.hasText(export.get("gx:requestType").toString())) {
+                throw new BadDataException("requestType.of.not.found");
+            }
+            if (!export.containsKey("gx:accessType") || StringUtils.hasText(export.get("gx:accessType").toString())) {
+                throw new BadDataException("accessType.of.not.found");
+            }
+            if (!export.containsKey("gx:formatType") || StringUtils.hasText(export.get("gx:formatType").toString())) {
+                throw new BadDataException("formatType.of.not.found");
+            }
+        }
+        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+            throw new BadDataException("aggregation.of.not.found");
+        } else {
+            this.commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+        }
     }
 
     public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
