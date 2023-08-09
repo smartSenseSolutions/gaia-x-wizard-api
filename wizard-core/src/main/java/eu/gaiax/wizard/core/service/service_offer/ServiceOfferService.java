@@ -78,9 +78,7 @@ public class ServiceOfferService {
         Map<String, Object> constraintMap = new HashMap<>();
         constraintMap.put("leftOperand", leftOperand);
         constraintMap.put("operator", "isAnyOf");
-        Map<String, Object> values = new HashMap<>();
-        values.put("values", rightOperand);
-        constraintMap.put("rightOperand", values);
+        constraintMap.put("rightOperand", rightOperand);
         constraint.add(constraintMap);
         perMap.put("constraint", constraint);
         permission.add(perMap);
@@ -106,17 +104,17 @@ public class ServiceOfferService {
 
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
-        if (request.getCredentialSubject().containsKey("gx:policy")) {
+        if (request.getCredentialSubject().containsKey(StringPool.GX_POLICY)) {
             String policyId = participant.getId() + "/" + serviceName + "_policy";
             String policyUrl = this.wizardHost + policyId + ".json";
-            Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
+            Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get(StringPool.GX_POLICY), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
             String hostPolicyJson = this.createODRLPolicy(odrlPolicyRequest, policyUrl);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 this.hostODRLPolicy(hostPolicyJson, policyId);
-                if (credentialSubject.containsKey("gx:policy")) {
-                    credentialSubject.put("gx:policy", policyUrl);
+                if (credentialSubject.containsKey(StringPool.GX_POLICY)) {
+                    credentialSubject.put(StringPool.GX_POLICY, policyUrl);
                 }
                 this.credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
             }
@@ -196,7 +194,7 @@ public class ServiceOfferService {
     private void hostServiceOffer(String hostServiceOfferJson, UUID id, String serviceName) {
         File file = new File("/tmp/" + serviceName + ".json");
         try {
-            FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
+            FileUtils.writeStringToFile(file, this.objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(hostServiceOfferJson), Charset.defaultCharset());
             String hostedPath = id + "/" + serviceName + ".json";
             this.s3Utils.uploadFile(hostedPath, file);
         } catch (Exception e) {

@@ -1,91 +1,118 @@
 package eu.gaiax.wizard.core.service.service_offer;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.policy_evaluator.Constraint;
 import eu.gaiax.wizard.api.model.policy_evaluator.Policy;
 import eu.gaiax.wizard.api.model.policy_evaluator.Rule;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.utils.Validate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PolicyEvaluatorService {
 
     private final RestTemplate restTemplate;
 
-    public String evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
-        Map catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
-        String countryCode = null;
+    private final ObjectMapper objectMapper;
+
+    public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
+        JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
+        String countryCode;
 
         try {
             countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
-        } catch (Exception ignored) {
-
+        } catch (Exception e) {
+            throw new BadDataException("Legal Address does not have country parameter");
         }
 
         if (!StringUtils.hasText(countryCode)) {
             throw new BadDataException("Legal Address does not have country parameter");
         }
 
-        ServiceOfferResponse serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
+        JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
         String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
-        Validate.isNull(policyUrl).launch(new BadDataException("No policy found for service" + serviceOffer.getName()));
 
-        Policy serviceOfferingPolicy = this.getPolicyForServiceOffer(policyUrl);
-        if (serviceOfferingPolicy == null) {
-            throw new EntityNotFoundException("Policy not found for the specified service offering.");
+        if (StringUtils.hasText(policyUrl)) {
+            Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
+            if (accessPolicy == null) {
+                throw new EntityNotFoundException("Policy not found for the specified entity.");
+            }
+
+            Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+            Constraint constraint = null;
+            if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
+                constraint = rule.get().getConstraint().stream()
+                        .filter(c -> c.getLeftOperand().equalsIgnoreCase("legalAddress.country"))
+                        .findAny()
+                        .orElse(null);
+            }
+
+            if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+            }
         }
 
-        Optional<Rule> rule = serviceOfferingPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
-        Constraint constraint = null;
-        if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
-            constraint = rule.get().getConstraint().stream().filter(c -> c.getLeftOperand().equalsIgnoreCase("legalAddress.country")).findAny().orElse(null);
-        }
-        if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-            throw new ForbiddenAccessException("The catalog does not have permission to view this service.");
-        }
-
-        return serviceOffer.getVcUrl();
+        return serviceOffer;
     }
 
-    private String getPolicyUrlFromServiceOffer(ServiceOfferResponse serviceOffer) {
-        List<Map<String, Object>> vcJsonList = serviceOffer.getVcJson();
-        Optional<Map<String, Object>> policyVcOptional = vcJsonList.stream()
-                .filter(vc -> vc.containsKey("gx:policy")).findFirst();
+    private String getPolicyUrlFromServiceOffer(JsonNode serviceOffer) {
+        JsonNode selfDescriptionCredential = serviceOffer.get("selfDescriptionCredential");
+        ObjectReader reader = this.objectMapper.readerFor(new TypeReference<List<JsonNode>>() {
+        });
 
-        return policyVcOptional
-                .map(stringObjectMap -> (String) stringObjectMap.get("gx:policy"))
-                .orElse(null);
+        List<JsonNode> list = new ArrayList<>();
+        try {
+            list = reader.readValue(selfDescriptionCredential.get("verifiableCredential"));
+        } catch (IOException ignored) {
+            log.info("Error encountered while parsing service for policy");
+        }
+
+        Optional<JsonNode> policyVcOptional = list.stream()
+                .filter(vc -> vc.get(StringPool.CREDENTIAL_SUBJECT).get("type").asText().equals("gx:ServiceOffering"))
+                .findFirst();
+        if (policyVcOptional.isPresent() && policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).has(StringPool.GX_POLICY)) {
+            return policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).get(StringPool.GX_POLICY).asText();
+        }
+
+        return null;
     }
 
-    private Map getCatalogueDescription(String catalogueUrl) {
-        ResponseEntity<Map> catalogueResponse = this.restTemplate.getForEntity(URI.create(catalogueUrl), Map.class);
+    private JsonNode getCatalogueDescription(String catalogueUrl) {
+        ResponseEntity<JsonNode> catalogueResponse = this.restTemplate.getForEntity(URI.create(catalogueUrl), JsonNode.class);
         if (catalogueResponse.getStatusCode().is2xxSuccessful()) {
             return catalogueResponse.getBody();
         }
+
         throw new BadDataException("Invalid Catalogue URL");
     }
 
-    private ServiceOfferResponse getServiceOffering(String serviceOfferingUrl) {
-        ResponseEntity<ServiceOfferResponse> serviceOfferingResponse = this.restTemplate.getForEntity(URI.create(serviceOfferingUrl), ServiceOfferResponse.class);
+    private JsonNode getServiceOffering(String serviceOfferingUrl) {
+        ResponseEntity<JsonNode> serviceOfferingResponse = this.restTemplate.getForEntity(URI.create(serviceOfferingUrl), JsonNode.class);
         if (serviceOfferingResponse.getStatusCode().is2xxSuccessful()) {
             return serviceOfferingResponse.getBody();
         }
+
         throw new BadDataException("Invalid Service Offering ID");
     }
 
@@ -94,13 +121,14 @@ public class PolicyEvaluatorService {
         if (policyResponse.getStatusCode().is2xxSuccessful()) {
             return policyResponse.getBody();
         }
+
         throw new BadDataException("Invalid Policy URL");
     }
 
     private boolean isCountryInPermittedRegion(String countryCode, Constraint constraint) {
 
         if (constraint == null) {
-//            no country constraint found, allow access
+//            no location constraint found, allow access
             return true;
         } else if (constraint.getOperator().equals("isAnyOf")) {
             return Arrays.stream(constraint.getRightOperand()).anyMatch(policyCountry -> policyCountry.equalsIgnoreCase(countryCode));
@@ -109,8 +137,8 @@ public class PolicyEvaluatorService {
         return false;
     }
 
-    private String getCountryCodeFromSelfDescription(Map catalogSelfDescription) {
-        Map<String, Object> legalAddress = (Map<String, Object>) catalogSelfDescription.get("legalAddress");
-        return legalAddress.get("country").toString();
+    private String getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
+        JsonNode legalAddress = catalogSelfDescription.get(StringPool.GX_LEGAL_ADDRESS);
+        return legalAddress.get(StringPool.GX_COUNTRY_SUBDIVISION).asText();
     }
 }

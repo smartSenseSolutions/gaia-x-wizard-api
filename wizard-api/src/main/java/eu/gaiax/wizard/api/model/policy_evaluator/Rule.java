@@ -12,8 +12,6 @@ public class Rule {
 
     private String assigner;
 
-    private String assignee;
-
     private String action;
 
     private List<Constraint> constraint;

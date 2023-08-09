@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.api.model.policy_evaluator;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,13 +9,12 @@ import java.util.List;
 @Getter
 @Setter
 public class Policy {
-    private String id;
-
+    @JsonProperty(value = "@context")
     private List<String> context;
 
     private String type;
 
-    private String uid;
+    private String id;
 
     private List<Rule> permission;
 
