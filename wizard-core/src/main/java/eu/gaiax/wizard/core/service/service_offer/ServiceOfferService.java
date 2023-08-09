@@ -61,12 +61,8 @@ public class ServiceOfferService {
     private final CommonService commonService;
     private final HashingService hashingService;
     private final S3Utils s3Utils;
-    @Value("${wizard.domain}")
-    private String domain;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
-    @Value("${wizard.gaiax.tnc}")
-    private String tnc;
 
     @NotNull
     private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
@@ -101,13 +97,12 @@ public class ServiceOfferService {
         }
 
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
-        String modifiedName = request.getName().replaceAll(" ", "_");
-        String serviceName =  "service_" + getRandomString();
+        String serviceName = "service_" + getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
             String policyId = participant.getId() + "/" + serviceName + "_policy";
-            String policyUrl = this.wizardHost + policyId + ".json";
+            String policyUrl = wizardHost + policyId + ".json";
             Map<String, List<String>> policy = objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), wizardHost, serviceName);
@@ -123,8 +118,7 @@ public class ServiceOfferService {
         createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
         String responseData = signService(participant, request, serviceName);
-        String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
-
+        String hostUrl = wizardHost + participant.getId() + "/" + serviceName + ".json";
         hostServiceOffer(responseData, participant.getId(), serviceName);
 
         Credential serviceOffVc = credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
@@ -154,7 +148,7 @@ public class ServiceOfferService {
     }
 
     private String getRandomString() {
-        String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        final String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
         StringBuilder randomString = new StringBuilder(5);
         for (int i = 0; i < 4; i++) {
@@ -168,7 +162,7 @@ public class ServiceOfferService {
 
     public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
         Map<String, Object> ODRLPolicy = new HashMap<>();
-        ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
+        ODRLPolicy.put("@context", contextConfig.ODRLPolicy());
         ODRLPolicy.put("type", "policy");
         if (hostUrl == null) {
             hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
@@ -197,7 +191,7 @@ public class ServiceOfferService {
         try {
             FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
             String hostedPath = id + "/" + serviceName + ".json";
-            this.s3Utils.uploadFile(hostedPath, file);
+            s3Utils.uploadFile(hostedPath, file);
         } catch (Exception e) {
             LOGGER.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
         } finally {
@@ -209,7 +203,7 @@ public class ServiceOfferService {
         File file = new File("/tmp/" + hostedPath + ".json");
         try {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostedPath + ".json", file);
+            s3Utils.uploadFile(hostedPath + ".json", file);
         } catch (Exception e) {
             LOGGER.error("Error while hosting service offer json for participant:{}", hostedPath, e.getMessage());
         } finally {
@@ -219,9 +213,9 @@ public class ServiceOfferService {
 
     private String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
         Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
+        String id = wizardHost + participant.getId() + "/" + serviceName + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl());
+        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         VerifiableCredential verifiableCredential = VerifiableCredential.builder()
@@ -266,10 +260,10 @@ public class ServiceOfferService {
         if (!request.getCredentialSubject().containsKey("gx:termsAndConditions")) {
             throw new BadDataException("term.condition.not.found");
         } else {
-            Map<String,Object> termsCondition=objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"),Map.class);
-            if(!termsCondition.containsKey("gx:URL")){
+            Map<String, Object> termsCondition = objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"), Map.class);
+            if (!termsCondition.containsKey("gx:URL")) {
                 throw new BadDataException("term.condition.not.found");
-            }else{
+            } else {
                 commonService.validateRequestUrl(termsCondition.get("gx:URL").toString(), "term.condition.not.found");
             }
         }
