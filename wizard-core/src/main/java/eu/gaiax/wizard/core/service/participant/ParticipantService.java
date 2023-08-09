@@ -14,6 +14,7 @@ import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
+import eu.gaiax.wizard.core.service.CommonService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -66,6 +68,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final SpecificationUtil<Participant> specificationUtil;
     private final SignerClient signerClient;
     private final ObjectMapper objectMapper;
+    private final CommonService commonService;
 
     private static final List<String> policies = Arrays.asList(
             "integrityCheck",
@@ -166,6 +169,20 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         String headQuarterCountry = (String) this.mapper.convertValue(headquarterAddress, typeReference).get(StringPool.GX_COUNTRY_SUBDIVISION);
         Validate.isFalse(StringUtils.hasText(legalCountry)).launch("invalid.legal.address");
         Validate.isFalse(StringUtils.hasText(headQuarterCountry)).launch("invalid.headquarter.address");
+        Object parentOrganization = credentials.get("gx:parentOrganization");
+        if (Objects.nonNull(parentOrganization)) {
+            TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
+            };
+            List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
+            parentOrg.parallelStream().forEach(url -> this.commonService.validateRequestUrl(url, "invalid.parent.organization"));
+        }
+        Object subOrganization = credentials.get("gx:subOrganization");
+        if (Objects.nonNull(subOrganization)) {
+            TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
+            };
+            List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
+            subOrg.parallelStream().forEach(url -> this.commonService.validateRequestUrl(url, "invalid.parent.organization"));
+        }
     }
 
     //TODO need to resolve DID and validate the private key from given verification method
@@ -217,7 +234,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
-        File file = this.s3Utils.getObject(participantId + "/" + filename, filename);
+        String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(filename);
+        File file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
         return FileUtils.readFileToString(file, Charset.defaultCharset());
     }
 
