@@ -6,9 +6,13 @@ package eu.gaiax.wizard.core.service.signer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
+import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -34,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The type Signer service.
@@ -43,10 +48,12 @@ import java.util.*;
 @RequiredArgsConstructor
 public class SignerService {
 
-    @Value("${wizard.host.wizard}")
-    private String wizardHost;
-    @Value("${wizard.gaiax.tnc}")
-    private String tnc;
+    private static final List<String> policies = Arrays.asList(
+            "integrityCheck",
+            "holderSignature",
+            "complianceSignature",
+            "complianceCheck"
+    );
     private final ContextConfig contextConfig;
     private final CredentialService credentialService;
     private final ParticipantRepository participantRepository;
@@ -55,6 +62,10 @@ public class SignerService {
     private final ObjectMapper mapper;
     private final ScheduleService scheduleService;
     private final Vault vault;
+    @Value("${wizard.host.wizard}")
+    private String wizardHost;
+    @Value("${wizard.gaiax.tnc}")
+    private String tnc;
 
     public void createParticipantJson(UUID participantId) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}", participantId);
@@ -192,4 +203,52 @@ public class SignerService {
         }
     }
 
+    public String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
+        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
+        Map<String, Object> providedBy = new HashMap<>();
+        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
+        request.getCredentialSubject().put("gx:providedBy", providedBy);
+        request.getCredentialSubject().put("id", id);
+        String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        VerifiableCredential verifiableCredential = VerifiableCredential.builder()
+                .serviceOffering(VerifiableCredential.ServiceOffering.builder()
+                        .context(this.contextConfig.serviceOffer())
+                        .type(StringPool.VERIFIABLE_CREDENTIAL)
+                        .id(participant.getDid())
+                        .issuer(participant.getDid())
+                        .issuanceDate(issuanceDate)
+                        .credentialSubject(request.getCredentialSubject())
+                        .build()).build();
+        List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
+        verifiableCredentialList.add(verifiableCredential);
+        SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
+                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
+                .issuer(participant.getDid())
+                .verificationMethod(request.getVerificationMethod())
+                .vcs(verifiableCredential)
+                .build();
+        try {
+            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
+            String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            log.debug("Send request to signer for service create vc");
+            return serviceOfferingString;
+        } catch (Exception e) {
+            log.debug("Service vc not created", e.getMessage());
+        }
+        return null;
+    }
+
+    public void validateRequestUrl(List<String> urls, String message) {
+        AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
+        urls.parallelStream().forEach(url -> {
+            try {
+                participantValidatorRequest.set(new ParticipantVerifyRequest(url, policies));
+                ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
+                log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
+            } catch (Exception e) {
+                log.error("An error occurred for URL: " + url, e);
+                throw new BadDataException(message + url);
+            }
+        });
+    }
 }
