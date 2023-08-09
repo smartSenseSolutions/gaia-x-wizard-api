@@ -30,7 +30,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
-public class ParticipantResource extends BaseResource {
+public class ParticipantController extends BaseController {
 
     private final ParticipantService participantService;
     private final DomainService domainService;
@@ -55,7 +55,7 @@ public class ParticipantResource extends BaseResource {
             @ApiResponse(responseCode = "200", description = "Participant registered successfully."),
             @ApiResponse(responseCode = "400", description = "Invalid participant registered request."),
     })
-    @PostMapping(value = "/register/participant", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = REGISTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Participant> registerParticipant(@RequestBody ParticipantRegisterRequest request) {
         return CommonResponse.of(this.participantService.registerParticipant(request));
     }
@@ -68,7 +68,7 @@ public class ParticipantResource extends BaseResource {
             @ApiResponse(responseCode = "200", description = "Participant registered successfully."),
             @ApiResponse(responseCode = "400", description = "Invalid participant onboarded request."),
     })
-    @PostMapping(value = "/onboard/participant/{participantId}", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(value = ONBOARD_PARTICIPANT, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Participant> registerParticipant(@PathVariable("participantId") String participantId, @RequestBody ParticipantCreationRequest request) {
         return CommonResponse.of(this.participantService.initiateOnboardParticipantProcess(participantId, request));
     }
@@ -78,7 +78,7 @@ public class ParticipantResource extends BaseResource {
             description = "This endpoint used to validate participant json."
     )
     @ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Participant onboarded successfully.")})
-    @PostMapping(value = "/validate/participant", consumes = APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
+    @PostMapping(value = VALIDATE_PARTICIPANT, consumes = APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     public String validateParticipant(@RequestBody ParticipantValidatorRequest request) {
         this.participantService.validateParticipant(request);
         return "Success";
@@ -88,7 +88,7 @@ public class ParticipantResource extends BaseResource {
             summary = "Get .well-known files",
             description = "This endpoint used to fetch well-known files."
     )
-    @GetMapping(path = ".well-known/{fileName}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = WELL_KNOWN, produces = APPLICATION_JSON_VALUE)
     public String getWellKnownFiles(@PathVariable(name = "fileName") String fileName, @RequestHeader(name = HttpHeaders.HOST) String host) throws IOException {
         return this.participantService.getWellKnownFiles(host, fileName);
     }
@@ -97,20 +97,20 @@ public class ParticipantResource extends BaseResource {
             summary = "Get participant json files",
             description = "This endpoint used to fetch participant json details."
     )
-    @GetMapping(path = "{participantId}/{fileName}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = PARTICIPANT_JSON, produces = APPLICATION_JSON_VALUE)
     public String getLegalParticipantJson(@PathVariable(name = "participantId") String participantId, @PathVariable("fileName") String fileName) throws IOException {
         return this.participantService.getLegalParticipantJson(participantId, fileName);
     }
 
     @Operation(summary = "Resume onboarding process from sub domain creation, role Admin, (only used for manual step in case of failure)")
-    @GetMapping(path = "subdomain/{participantId}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = PARTICIPANT_SUBDOMAIN, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createSubDomain(@PathVariable(name = "participantId") String participantId) {
         this.domainService.createSubDomain(UUID.fromString(participantId));
         return CommonResponse.of(Map.of("message", "Subdomain creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from SLL certificate creation, role = admin, (only used for manual step in case of failure)")
-    @GetMapping(path = "certificate/{participantId}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = PARTICIPANT_CERTIFICATE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Participant> createCertificate(@PathVariable(name = "participantId") String participantId) {
         Participant participant = this.participantService.get(UUID.fromString(participantId));
         Validate.isTrue(participant.getStatus() != RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus()).launch("Status is not certification creation failed");
@@ -121,21 +121,21 @@ public class ParticipantResource extends BaseResource {
 
 
     @Operation(summary = "Resume onboarding process from ingress creation, role = admin, (only used for manual step in case of failure)")
-    @GetMapping(path = "ingress/{participantId}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = PARTICIPANT_INGRESS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createIngress(@PathVariable(name = "participantId") String participantId) {
         this.k8SService.createIngress(UUID.fromString(participantId));
         return CommonResponse.of(Map.of("message", "Ingress creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from did creation, role-=admin, (only used for manual step in case of failure)")
-    @GetMapping(path = "did/{participantId}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = PARTICIPANT_DID, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createDid(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createDid(UUID.fromString(participantId));
         return CommonResponse.of(Map.of("message", "did creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from participant credential creation, role Admin, (only used for manual step in case of failure)")
-    @GetMapping(path = "participant/{participantId}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = CREATE_PARTICIPANT, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createParticipantJson(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createParticipantJson(UUID.fromString(participantId));
         return CommonResponse.of(Map.of("message", "participant json creation started"));

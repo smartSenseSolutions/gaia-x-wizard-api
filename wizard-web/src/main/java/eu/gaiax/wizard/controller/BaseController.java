@@ -7,7 +7,7 @@ import java.security.Principal;
 import java.util.Objects;
 
 @RestController
-public abstract class BaseResource {
+public abstract class BaseController {
     public Object requestForClaim(String claim, Principal principal) {
         if (Objects.isNull(principal)) {
             return "test@email.com";
