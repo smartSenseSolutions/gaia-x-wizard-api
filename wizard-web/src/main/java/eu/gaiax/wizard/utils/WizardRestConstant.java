@@ -5,17 +5,12 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WizardRestConstant {
-    public static final String GET_ENTERPRISE_FILES = "/.well-known/{fileName}";
-    public static final String REGISTER = "/register";
-    public static final String SEND_REQUIRED_ACTIONS_EMAIL = "/email-required-actions";
+
+    public static final String REGISTER = "/public/register";
+    public static final String SEND_REQUIRED_ACTIONS_EMAIL = "/public/registration/send-email";
     public static final String ENTERPRISE = "/enterprises";//ER
     public static final String ENTERPRISE_LIST = ENTERPRISE + "/list";//AR
     public static final String ENTERPRISE_BY_ID = ENTERPRISE + "/{id}";//AR
-    public static final String CREATE_SUBDOMAIN = "/subdomain/{enterpriseId}";
-    public static final String CREATE_CERTIFICATE = "/certificate/{enterpriseId}";
-    public static final String CREATE_INGRESS = "/ingress/{enterpriseId}";
-    public static final String CREATE_DID = "/did/{enterpriseId}";
-    public static final String CREATE_PARTICIPANT_JSON = "/participant/{enterpriseId}";
     public static final String ENTERPRISE_VC = ENTERPRISE + "/vcs";//ER
     public static final String SERVICE_OFFERING = ENTERPRISE + "/service-offers";//ER
     public static final String SERVICE_OFFER_BY_ID = ENTERPRISE + "/service-offers/{id}";//ER
@@ -25,17 +20,41 @@ public class WizardRestConstant {
 
     public static final String EXPORT_KEYS = ENTERPRISE + "/keys/export"; //ER
 
-    public static final String MASTER_DATA_FILTER = "/master-data/{dataType}/filter";
+    public static final String MASTER_DATA_FILTER = "/public/master-data/{dataType}/filter";
 
-    public static final String LABEL_LEVEL_QUESTIONS = "/label-level-questions";
+    public static final String LABEL_LEVEL_QUESTIONS = "/public/label-level-questions";
 
-    public static final String CHECK_REGISTRATION = "/check-registration";
+    public static final String CHECK_REGISTRATION = "/public/check-registration";
 
     public static final String PARTICIPANT_CONFIG = "/participant/config";
 
-    public static final String POLICY_EVALUATE = "/policy/evaluate";
+    public static final String POLICY_EVALUATE = "/public/policy/evaluate";
+
+    public static final String SERVICE_OFFER = "/service-offer";
+
+    public static final String PUBLIC_SERVICE_OFFER = "/public/service-offer";
+
+    public static final String PUBLIC_POLICY = "/public/policy";
+
+    public static final String VALIDATE_SERVICE_OFFER = "/service-offer/validate";
 
     public static final String SERVICE_OFFER_LOCATION = "/public/service-offer/location";
 
+    public static final String ONBOARD_PARTICIPANT = "/onboard/participant/{participantId}";
 
+    public static final String VALIDATE_PARTICIPANT = "/validate/participant";
+
+    public static final String WELL_KNOWN = "/.well-known/{fileName}";
+
+    public static final String PARTICIPANT_JSON = "/{participantId}/{fileName}";
+
+    public static final String PARTICIPANT_SUBDOMAIN = "/subdomain/{participantId}";
+
+    public static final String CERTIFICATE_SUBDOMAIN = "/certificate/{participantId}";
+
+    public static final String PARTICIPANT_INGRESS = "/ingress/{participantId}";
+
+    public static final String PARTICIPANT_DID = "/did/{participantId}";
+
+    public static final String CREATE_PARTICIPANT = "/participant/{participantId}";
 }
