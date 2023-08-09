@@ -1,9 +1,11 @@
 package eu.gaiax.wizard.core.service.keycloak;
 
+
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.KeycloakRequiredActionsEnum;
 import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.KeycloakSettings;
+import eu.gaiax.wizard.api.utils.Validate;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.OAuth2Constants;
@@ -78,8 +80,15 @@ public class KeycloakService {
 
     public void sendRequiredActionsEmail(String email) {
         UserRepresentation userRepresentation = this.getKeycloakUserByEmail(email);
+        Validate.isNull(userRepresentation).launch(new BadDataException("User not found"));
+
         UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
-        userResource.executeActionsEmail(List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()), this.keycloakSettings.actionTokenLifespan());
+        userResource.executeActionsEmail(
+                this.keycloakSettings.publicClientId(),
+                this.keycloakSettings.requiredActionsEmailRedirectionUrl(),
+                this.keycloakSettings.actionTokenLifespan(),
+                List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue())
+        );
     }
 
     public UserRepresentation getKeycloakUserByEmail(String email) {
