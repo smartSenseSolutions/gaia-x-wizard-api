@@ -160,10 +160,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Map<String, Object> credentials = this.mapper.convertValue(credentialSubject, typeReference);
         String legalName = (String) credentials.get("gx:legalName");
         Validate.isFalse(StringUtils.hasText(legalName)).launch("invalid.legal.name");
-        Object legalAddress = credentials.get("gx:legalAddress");
+        Object legalAddress = credentials.get(StringPool.GX_LEGAL_ADDRESS);
         Object headquarterAddress = credentials.get("gx:headquarterAddress");
-        String legalCountry = (String) this.mapper.convertValue(legalAddress, typeReference).get("gx:countrySubdivisionCode");
-        String headQuarterCountry = (String) this.mapper.convertValue(headquarterAddress, typeReference).get("gx:countrySubdivisionCode");
+        String legalCountry = (String) this.mapper.convertValue(legalAddress, typeReference).get(StringPool.GX_COUNTRY_SUBDIVISION);
+        String headQuarterCountry = (String) this.mapper.convertValue(headquarterAddress, typeReference).get(StringPool.GX_COUNTRY_SUBDIVISION);
         Validate.isFalse(StringUtils.hasText(legalCountry)).launch("invalid.legal.address");
         Validate.isFalse(StringUtils.hasText(headQuarterCountry)).launch("invalid.headquarter.address");
     }
