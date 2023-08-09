@@ -23,7 +23,7 @@ import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
-import eu.gaiax.wizard.dao.repository.serviceoffer.ServiceOfferRepository;
+import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -86,7 +86,7 @@ public class ServiceOfferService {
         if (email != null) {
             participant = participantRepository.getByEmail(email);
             Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            signerService.validateRequestUrl(Arrays.asList(participantCred.getVcUrl()), "participant.json.not.found");
+            signerService.validateRequestUrl(participantCred.getVcUrl(), "participant.json.not.found");
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
             participant = participantService.validateParticipant(participantValidatorRequest);
@@ -226,13 +226,13 @@ public class ServiceOfferService {
             if (!termsCondition.containsKey("gx:URL")) {
                 throw new BadDataException("term.condition.not.found");
             } else {
-                signerService.validateRequestUrl(Arrays.asList(termsCondition.get("gx:URL").toString()), "term.condition.not.found");
+                signerService.validateRequestUrl(termsCondition.get("gx:URL").toString(), "term.condition.not.found");
             }
         }
         if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         } else {
-            signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("aggregation.of.not.found").toString()), "aggregation.of.not.found");
+            signerService.validateRequestUrl(request.getCredentialSubject().get("gx:aggregationOf").toString(), "aggregation.of.not.found");
         }
 
         if (!request.getCredentialSubject().containsKey("gx:dataAccountExport")) {
@@ -256,7 +256,7 @@ public class ServiceOfferService {
             throw new BadDataException("aggregation.of.not.found");
         } else {
             List<Map<String, String>> agg = objectMapper.readValue(request.getCredentialSubject().get("aggregation.of.not.found").toString(), List.class);
-            signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("aggregation.of.not.found").toString()), "aggregation.of.not.found");
+            signerService.validateRequestUrl(request.getCredentialSubject().get("aggregationOf").toString(), "aggregation.of.not.found");
         }
     }
 }
