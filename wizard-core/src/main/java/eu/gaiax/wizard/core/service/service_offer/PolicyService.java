@@ -11,12 +11,9 @@ import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
-import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
-import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,7 +22,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static eu.gaiax.wizard.api.model.StringPool.POLICY_LOCATION_LEFT_OPERAND;
 
@@ -37,39 +37,6 @@ public class PolicyService {
     private final RestTemplate restTemplate;
 
     private final ObjectMapper objectMapper;
-
-    private final ContextConfig contextConfig;
-
-    public String createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
-        Map<String, Object> ODRLPolicy = new HashMap<>();
-        ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
-        ODRLPolicy.put("type", "policy");
-        if (hostUrl == null) {
-            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
-        }
-        ODRLPolicy.put("id", hostUrl);
-        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
-        ODRLPolicy.put("permission", permission);
-        return this.objectMapper.writeValueAsString(ODRLPolicy);
-    }
-
-    @NotNull
-    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
-        List<Map<String, Object>> permission = new ArrayList<>();
-        Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", target);
-        perMap.put("assigner", assigner);
-        perMap.put("action", "view");
-        List<Map<String, Object>> constraint = new ArrayList<>();
-        Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("leftOperand", leftOperand);
-        constraintMap.put("operator", "isAnyOf");
-        constraintMap.put("rightOperand", rightOperand);
-        constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
-        permission.add(perMap);
-        return permission;
-    }
 
     public String[] getLocationByServiceOfferingId(String serviceOfferingId) {
         JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId);
