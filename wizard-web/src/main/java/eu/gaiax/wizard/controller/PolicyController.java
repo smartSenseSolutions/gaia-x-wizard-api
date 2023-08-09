@@ -3,7 +3,8 @@ package eu.gaiax.wizard.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
-import eu.gaiax.wizard.core.service.service_offer.PolicyEvaluatorService;
+import eu.gaiax.wizard.core.service.service_offer.PolicyService;
+import eu.gaiax.wizard.utils.WizardRestConstant;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,14 +22,14 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(value = GAIA_X_BASE_PATH)
-public class PolicyEvaluatorController extends BaseResource {
+public class PolicyController extends BaseResource {
 
-    private final PolicyEvaluatorService policyEvaluatorService;
+    private final PolicyService policyService;
 
     @Tag(name = "Policy-Evaluator")
     @Operation(summary = "ODRL policy evaluator for catalogue")
-    @PostMapping(path = "/policy/evaluate", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(path = WizardRestConstant.CATALOGUE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<JsonNode> createServiceOfferingPublic(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) throws IOException {
-        return CommonResponse.of(this.policyEvaluatorService.evaluatePolicy(policyEvaluationRequest));
+        return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
     }
 }

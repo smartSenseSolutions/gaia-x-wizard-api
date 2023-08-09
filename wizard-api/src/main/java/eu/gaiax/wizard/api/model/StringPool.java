@@ -100,6 +100,7 @@ public class StringPool {
     public static final String GX_LEGAL_ADDRESS = "gx:legalAddress";
     public static final String GX_COUNTRY_SUBDIVISION = "gx:countrySubdivisionCode";
     public static final String GX_POLICY = "gx:policy";
+    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
 
     private StringPool() {
     }

@@ -1,9 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.CommonResponse;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +17,7 @@ import java.io.IOException;
 import java.security.Principal;
 
 import static eu.gaiax.wizard.api.model.StringPool.GAIA_X_BASE_PATH;
+import static eu.gaiax.wizard.utils.WizardRestConstant.SERVICE_OFFER_LOCATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -55,7 +54,16 @@ public class ServiceOfferController extends BaseResource {
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create ODRLPolicy")
     @PostMapping(path = "/public/policy/ODRL", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest, Principal principal) throws IOException {
+    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createODRLPolicy(odrlPolicyRequest, null));
     }
+
+    @Tag(name = "Service-Offering")
+    @Operation(summary = "Get service locations from policy")
+    @PostMapping(path = SERVICE_OFFER_LOCATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<Object> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
+        ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
+        return CommonResponse.of(serviceOfferingLocationResponse);
+    }
+
 }

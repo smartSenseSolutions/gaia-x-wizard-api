@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.api.model.policy_evaluator;
+package eu.gaiax.wizard.api.model.policy;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

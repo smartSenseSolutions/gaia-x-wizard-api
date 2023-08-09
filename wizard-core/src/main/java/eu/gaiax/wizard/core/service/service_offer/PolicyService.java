@@ -8,9 +8,9 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
 import eu.gaiax.wizard.api.model.StringPool;
-import eu.gaiax.wizard.api.model.policy_evaluator.Constraint;
-import eu.gaiax.wizard.api.model.policy_evaluator.Policy;
-import eu.gaiax.wizard.api.model.policy_evaluator.Rule;
+import eu.gaiax.wizard.api.model.policy.Constraint;
+import eu.gaiax.wizard.api.model.policy.Policy;
+import eu.gaiax.wizard.api.model.policy.Rule;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,14 +27,44 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static eu.gaiax.wizard.api.model.StringPool.POLICY_LOCATION_LEFT_OPERAND;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PolicyEvaluatorService {
+public class PolicyService {
 
     private final RestTemplate restTemplate;
 
     private final ObjectMapper objectMapper;
+
+    public String[] getLocationByServiceOfferingId(String serviceOfferingId) {
+        JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId);
+        String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
+
+        if (StringUtils.hasText(policyUrl)) {
+            Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
+            if (accessPolicy == null) {
+                return new String[]{};
+            }
+
+            Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+            Constraint constraint;
+            if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
+                constraint = rule.get().getConstraint().stream()
+                        .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                        .findAny()
+                        .orElse(null);
+
+                if (constraint != null) {
+                    return constraint.getRightOperand();
+                }
+            }
+
+        }
+
+        return new String[]{};
+    }
 
     public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
@@ -63,7 +93,7 @@ public class PolicyEvaluatorService {
             Constraint constraint = null;
             if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
                 constraint = rule.get().getConstraint().stream()
-                        .filter(c -> c.getLeftOperand().equalsIgnoreCase("legalAddress.country"))
+                        .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
                         .findAny()
                         .orElse(null);
             }

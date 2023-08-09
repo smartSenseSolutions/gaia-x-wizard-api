@@ -8,10 +8,7 @@ import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.StringPool;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
+import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -58,8 +55,8 @@ public class ServiceOfferService {
     private final ParticipantService participantService;
     private final ContextConfig contextConfig;
     private final CommonService commonService;
-    private final HashingService hashingService;
     private final S3Utils s3Utils;
+    private final PolicyService policyService;
     @Value("${wizard.domain}")
     private String domain;
     @Value("${wizard.host.wizard}")
@@ -256,5 +253,9 @@ public class ServiceOfferService {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
         Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
+    }
+
+    public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
+        return this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
     }
 }
