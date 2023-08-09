@@ -171,14 +171,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> signerService.validateRequestUrl(url, "invalid.parent.organization"));
+            parentOrg.parallelStream().forEach(url -> signerService.validateRequestUrl(Arrays.asList(url), "invalid.parent.organization"));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> signerService.validateRequestUrl(url, "invalid.parent.organization"));
+            subOrg.parallelStream().forEach(url -> signerService.validateRequestUrl(Arrays.asList(url), "invalid.parent.organization"));
         }
     }
 
