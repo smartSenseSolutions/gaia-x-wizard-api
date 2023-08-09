@@ -2,5 +2,5 @@ package eu.gaiax.wizard.api.model;
 
 import java.util.List;
 
-public record ParticipantVerifyRequest(String participantUrl, List<String> policies) {
+public record ParticipantVerifyRequest(List<String> url, List<String> policies) {
 }

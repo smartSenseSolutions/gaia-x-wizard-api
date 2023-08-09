@@ -4,24 +4,21 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.core.service.CommonService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
+import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
@@ -33,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -58,7 +54,7 @@ public class ServiceOfferService {
     private final ParticipantRepository participantRepository;
     private final ParticipantService participantService;
     private final ContextConfig contextConfig;
-    private final CommonService commonService;
+    private final SignerService signerService;
     private final HashingService hashingService;
     private final S3Utils s3Utils;
     @Value("${wizard.host.wizard}")
@@ -90,7 +86,7 @@ public class ServiceOfferService {
         if (email != null) {
             participant = participantRepository.getByEmail(email);
             Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            commonService.validateRequestUrl(participantCred.getVcUrl(), "participant.json.not.found");
+            signerService.validateRequestUrl(Arrays.asList(participantCred.getVcUrl()), "participant.json.not.found");
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
             participant = participantService.validateParticipant(participantValidatorRequest);
@@ -110,14 +106,15 @@ public class ServiceOfferService {
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
-                    credentialSubject.put("gx:policy", policyUrl);
+                    credentialSubject.put("gx:policy", List.of(policyUrl));
                 }
                 credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
             }
         }
         createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
-        String responseData = signService(participant, request, serviceName);
+
+        String responseData = signerService.signService(participant, request, serviceName);
         String hostUrl = wizardHost + participant.getId() + "/" + serviceName + ".json";
         hostServiceOffer(responseData, participant.getId(), serviceName);
 
@@ -211,41 +208,6 @@ public class ServiceOfferService {
         }
     }
 
-    private String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
-        Credential participantCred = credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-        String id = wizardHost + participant.getId() + "/" + serviceName + ".json";
-        Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
-        request.getCredentialSubject().put("gx:providedBy", providedBy);
-        request.getCredentialSubject().put("id", id);
-        VerifiableCredential verifiableCredential = VerifiableCredential.builder()
-                .serviceOffering(VerifiableCredential.ServiceOffering.builder()
-                        .context(contextConfig.serviceOffer())
-                        .type(StringPool.VERIFIABLE_CREDENTIAL)
-                        .id(participant.getDid())
-                        .issuer(participant.getDid())
-                        .issuanceDate(commonService.getCurrentFormattedDate())
-                        .credentialSubject(request.getCredentialSubject())
-                        .build()).build();
-        List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
-        verifiableCredentialList.add(verifiableCredential);
-        SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
-                .issuer(participant.getDid())
-                .legalParticipantURL(participantCred.getVcUrl())
-                .verificationMethod(request.getVerificationMethod())
-                .vcs(verifiableCredential)
-                .build();
-        try {
-            ResponseEntity<Map<String, Object>> signerResponse = signerClient.createServiceOfferVc(signerServiceRequest);
-            String serviceOfferingString = objectMapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
-            LOGGER.debug("Send request to signer for service create vc");
-            return serviceOfferingString;
-        } catch (Exception e) {
-            LOGGER.debug("Service vc not created", e.getMessage());
-        }
-        return null;
-    }
 
     public void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
@@ -264,13 +226,13 @@ public class ServiceOfferService {
             if (!termsCondition.containsKey("gx:URL")) {
                 throw new BadDataException("term.condition.not.found");
             } else {
-                commonService.validateRequestUrl(termsCondition.get("gx:URL").toString(), "term.condition.not.found");
+                signerService.validateRequestUrl(Arrays.asList(termsCondition.get("gx:URL").toString()), "term.condition.not.found");
             }
         }
         if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         } else {
-            commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+            signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("aggregation.of.not.found").toString()), "aggregation.of.not.found");
         }
 
         if (!request.getCredentialSubject().containsKey("gx:dataAccountExport")) {
@@ -293,7 +255,8 @@ public class ServiceOfferService {
         if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         } else {
-            commonService.validateRequestUrl(request.getCredentialSubject().get("aggregation.of.not.found").toString(), "aggregation.of.not.found");
+            List<Map<String, String>> agg = objectMapper.readValue(request.getCredentialSubject().get("aggregation.of.not.found").toString(), List.class);
+            signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("aggregation.of.not.found").toString()), "aggregation.of.not.found");
         }
     }
 }

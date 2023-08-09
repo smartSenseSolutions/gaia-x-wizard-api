@@ -9,8 +9,6 @@ import lombok.Setter;
 @Setter
 @Builder
 public class SignerServiceRequest {
-
-    private String legalParticipantURL;
     private String issuer;
     private String verificationMethod;
     private String privateKey;
