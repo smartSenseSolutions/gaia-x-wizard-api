@@ -38,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The type Signer service.
@@ -237,11 +238,14 @@ public class SignerService {
         return null;
     }
 
-    public void validateRequestUrl(String url, String message) {
+    public void validateRequestUrl(List<String> urls, String message) {
         try {
-            ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(url, policies);
-            ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify(participantValidatorRequest);
-            log.debug("signer validation response:{}", signerResponse.getBody().get("message").toString());
+            AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = null;
+            urls.parallelStream().forEach(url -> {
+                participantValidatorRequest.set(new ParticipantVerifyRequest(url, policies));
+                ResponseEntity<Map<String, Object>> signerResponse = signerClient.verify(participantValidatorRequest.get());
+                log.debug("signer validation response:{}", signerResponse.getBody().get("message").toString());
+            });
         } catch (Exception e) {
             throw new BadDataException(message);
         }
