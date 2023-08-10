@@ -10,6 +10,7 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -66,8 +67,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final Vault vault;
     private final ObjectMapper mapper;
     private final SpecificationUtil<Participant> specificationUtil;
-    private final ObjectMapper objectMapper;
-    private final InvokeService invokeService;
     @Value("${wizard.domain}")
     private String domain;
 
@@ -188,7 +187,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     public Participant validateParticipant(ParticipantValidatorRequest request) {
         this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found");
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
-        JsonNode root = this.objectMapper.readTree(participantJson);
+        JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;
         JsonNode selfDescriptionCredential = root.get("selfDescriptionCredential");
         if (selfDescriptionCredential != null) {
@@ -229,12 +228,17 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public String getLegalParticipantJson(String participantId, String filename) throws IOException {
-        log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(filename);
-        File file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
-        return FileUtils.readFileToString(file, Charset.defaultCharset());
+        File file = new File(fetchedFileName);
+        try {
+            log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
+            Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+            Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+            file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
+            return FileUtils.readFileToString(file, Charset.defaultCharset());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
     public Map<String, Object> checkIfParticipantRegistered(String email) {
@@ -260,7 +264,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
         Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
         Validate.isNull(participant).launch(new EntityNotFoundException("Invalid participant ID"));
-        ParticipantConfigDTO participantConfigDTO = this.objectMapper.convertValue(participant, ParticipantConfigDTO.class);
+        ParticipantConfigDTO participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
 
         if (participant.isOwnDidSolution()) {
             participantConfigDTO.setPrivateKeyRequired(!StringUtils.hasText(participant.getPrivateKeyId()));
