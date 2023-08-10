@@ -78,9 +78,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (email != null) {
             participant = this.participantRepository.getByEmail(email);
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Arrays.asList(participantCred.getVcUrl()), "participant.json.not.found");
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found");
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
 
@@ -117,8 +117,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .credential(serviceOffVc)
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
-        if (response.containsKey("veracityData")) {
-            serviceOffer.setVeracityData(response.get("veracityData").toString());
+        if (response.containsKey("trustIndex")) {
+            serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
@@ -132,7 +132,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .vcJson(vc)
                 .description(serviceOffer.getDescription())
                 .build();
-
     }
 
     private String getRandomString() {
