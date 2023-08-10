@@ -12,10 +12,6 @@ public class StringPool {
      * The constant JOB_TYPE_CREATE_SUB_DOMAIN.
      */
     public static final String JOB_TYPE_CREATE_SUB_DOMAIN = "JOB_TYPE_CREATE_SUB_DOMAIN";
-    /**
-     * The constant GAIA_X_BASE_PATH.
-     */
-    public static final String GAIA_X_BASE_PATH = "/gaiax";
 
     /**
      * The constant JOB_TYPE_CREATE_CERTIFICATE.

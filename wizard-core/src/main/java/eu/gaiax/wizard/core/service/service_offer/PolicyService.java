@@ -11,21 +11,26 @@ import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
+import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
+import eu.gaiax.wizard.api.model.setting.ContextConfig;
+import eu.gaiax.wizard.api.utils.CommonUtils;
+import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.Validate;
+import eu.gaiax.wizard.core.service.participant.InvokeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
+import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.nio.charset.Charset;
+import java.util.*;
 
 import static eu.gaiax.wizard.api.model.StringPool.POLICY_LOCATION_LEFT_OPERAND;
 
@@ -34,33 +39,70 @@ import static eu.gaiax.wizard.api.model.StringPool.POLICY_LOCATION_LEFT_OPERAND;
 @Slf4j
 public class PolicyService {
 
-    private final RestTemplate restTemplate;
-
     private final ObjectMapper objectMapper;
+    private final S3Utils s3Utils;
+    private final ContextConfig contextConfig;
+
+
+    public String createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
+        Map<String, Object> policyMap = new HashMap<>();
+        policyMap.put("@context", this.contextConfig.ODRLPolicy());
+        policyMap.put("type", "policy");
+        if (hostUrl == null) {
+            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
+        }
+        policyMap.put("id", hostUrl);
+        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
+        policyMap.put("permission", permission);
+        return this.objectMapper.writeValueAsString(policyMap);
+    }
+
+    @NotNull
+    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
+        List<Map<String, Object>> permission = new ArrayList<>();
+        Map<String, Object> perMap = new HashMap<>();
+        perMap.put("target", target);
+        perMap.put("assigner", assigner);
+        perMap.put("action", "view");
+        List<Map<String, Object>> constraint = new ArrayList<>();
+        Map<String, Object> constraintMap = new HashMap<>();
+        constraintMap.put("leftOperand", leftOperand);
+        constraintMap.put("operator", "isAnyOf");
+        constraintMap.put("rightOperand", rightOperand);
+        constraint.add(constraintMap);
+        perMap.put("constraint", constraint);
+        permission.add(perMap);
+        return permission;
+    }
+
+    public void hostODRLPolicy(String hostPolicyJson, String hostedPath) {
+        File file = new File("/tmp/" + hostedPath + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
+            this.s3Utils.uploadFile(hostedPath + ".json", file);
+        } catch (Exception e) {
+            log.error("Error while hosting policy json on path " + hostedPath, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
+    }
 
     public String[] getLocationByServiceOfferingId(String serviceOfferingId) {
         JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId);
         String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
 
         if (StringUtils.hasText(policyUrl)) {
-            Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
-            if (accessPolicy == null) {
+            Constraint constraint;
+            try {
+                constraint = this.getLocationConstraintFromPolicy(policyUrl);
+            } catch (Exception e) {
+                log.info("Error encountered while fetching policy for service Id: {}", serviceOfferingId);
                 return new String[]{};
             }
 
-            Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
-            Constraint constraint;
-            if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
-                constraint = rule.get().getConstraint().stream()
-                        .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
-                        .findAny()
-                        .orElse(null);
-
-                if (constraint != null) {
-                    return constraint.getRightOperand();
-                }
+            if (constraint != null) {
+                return constraint.getRightOperand();
             }
-
         }
 
         return new String[]{};
@@ -84,19 +126,7 @@ public class PolicyService {
         String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
 
         if (StringUtils.hasText(policyUrl)) {
-            Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
-            if (accessPolicy == null) {
-                throw new EntityNotFoundException("Policy not found for the specified entity.");
-            }
-
-            Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
-            Constraint constraint = null;
-            if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
-                constraint = rule.get().getConstraint().stream()
-                        .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
-                        .findAny()
-                        .orElse(null);
-            }
+            Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
             if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
                 throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
@@ -129,30 +159,44 @@ public class PolicyService {
     }
 
     private JsonNode getCatalogueDescription(String catalogueUrl) {
-        ResponseEntity<JsonNode> catalogueResponse = this.restTemplate.getForEntity(URI.create(catalogueUrl), JsonNode.class);
-        if (catalogueResponse.getStatusCode().is2xxSuccessful()) {
-            return catalogueResponse.getBody();
-        }
-
-        throw new BadDataException("Invalid Catalogue URL");
+        String catalogue = InvokeService.executeRequest(catalogueUrl, HttpMethod.GET);
+        Validate.isNull(catalogue).launch(new BadDataException("Invalid Catalogue URL"));
+        return this.objectMapper.valueToTree(catalogue);
     }
 
     private JsonNode getServiceOffering(String serviceOfferingUrl) {
-        ResponseEntity<JsonNode> serviceOfferingResponse = this.restTemplate.getForEntity(URI.create(serviceOfferingUrl), JsonNode.class);
-        if (serviceOfferingResponse.getStatusCode().is2xxSuccessful()) {
-            return serviceOfferingResponse.getBody();
-        }
-
-        throw new BadDataException("Invalid Service Offering ID");
+        String serviceOffering = InvokeService.executeRequest(serviceOfferingUrl, HttpMethod.GET);
+        Validate.isNull(serviceOffering).launch(new BadDataException("IInvalid Service Offering ID"));
+        return this.objectMapper.valueToTree(serviceOffering);
     }
 
     private Policy getPolicyForServiceOffer(String policyUrl) {
-        ResponseEntity<Policy> policyResponse = this.restTemplate.getForEntity(URI.create(policyUrl), Policy.class);
-        if (policyResponse.getStatusCode().is2xxSuccessful()) {
-            return policyResponse.getBody();
+        String policy = InvokeService.executeRequest(policyUrl, HttpMethod.GET);
+        Validate.isNull(policy).launch(new BadDataException("Invalid Policy URL"));
+
+        try {
+            return this.objectMapper.readValue(policy, Policy.class);
+        } catch (Exception e) {
+            log.info("Error while converting policy from string to object");
+            return null;
+        }
+    }
+
+    private Constraint getLocationConstraintFromPolicy(String policyUrl) {
+        Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
+        if (accessPolicy == null) {
+            throw new EntityNotFoundException("Policy not found for the specified entity.");
         }
 
-        throw new BadDataException("Invalid Policy URL");
+        Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+        Constraint constraint = null;
+        if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
+            constraint = rule.get().getConstraint().stream()
+                    .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                    .findAny()
+                    .orElse(null);
+        }
+        return constraint;
     }
 
     private boolean isCountryInPermittedRegion(String countryCode, Constraint constraint) {

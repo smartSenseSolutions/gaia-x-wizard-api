@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
@@ -47,6 +48,7 @@ import java.util.*;
 public class ServiceOfferService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceOfferService.class);
 
+    private final SignerClient signerClient;
     private final CredentialService credentialService;
     private final ServiceOfferRepository serviceOfferRepository;
     private final ObjectMapper objectMapper;
@@ -54,28 +56,11 @@ public class ServiceOfferService {
     private final ParticipantService participantService;
     private final ContextConfig contextConfig;
     private final SignerService signerService;
+    private final HashingService hashingService;
     private final S3Utils s3Utils;
     private final PolicyService policyService;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
-
-    @NotNull
-    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
-        List<Map<String, Object>> permission = new ArrayList<>();
-        Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", target);
-        perMap.put("assigner", assigner);
-        perMap.put("action", "view");
-        List<Map<String, Object>> constraint = new ArrayList<>();
-        Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("leftOperand", leftOperand);
-        constraintMap.put("operator", "isAnyOf");
-        constraintMap.put("rightOperand", rightOperand);
-        constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
-        permission.add(perMap);
-        return permission;
-    }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String email) throws IOException {
@@ -101,9 +86,9 @@ public class ServiceOfferService {
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
-            String hostPolicyJson = this.createODRLPolicy(odrlPolicyRequest, policyUrl);
+            String hostPolicyJson = this.policyService.createPolicy(odrlPolicyRequest, policyUrl);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
-                this.hostODRLPolicy(hostPolicyJson, policyId);
+                this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
                     credentialSubject.put("gx:policy", List.of(policyUrl));
                 }
@@ -132,7 +117,7 @@ public class ServiceOfferService {
         };
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         List<Map<String, Object>> vc = this.objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
-        ServiceOfferResponse serviceOfferResponse = ServiceOfferResponse.builder()
+        return ServiceOfferResponse.builder()
                 .vcUrl(serviceOffer.getCredential().getVcUrl())
                 .name(serviceOffer.getName())
                 .veracityData(serviceOffer.getVeracityData())
@@ -147,29 +132,13 @@ public class ServiceOfferService {
         final String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
         StringBuilder randomString = new StringBuilder(5);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 4; i++) {
             int randomIndex = random.nextInt(possibleCharacters.length());
             char randomChar = possibleCharacters.charAt(randomIndex);
             randomString.append(randomChar);
         }
         return randomString.toString();
     }
-
-
-    public String createODRLPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
-        Map<String, Object> ODRLPolicy = new HashMap<>();
-        ODRLPolicy.put("@context", this.contextConfig.ODRLPolicy());
-        ODRLPolicy.put("type", "policy");
-        if (hostUrl == null) {
-            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
-        }
-        ODRLPolicy.put("id", hostUrl);
-        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
-        ODRLPolicy.put("permission", permission);
-        String hostPolicyJson = this.objectMapper.writeValueAsString(ODRLPolicy);
-        return hostPolicyJson;
-    }
-
 
     private void createTermsConditionHash(Map<String, Object> credentialSubject) throws IOException {
         if (credentialSubject.containsKey("gx:termsAndConditions")) {
@@ -190,18 +159,6 @@ public class ServiceOfferService {
             this.s3Utils.uploadFile(hostedPath, file);
         } catch (Exception e) {
             LOGGER.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
-        } finally {
-            CommonUtils.deleteFile(file);
-        }
-    }
-
-    private void hostODRLPolicy(String hostPolicyJson, String hostedPath) {
-        File file = new File("/tmp/" + hostedPath + ".json");
-        try {
-            FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostedPath + ".json", file);
-        } catch (Exception e) {
-            LOGGER.error("Error while hosting service offer json for participant:{},error:{}", hostedPath, e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
         }
