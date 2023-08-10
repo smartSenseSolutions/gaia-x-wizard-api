@@ -35,7 +35,7 @@ public class PolicyController extends BaseController {
     @Tag(name = "Policy")
     @Operation(summary = "Policy evaluator for catalogue")
     @PostMapping(path = WizardRestConstant.POLICY_EVALUATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<JsonNode> createServiceOfferingPublic(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) throws IOException {
+    public CommonResponse<JsonNode> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
         return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
     }
 }
