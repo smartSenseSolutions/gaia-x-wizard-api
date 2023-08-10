@@ -19,7 +19,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
-public class ResourceController extends BaseResource {
+public class ResourceController extends BaseController {
 
     private final ResourceService resourceService;
 
