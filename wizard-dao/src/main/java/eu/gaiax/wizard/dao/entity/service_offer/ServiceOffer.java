@@ -35,5 +35,12 @@ public class ServiceOffer extends SuperEntity {
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
     @Column(name = "veracity_data")
-    private String veracityData ;
+    private String veracityData;
+
+    public String getVcUrl() {
+        if (this.credential != null) {
+            return this.credential.getVcUrl();
+        }
+        return null;
+    }
 }
