@@ -1,17 +1,8 @@
 package eu.gaiax.wizard.dao.entity.data_master;
 
-import com.smartsensesolutions.java.commons.base.entity.BaseEntity;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LabelLevelTypeMaster extends SuperEntity implements BaseEntity {
+public class LabelLevelTypeMaster extends SuperEntity {
 
     @Column(name = "name")
     private String name;

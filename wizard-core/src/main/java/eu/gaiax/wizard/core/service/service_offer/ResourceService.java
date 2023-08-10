@@ -103,7 +103,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         if (credentialSubject != null) {
             credentialSubject.put("@context", this.contextConfig.resource());
             credentialSubject.put("@id", this.wizardHost + participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json");
-            credentialSubject.put("@type", request.credentialSubject().get("@type").toString());
+            credentialSubject.put("@type", "gx:" + request.credentialSubject().get("@type").toString());
         }
         resourceRequest.put("credentialSubject", credentialSubject);
 
