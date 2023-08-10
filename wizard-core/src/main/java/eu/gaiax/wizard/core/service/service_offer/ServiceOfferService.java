@@ -27,7 +27,6 @@ import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -124,8 +123,6 @@ public class ServiceOfferService {
                 .vcJson(vc)
                 .description(serviceOffer.getDescription())
                 .build();
-        return serviceOfferResponse;
-
     }
 
     private String getRandomString() {
