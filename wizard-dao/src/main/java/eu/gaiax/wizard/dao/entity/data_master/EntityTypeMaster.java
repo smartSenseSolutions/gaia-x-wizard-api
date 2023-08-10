@@ -1,7 +1,6 @@
 package eu.gaiax.wizard.dao.entity.data_master;
 
 
-import com.smartsensesolutions.java.commons.base.entity.BaseEntity;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +12,7 @@ import lombok.Setter;
 @Table(name = "entity_type_master")
 @Getter
 @Setter
-public class EntityTypeMaster extends SuperEntity implements BaseEntity {
+public class EntityTypeMaster extends SuperEntity {
 
     @Column(name = "type")
     private String type;

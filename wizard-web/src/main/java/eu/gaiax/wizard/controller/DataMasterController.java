@@ -4,11 +4,13 @@ import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.LabelLevelTypeInterface;
+import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.core.service.data_master.LabelLevelService;
 import eu.gaiax.wizard.core.service.data_master.MasterDataServiceFactory;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +23,8 @@ import static eu.gaiax.wizard.utils.WizardRestConstant.MASTER_DATA_FILTER;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Master data", description = "APIs to access master data for dropdowns in forms")
+@Valid
+@Tag(name = "master-data", description = "APIs to access master data for dropdowns in forms")
 public class DataMasterController extends BaseController {
 
     private final MasterDataServiceFactory masterDataServiceFactory;
@@ -33,11 +36,12 @@ public class DataMasterController extends BaseController {
             description = "This endpoint used to fetch master data for participant, service and resource forms."
     )
     @PostMapping(MASTER_DATA_FILTER)
-    public CommonResponse<Page> filterTypeMaster(
+    public CommonResponse<PageResponse> filterTypeMaster(
             @PathVariable(name = "dataType") @Parameter(description = "[access, entity, format, registration, request, standard, subdivision]") String dataType,
             @RequestBody FilterRequest filterRequest) {
         BaseService service = this.masterDataServiceFactory.getInstance(dataType + "TypeMasterService");
-        return CommonResponse.of(service.filter(filterRequest));
+        Page page = service.filter(filterRequest);
+        return CommonResponse.of(PageResponse.of(page, filterRequest.getSort()));
     }
 
     @Operation(
