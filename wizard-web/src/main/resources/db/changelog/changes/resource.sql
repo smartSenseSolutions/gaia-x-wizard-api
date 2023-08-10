@@ -14,3 +14,8 @@ CREATE TABLE resource(
     CONSTRAINT fk_participant_id FOREIGN KEY (participant_id) REFERENCES participant(id),
     CONSTRAINT fk_credential_id FOREIGN KEY (credential_id) REFERENCES credential(id)
 );
+--changeset mittal:1
+ALTER TABLE resource ALTER COLUMN "type" TYPE varchar USING "type"::varchar(30);
+ALTER TABLE resource ALTER COLUMN sub_type TYPE varchar USING sub_type::varchar(30);
+
+

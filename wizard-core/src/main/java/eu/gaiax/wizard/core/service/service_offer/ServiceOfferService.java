@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
@@ -48,7 +47,6 @@ import java.util.*;
 public class ServiceOfferService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceOfferService.class);
 
-    private final SignerClient signerClient;
     private final CredentialService credentialService;
     private final ServiceOfferRepository serviceOfferRepository;
     private final ObjectMapper objectMapper;
@@ -56,7 +54,6 @@ public class ServiceOfferService {
     private final ParticipantService participantService;
     private final ContextConfig contextConfig;
     private final SignerService signerService;
-    private final HashingService hashingService;
     private final S3Utils s3Utils;
     private final PolicyService policyService;
     @Value("${wizard.host.wizard}")
@@ -88,9 +85,9 @@ public class ServiceOfferService {
         if (email != null) {
             participant = this.participantRepository.getByEmail(email);
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Arrays.asList(participantCred.getVcUrl()), "participant.json.not.found");
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found");
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
 
@@ -127,8 +124,8 @@ public class ServiceOfferService {
                 .credential(serviceOffVc)
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
-        if (response.containsKey("veracityData")) {
-            serviceOffer.setVeracityData(response.get("veracityData").toString());
+        if (response.containsKey("trustIndex")) {
+            serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
@@ -150,7 +147,7 @@ public class ServiceOfferService {
         final String possibleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         Random random = new Random();
         StringBuilder randomString = new StringBuilder(5);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             int randomIndex = random.nextInt(possibleCharacters.length());
             char randomChar = possibleCharacters.charAt(randomIndex);
             randomString.append(randomChar);
@@ -204,7 +201,7 @@ public class ServiceOfferService {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostedPath + ".json", file);
         } catch (Exception e) {
-            LOGGER.error("Error while hosting service offer json for participant:{}", hostedPath, e.getMessage());
+            LOGGER.error("Error while hosting service offer json for participant:{},error:{}", hostedPath, e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
         }
