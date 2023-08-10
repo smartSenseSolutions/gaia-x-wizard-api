@@ -4,9 +4,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartsensesolutions.java.commons.FilterRequest;
+import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
+import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
@@ -30,6 +36,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,7 +51,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceOfferService {
+public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceOfferService.class);
 
     private final SignerClient signerClient;
@@ -58,6 +65,8 @@ public class ServiceOfferService {
     private final HashingService hashingService;
     private final S3Utils s3Utils;
     private final PolicyService policyService;
+    private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -215,5 +224,23 @@ public class ServiceOfferService {
 
     public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
         return this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
+    }
+
+    public PageResponse<ServiceAndResourceListDTO> getServiceOfferingList(FilterRequest filterRequest) {
+        Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
+        List<ServiceAndResourceListDTO> serviceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
+        });
+
+        return PageResponse.of(serviceList, serviceOfferPage, filterRequest.getSort());
+    }
+
+    @Override
+    protected BaseRepository<ServiceOffer, UUID> getRepository() {
+        return this.serviceOfferRepository;
+    }
+
+    @Override
+    protected SpecificationUtil<ServiceOffer> getSpecificationUtil() {
+        return this.serviceOfferSpecificationUtil;
     }
 }
