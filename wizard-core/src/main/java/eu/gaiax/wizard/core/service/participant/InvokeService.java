@@ -2,6 +2,7 @@ package eu.gaiax.wizard.core.service.participant;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -9,6 +10,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.util.Objects;
 
 @Slf4j
+@Service
 public class InvokeService {
     public static String executeRequest(String url, HttpMethod method) {
         return executeRequest(url, method, null);
