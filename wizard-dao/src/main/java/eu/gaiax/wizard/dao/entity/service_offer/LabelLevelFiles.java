@@ -17,16 +17,21 @@ import java.util.UUID;
 public class LabelLevelFiles extends SuperEntity {
     @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", referencedColumnName = "id", nullable = false)
     private Participant participant;
+
     @Column(name = "service_offer_id", insertable = false, updatable = false)
     private UUID serviceOfferId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_offer_id", referencedColumnName = "id", nullable = false)
     private ServiceOffer serviceOffer;
+
     @Column(name = "file_path")
     private String filePath;
+
     @Column(name = "description")
     private String description;
 }

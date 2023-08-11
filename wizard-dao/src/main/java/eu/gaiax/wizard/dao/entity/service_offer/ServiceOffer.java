@@ -19,8 +19,10 @@ public class ServiceOffer extends SuperEntity {
 
     @Column(name = "name", nullable = false)
     private String name;
+
     @Column(name = "description")
     private String description;
+
     @Column(name = "credential_id", insertable = false, updatable = false)
     private UUID credentialId;
 
@@ -34,6 +36,14 @@ public class ServiceOffer extends SuperEntity {
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL) // Adjust the cascade type as per your use case
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
+
     @Column(name = "veracity_data")
-    private String veracityData ;
+    private String veracityData;
+
+    public String getVcUrl() {
+        if (this.credential != null) {
+            return this.credential.getVcUrl();
+        }
+        return null;
+    }
 }

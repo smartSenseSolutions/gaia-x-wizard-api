@@ -1,8 +1,15 @@
 package eu.gaiax.wizard.core.service.service_offer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartsensesolutions.java.commons.FilterRequest;
+import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
+import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -20,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -28,23 +36,29 @@ import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ResourceService {
+public class ResourceService extends BaseService<Resource, UUID> {
 
     private final ResourceRepository repository;
+
     private final ParticipantService participantService;
+
     private final ParticipantRepository participantRepository;
+
     private final ContextConfig contextConfig;
+
     private final ObjectMapper objectMapper;
+
     private final S3Utils s3Utils;
+
     private final CredentialService credentialService;
+
+    private final SpecificationUtil<Resource> specificationUtil;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -114,5 +128,23 @@ public class ResourceService {
         } finally {
             CommonUtils.deleteFile(file);
         }
+    }
+
+    public PageResponse<ServiceAndResourceListDTO> getResourceList(FilterRequest filterRequest) {
+        Page<Resource> resourcePage = this.filter(filterRequest);
+        List<ServiceAndResourceListDTO> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
+        });
+
+        return PageResponse.of(resourceList, resourcePage, filterRequest.getSort());
+    }
+
+    @Override
+    protected BaseRepository<Resource, UUID> getRepository() {
+        return this.repository;
+    }
+
+    @Override
+    protected SpecificationUtil<Resource> getSpecificationUtil() {
+        return this.specificationUtil;
     }
 }

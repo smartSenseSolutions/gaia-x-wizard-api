@@ -4,7 +4,11 @@
 
 package eu.gaiax.wizard.api.client;
 
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.CreateVPRequest;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
+import eu.gaiax.wizard.api.model.VerifyRequest;
+import eu.gaiax.wizard.api.model.did.CreateDidRequest;
 import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -17,7 +21,7 @@ import java.util.Map;
 @FeignClient(value = "Signerapi", url = "${wizard.host.signer}")
 public interface SignerClient {
 
-    @PostMapping(path = "createWebDID", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/v1/create-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createDid(@RequestBody CreateDidRequest createDidRequest);
 
     @PostMapping(path = "/v1/gaia-x/legal-participant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

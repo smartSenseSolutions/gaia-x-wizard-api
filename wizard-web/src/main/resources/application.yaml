@@ -80,6 +80,10 @@ wizard:
   domain:
   gaiax:
     tnc:
+  service-endpoint:
+    linkDomainType:
+    pdpType:
+    pdpUrl:
 
 spring:
   liquibase:

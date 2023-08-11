@@ -1,7 +1,10 @@
 package eu.gaiax.wizard.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 
+import static eu.gaiax.wizard.utils.WizardRestConstant.RESOURCE_LIST;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -33,8 +37,15 @@ public class ResourceController extends BaseController {
     @Tag(name = "Resources")
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
+    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
         return CommonResponse.of(this.resourceService.createResource(request, null));
+    }
+
+    @Tag(name = "Resources")
+    @Operation(summary = "Get service list for dropdown")
+    @PostMapping(path = RESOURCE_LIST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<PageResponse<ServiceAndResourceListDTO>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
+        return CommonResponse.of(this.resourceService.getResourceList(filterRequest));
     }
 
 }

@@ -1,6 +1,9 @@
 package eu.gaiax.wizard.controller;
 
+import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
@@ -58,5 +61,13 @@ public class ServiceOfferController extends BaseController {
         ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
         return CommonResponse.of(serviceOfferingLocationResponse);
     }
+
+    @Tag(name = "Service-Offering")
+    @Operation(summary = "Get service list for dropdown")
+    @PostMapping(path = SERVICE_OFFER_LIST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<PageResponse<ServiceAndResourceListDTO>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
+        return CommonResponse.of(this.serviceOfferService.getServiceOfferingList(filterRequest));
+    }
+
 
 }

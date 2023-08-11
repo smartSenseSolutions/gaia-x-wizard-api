@@ -1,11 +1,11 @@
 package eu.gaiax.wizard.dao.entity.data_master;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.smartsensesolutions.java.commons.base.entity.BaseEntity;
 import eu.gaiax.wizard.api.model.ApplicableLevelCriterionEnum;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
@@ -13,7 +13,7 @@ import java.util.UUID;
 @Table(name = "label_level_question_master")
 @Getter
 @Setter
-public class LabelLevelQuestionMaster extends SuperEntity implements BaseEntity {
+public class LabelLevelQuestionMaster extends SuperEntity {
 
     @Column(name = "type_id", insertable = false, updatable = false)
     private UUID typeId;
