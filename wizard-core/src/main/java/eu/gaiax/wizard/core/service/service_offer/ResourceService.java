@@ -78,8 +78,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
             Credential resourceVc = this.credentialService.createCredential(json, this.wizardHost + hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.credentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
-                    .type(request.credentialSubject().get("@type").toString())
-                    .subType(request.credentialSubject().get("@subType") == null ? null : request.credentialSubject().get("@subType").toString())
+                    .type(request.credentialSubject().get("type").toString())
+                    .subType(request.credentialSubject().get("subType") == null ? null : request.credentialSubject().get("subType").toString())
                     .description(request.credentialSubject().get("gx:description") == null ? null : request.credentialSubject().get("gx:description").toString())
                     .participant(participant).build();
             return this.repository.save(resource);
@@ -97,15 +97,20 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
         resourceRequest.put("id", this.wizardHost + "resource" + "/" + UUID.randomUUID() + ".json");
-        resourceRequest.put("issuer", "did:web:dev.smartproof.in");
+        resourceRequest.put("issuer", participant.getDid());
         resourceRequest.put("issuanceDate", issuanceDate);
-        Map<String, Object> credentialSubject = request.credentialSubject();
-        if (credentialSubject != null) {
-            credentialSubject.put("@context", this.contextConfig.resource());
-            credentialSubject.put("@id", this.wizardHost + participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json");
-            credentialSubject.put("@type", "gx:" + request.credentialSubject().get("@type").toString());
+        Map<String, Object> credentialSub = request.credentialSubject();
+        if (credentialSub != null) {
+            credentialSub.put("@context", this.contextConfig.resource());
+            credentialSub.put("id", this.wizardHost + participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json");
+            if (request.credentialSubject().get("type").toString().contains("Physical")) {
+                credentialSub.put("type", "gx:" + request.credentialSubject().get("type").toString());
+            } else {
+                credentialSub.put("type", "gx:" + request.credentialSubject().get("subType").toString());
+                credentialSub.remove("subType");
+            }
         }
-        resourceRequest.put("credentialSubject", credentialSubject);
+        resourceRequest.put("credentialSubject", credentialSub);
 
 
         //Todo singer code remaining

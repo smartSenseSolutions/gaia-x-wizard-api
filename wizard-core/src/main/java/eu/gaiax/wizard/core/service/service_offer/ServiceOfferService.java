@@ -13,6 +13,7 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
@@ -66,6 +67,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final S3Utils s3Utils;
     private final PolicyService policyService;
     private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
+    private final ServiceEndpointConfig serviceEndpointConfig;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -109,6 +111,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         String responseData = this.signerService.signService(participant, request, serviceName);
         String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
         this.hostServiceOffer(responseData, participant.getId(), serviceName);
+        this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
 
         Credential serviceOffVc = this.credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         ServiceOffer serviceOffer = ServiceOffer.builder()
