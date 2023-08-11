@@ -262,7 +262,7 @@ public class SignerService {
         });
     }
 
-    private void addServiceEndpoint(UUID participantId, String id, String type, String url) {
+    public void addServiceEndpoint(UUID participantId, String id, String type, String url) {
         Map<String, String> map = Map.of("id", id, "type", type, "serviceEndpoints", url);
         String didPath = "/tmp/" + UUID.randomUUID().toString() + ".json";
         File file = null;
