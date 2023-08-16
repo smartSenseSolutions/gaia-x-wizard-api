@@ -150,8 +150,7 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "401", description = "Unauthorized access."),
             @ApiResponse(responseCode = "403", description = "User does not have access to this API."),
             @ApiResponse(responseCode = "404", description = "Participant not found.")
-    }
-    )
+    })
     @GetMapping(PARTICIPANT_CONFIG)
     public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
         String userId = (String) this.requestForClaim(StringPool.ID, principal);
@@ -167,8 +166,7 @@ public class ParticipantController extends BaseController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Email sent successfully."),
             @ApiResponse(responseCode = "400", description = "User not registered.")
-    }
-    )
+    })
     @PostMapping(SEND_REQUIRED_ACTIONS_EMAIL)
     public CommonResponse<Object> sendRequiredActionsEmail(@RequestBody SendRegistrationEmailRequest sendRegistrationEmailRequest) {
         this.participantService.sendRegistrationLink(sendRegistrationEmailRequest.email());
