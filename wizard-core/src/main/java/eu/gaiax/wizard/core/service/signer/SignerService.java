@@ -11,6 +11,9 @@ import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.did.CreateDidRequest;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
+import eu.gaiax.wizard.api.model.did.ServiceEndpoints;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
@@ -27,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -34,6 +39,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -62,6 +68,8 @@ public class SignerService {
     private final ObjectMapper mapper;
     private final ScheduleService scheduleService;
     private final Vault vault;
+    private final ServiceEndpointConfig serviceEndpointConfig;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
     @Value("${wizard.gaiax.tnc}")
@@ -151,7 +159,9 @@ public class SignerService {
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
-            this.credentialService.createCredential(participantString, this.formParticipantJsonUrl(participant.getId()), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
+            String participantJsonUrl = this.formParticipantJsonUrl(participant.getId());
+            this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
+            this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
             log.debug("SignerService(createParticipantJson) -> Participant json has been created for participant {} with selfDescription {}", participant.getId(), participantString);
         } catch (Exception e) {
@@ -172,7 +182,7 @@ public class SignerService {
         try {
             String domain = participant.getDomain();
             log.info("SignerService(createDid) ->  DID creation is initiated for domain {}", domain);
-            CreateDidRequest createDidRequest = new CreateDidRequest(domain);
+            CreateDidRequest createDidRequest = new CreateDidRequest(domain, List.of(new ServiceEndpoints(this.serviceEndpointConfig.pdpType(), this.serviceEndpointConfig.pdpUrl())));
             log.info("SignerService(createDid) -> Initiated signerClient call for create did for domain {}", domain);
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createDid(createDidRequest);
             log.info("SignerService(createDid): -> Response has been received from signerClient for domain {}", domain);
@@ -250,5 +260,30 @@ public class SignerService {
                 throw new BadDataException(message + url);
             }
         });
+    }
+
+    public void addServiceEndpoint(UUID participantId, String id, String type, String url) {
+        Map<String, String> map = Map.of("id", id, "type", type, "serviceEndpoints", url);
+        String didPath = "/tmp/" + UUID.randomUUID().toString() + ".json";
+        File file = null;
+        File updatedFile = new File("/tmp/" + UUID.randomUUID().toString() + ".json");
+        try {
+            file = this.s3Utils.getObject(participantId + "/did.json", didPath);
+            String didString = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
+            JSONObject jsonObject = new JSONObject(didString);
+            JSONArray services = jsonObject.optJSONArray("service");
+            if (Objects.isNull(services)) {
+                jsonObject.put("service", new ArrayList<>());
+                services = jsonObject.getJSONArray("service");
+            }
+            services.put(map);
+            FileUtils.writeStringToFile(updatedFile, jsonObject.toString(), Charset.defaultCharset());
+            this.s3Utils.uploadFile(participantId + "/did.json", updatedFile);
+        } catch (Exception ex) {
+            log.error("Issue occurred while add service endpoint into the DID document for participant {}", participantId);
+            throw new BadDataException("not.able.to.add.service.endpoint");
+        } finally {
+            CommonUtils.deleteFile(file, updatedFile);
+        }
     }
 }

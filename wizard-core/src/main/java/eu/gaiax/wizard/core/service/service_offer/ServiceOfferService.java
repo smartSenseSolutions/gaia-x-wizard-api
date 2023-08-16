@@ -4,9 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smartsensesolutions.java.commons.FilterRequest;
+import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
+import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
@@ -30,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -44,7 +52,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class ServiceOfferService {
+public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceOfferService.class);
 
     private final SignerClient signerClient;
@@ -58,6 +66,9 @@ public class ServiceOfferService {
     private final HashingService hashingService;
     private final S3Utils s3Utils;
     private final PolicyService policyService;
+    private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
+    private final ServiceEndpointConfig serviceEndpointConfig;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -69,9 +80,9 @@ public class ServiceOfferService {
         if (email != null) {
             participant = this.participantRepository.getByEmail(email);
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Arrays.asList(participantCred.getVcUrl()), "participant.json.not.found");
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found");
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.getIssuer(), request.isStoreVault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
 
@@ -100,6 +111,7 @@ public class ServiceOfferService {
         String responseData = this.signerService.signService(participant, request, serviceName);
         String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
         this.hostServiceOffer(responseData, participant.getId(), serviceName);
+        this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
 
         Credential serviceOffVc = this.credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         ServiceOffer serviceOffer = ServiceOffer.builder()
@@ -108,8 +120,8 @@ public class ServiceOfferService {
                 .credential(serviceOffVc)
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
-        if (response.containsKey("veracityData")) {
-            serviceOffer.setVeracityData(response.get("veracityData").toString());
+        if (response.containsKey("trustIndex")) {
+            serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
@@ -123,7 +135,6 @@ public class ServiceOfferService {
                 .vcJson(vc)
                 .description(serviceOffer.getDescription())
                 .build();
-
     }
 
     private String getRandomString() {
@@ -216,5 +227,23 @@ public class ServiceOfferService {
 
     public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
         return this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
+    }
+
+    public PageResponse<ServiceAndResourceListDTO> getServiceOfferingList(FilterRequest filterRequest) {
+        Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
+        List<ServiceAndResourceListDTO> serviceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
+        });
+
+        return PageResponse.of(serviceList, serviceOfferPage, filterRequest.getSort());
+    }
+
+    @Override
+    protected BaseRepository<ServiceOffer, UUID> getRepository() {
+        return this.serviceOfferRepository;
+    }
+
+    @Override
+    protected SpecificationUtil<ServiceOffer> getSpecificationUtil() {
+        return this.serviceOfferSpecificationUtil;
     }
 }

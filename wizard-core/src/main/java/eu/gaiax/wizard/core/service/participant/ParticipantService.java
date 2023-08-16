@@ -1,17 +1,16 @@
 package eu.gaiax.wizard.core.service.participant;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.client.SignerClient;
-import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
-import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -36,7 +35,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -69,8 +67,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final Vault vault;
     private final ObjectMapper mapper;
     private final SpecificationUtil<Participant> specificationUtil;
-    private final SignerClient signerClient;
-    private final ObjectMapper objectMapper;
     @Value("${wizard.domain}")
     private String domain;
 
@@ -175,14 +171,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Arrays.asList(url), "invalid.parent.organization"));
+            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Arrays.asList(url), "invalid.parent.organization"));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
         }
     }
 
@@ -193,19 +189,23 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        ParticipantVerifyRequest participantValidatorRequest = new ParticipantVerifyRequest(request.participantJsonUrl(), policies);
-        ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest);
-        if (!signerResponse.getStatusCode().is2xxSuccessful()) {
-            throw new BadDataException();
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found");
+        String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
+        JsonNode root = this.mapper.readTree(participantJson);
+        String issuer = null;
+        JsonNode selfDescriptionCredential = root.get("selfDescriptionCredential");
+        if (selfDescriptionCredential != null) {
+            issuer = selfDescriptionCredential.path("verifiableCredential").path(0).path("issuer").asText();
         }
-        Participant participant = this.participantRepository.getByDid(request.issuer());
+        Validate.isNull(issuer).launch(new EntityNotFoundException("issuer.not.found"));
+
+        Participant participant = this.participantRepository.getByDid(issuer);
         if (Objects.isNull(participant)) {
             participant = Participant.builder()
-                    .did(request.issuer())
+                    .did(issuer)
                     .build();
         }
         participant = this.participantRepository.save(participant);
-        String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
         if (Objects.isNull(credential)) {
             credential = this.credentialService.createCredential(participantJson, request.participantJsonUrl(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
@@ -232,12 +232,17 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public String getLegalParticipantJson(String participantId, String filename) throws IOException {
-        log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(filename);
-        File file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
-        return FileUtils.readFileToString(file, Charset.defaultCharset());
+        File file = new File(fetchedFileName);
+        try {
+            log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
+            Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+            Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+            file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
+            return FileUtils.readFileToString(file, Charset.defaultCharset());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
     }
 
     public Map<String, Object> checkIfParticipantRegistered(String email) {
