@@ -69,6 +69,7 @@ public class PlatformSwaggerConfig {
                                 )
                         )
         );
+
         return openAPI.components(components)
                 .addSecurityItem(new SecurityRequirement().addList("gaia-x-open-api", Collections.emptyList()));
     }

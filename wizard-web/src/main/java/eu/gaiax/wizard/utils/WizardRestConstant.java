@@ -7,8 +7,10 @@ import lombok.NoArgsConstructor;
 public class WizardRestConstant {
 
     public static final String REGISTER = "/public/register";
+
     public static final String SEND_REQUIRED_ACTIONS_EMAIL = "/public/registration/send-email";
-    public static final String ENTERPRISE = "/enterprise";//ER
+
+    /*public static final String ENTERPRISE = "/enterprise";//ER
     public static final String ENTERPRISE_LIST = ENTERPRISE + "/list";//AR
     public static final String ENTERPRISE_BY_ID = ENTERPRISE + "/{id}";//AR
     public static final String ENTERPRISE_VC = ENTERPRISE + "/vcs";//ER
@@ -18,7 +20,7 @@ public class WizardRestConstant {
     public static final String CREATE_VP = ENTERPRISE + "/vc/{name}/vp";//ER
     public static final String SERVICE_OFFER_DETAILS = ENTERPRISE + "/service-offers/{offerId}/details";//ER
 
-    public static final String EXPORT_KEYS = ENTERPRISE + "/keys/export"; //ER
+    public static final String EXPORT_KEYS = ENTERPRISE + "/keys/export"; //ER*/
 
     public static final String MASTER_DATA_FILTER = "/public/master-data/{dataType}/filter";
 
@@ -26,9 +28,9 @@ public class WizardRestConstant {
 
     public static final String CHECK_REGISTRATION = "/public/check-registration";
 
-    public static final String PARTICIPANT_CONFIG = "/participant/config";
-
     public static final String POLICY_EVALUATE = "/public/policy/evaluate";
+    
+    public static final String PARTICIPANT_CONFIG = "/participant/config";
 
     public static final String SERVICE_OFFER = "/service-offer";
 

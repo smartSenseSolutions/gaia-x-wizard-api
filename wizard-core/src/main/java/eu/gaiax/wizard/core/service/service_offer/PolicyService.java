@@ -81,7 +81,7 @@ public class PolicyService {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostedPath + ".json", file);
         } catch (Exception e) {
-            log.error("Error while hosting policy json on path " + hostedPath, e.getMessage());
+            log.error("Error while hosting policy json on path " + hostedPath, e);
         } finally {
             CommonUtils.deleteFile(file);
         }
