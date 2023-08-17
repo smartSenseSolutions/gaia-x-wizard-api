@@ -219,6 +219,10 @@ public class SignerService {
         providedBy.put("id", request.getParticipantJsonUrl() + "#0");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
+        request.getCredentialSubject().put("gx:name", request.getName());
+        if (request.getDescription() != null) {
+            request.getCredentialSubject().put("gx:description", request.getDescription());
+        }
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         VerifiableCredential verifiableCredential = VerifiableCredential.builder()
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
@@ -244,8 +248,8 @@ public class SignerService {
             return serviceOfferingString;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
-        return null;
     }
 
     public void validateRequestUrl(List<String> urls, String message) {
@@ -257,7 +261,7 @@ public class SignerService {
                 log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
-                throw new BadDataException(message + url);
+                throw new BadDataException(message + ",url=" + url);
             }
         });
     }

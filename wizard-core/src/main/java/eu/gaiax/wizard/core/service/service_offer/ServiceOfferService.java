@@ -3,6 +3,7 @@ package eu.gaiax.wizard.core.service.service_offer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
@@ -168,6 +169,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.s3Utils.uploadFile(hostedPath, file);
         } catch (Exception e) {
             LOGGER.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
+            throw new BadDataException(e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
         }
@@ -178,51 +180,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
         Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
-    }
-
-    public void validateServiceOfferMainRequest(CreateServiceOfferingRequest request) throws JsonProcessingException {
-        Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
-        Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
-        Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
-        if (!request.getCredentialSubject().containsKey("gx:termsAndConditions")) {
-            throw new BadDataException("term.condition.not.found");
-        } else {
-            Map<String, Object> termsCondition = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:termsAndConditions"), Map.class);
-            if (!termsCondition.containsKey("gx:URL")) {
-                throw new BadDataException("term.condition.not.found");
-            } else {
-                this.signerService.validateRequestUrl(Arrays.asList(termsCondition.get("gx:URL").toString()), "term.condition.not.found");
-            }
-        }
-        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
-            throw new BadDataException("aggregation.of.not.found");
-        } else {
-            this.signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("gx:aggregationOf").toString()), "aggregation.of.not.found");
-        }
-
-        if (!request.getCredentialSubject().containsKey("gx:dataAccountExport")) {
-            throw new BadDataException("data.account.export.not.found");
-        } else {
-            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
-            };
-            this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
-            Map<String, Object> export = this.objectMapper.readValue(request.getCredentialSubject().get("gx:dataAccountExport").toString(), typeReference);
-            if (!export.containsKey("gx:requestType") || StringUtils.hasText(export.get("gx:requestType").toString())) {
-                throw new BadDataException("requestType.of.not.found");
-            }
-            if (!export.containsKey("gx:accessType") || StringUtils.hasText(export.get("gx:accessType").toString())) {
-                throw new BadDataException("accessType.of.not.found");
-            }
-            if (!export.containsKey("gx:formatType") || StringUtils.hasText(export.get("gx:formatType").toString())) {
-                throw new BadDataException("formatType.of.not.found");
-            }
-        }
-        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
-            throw new BadDataException("aggregation.of.not.found");
-        } else {
-            List<Map<String, String>> agg = this.objectMapper.readValue(request.getCredentialSubject().get("aggregation.of.not.found").toString(), List.class);
-            this.signerService.validateRequestUrl(Arrays.asList(request.getCredentialSubject().get("aggregationOf").toString()), "aggregation.of.not.found");
-        }
     }
 
     public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
@@ -246,4 +203,103 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     protected SpecificationUtil<ServiceOffer> getSpecificationUtil() {
         return this.serviceOfferSpecificationUtil;
     }
+
+    public void validateServiceOfferMainRequest(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        this.validateCredentialSubject(request);
+        this.validateTermsAndConditions(request);
+        this.validateAggregationOf(request);
+        this.validateDependsOn(request);
+        this.validateDataAccountExport(request);
+    }
+
+    private void validateName(CreateServiceOfferingRequest request) {
+        if (StringUtils.hasText(request.getName())) {
+            throw new BadDataException("invalid.service.name");
+        }
+    }
+
+    private void validateCredentialSubject(CreateServiceOfferingRequest request) {
+        if (CollectionUtils.isEmpty(request.getCredentialSubject())) {
+            throw new BadDataException("invalid.credential");
+        }
+    }
+
+    private void validateTermsAndConditions(CreateServiceOfferingRequest request) {
+        Map<String, Object> credentialSubject = request.getCredentialSubject();
+        if (!credentialSubject.containsKey("gx:termsAndConditions")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        Map termsCondition = this.objectMapper.convertValue(
+                credentialSubject.get("gx:termsAndConditions"), Map.class);
+
+        if (!termsCondition.containsKey("gx:URL")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        String termsAndConditionsUrl = termsCondition.get("gx:URL").toString();
+        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ");
+    }
+
+    private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        if (request.getCredentialSubject().containsKey("gx:aggregationOf")
+                || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+            throw new BadDataException("aggregation.of.not.found");
+        }
+        JsonNode jsonNode = this.objectMapper.readTree(request.getCredentialSubject().toString());
+
+        JsonNode aggregationOfArray = jsonNode.at("/credentialSubject/gx:aggregationOf");
+
+        List<String> ids = new ArrayList<>();
+        aggregationOfArray.forEach(item -> {
+            if (item.has("id")) {
+                String id = item.get("id").asText();
+                ids.add(id);
+            }
+        });
+        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found");
+    }
+
+    private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        if (request.getCredentialSubject().get("gx:dependsOn") != null) {
+            JsonNode jsonNode = this.objectMapper.readTree(request.getCredentialSubject().toString());
+
+            JsonNode aggregationOfArray = jsonNode.at("/credentialSubject/gx:dependsOn");
+
+            List<String> ids = new ArrayList<>();
+            aggregationOfArray.forEach(item -> {
+                if (item.has("id")) {
+                    String id = item.get("id").asText();
+                    ids.add(id);
+                }
+            });
+            this.signerService.validateRequestUrl(ids, "depends.on.not.found");
+        }
+
+    }
+
+    private void validateDataAccountExport(CreateServiceOfferingRequest request) throws JsonProcessingException {
+        Map<String, Object> credentialSubject = request.getCredentialSubject();
+        if (!credentialSubject.containsKey("gx:dataAccountExport")) {
+            throw new BadDataException("data.account.export.not.found");
+        }
+
+        TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+        };
+        this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+
+        Map<String, Object> export = this.objectMapper.readValue(
+                credentialSubject.get("gx:dataAccountExport").toString(), typeReference);
+
+        this.validateExportField(export, "gx:requestType", "requestType.of.not.found");
+        this.validateExportField(export, "gx:accessType", "accessType.of.not.found");
+        this.validateExportField(export, "gx:formatType", "formatType.of.not.found");
+    }
+
+    private void validateExportField(Map<String, Object> export, String fieldName, String errorMessage) {
+        if (!export.containsKey(fieldName) || StringUtils.hasText(export.get(fieldName).toString())) {
+            throw new BadDataException(errorMessage);
+        }
+    }
+
 }
