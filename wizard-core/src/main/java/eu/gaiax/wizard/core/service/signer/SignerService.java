@@ -219,6 +219,10 @@ public class SignerService {
         providedBy.put("id", request.getParticipantJsonUrl() + "#0");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
+        request.getCredentialSubject().put("gx:name", request.getName());
+        if (request.getDescription() != null) {
+            request.getCredentialSubject().put("gx:description", request.getDescription());
+        }
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         VerifiableCredential verifiableCredential = VerifiableCredential.builder()
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
