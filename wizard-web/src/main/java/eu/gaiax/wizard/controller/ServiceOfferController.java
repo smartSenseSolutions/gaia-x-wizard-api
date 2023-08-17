@@ -40,9 +40,9 @@ public class ServiceOfferController extends BaseController {
     }
 
     @Tag(name = "Service-Offering")
-    @Operation(summary = "Create Service offering for enterprise, role = enterprise")
+    @Operation(summary = "Validate Service offering for enterprise, role = enterprise")
     @PostMapping(path = VALIDATE_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public void validateServiceOfferRequest(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
+    public void validateServiceOfferRequest(@RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
         this.serviceOfferService.validateServiceOfferMainRequest(request);
     }

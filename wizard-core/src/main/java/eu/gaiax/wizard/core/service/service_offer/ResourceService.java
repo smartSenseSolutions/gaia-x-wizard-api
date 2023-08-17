@@ -26,6 +26,7 @@ import eu.gaiax.wizard.dao.repository.resource.ResourceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,22 @@ public class ResourceService extends BaseService<Resource, UUID> {
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
+    @NotNull
+    private static List<Map<String, Object>> getMaps(Participant participant) {
+        List<Map<String, Object>> permission = new ArrayList<>();
+        Map<String, Object> perMap = new HashMap<>();
+        perMap.put("target", participant.getDid());
+        perMap.put("assigner", participant.getDid());
+        perMap.put("action", "view");
+        List<Map<String, Object>> constraint = new ArrayList<>();
+        Map<String, Object> constraintMap = new HashMap<>();
+        constraintMap.put("default", "allow");
+        constraint.add(constraintMap);
+        perMap.put("constraint", constraint);
+        permission.add(perMap);
+        return permission;
+    }
+
     public Resource createResource(CreateResourceRequest request, String email) throws JsonProcessingException {
         Participant participant;
         if (StringUtils.hasText(email)) {
@@ -71,9 +88,9 @@ public class ResourceService extends BaseService<Resource, UUID> {
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
         this.validateResourceRequest(request);
-        String json = this.resourceVc(request, participant);
+        String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
+        String json = this.resourceVc(request, participant, this.wizardHost + hostUrl);
         if (StringUtils.hasText(json)) {
-            String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
             this.hostResourceJson(json, hostUrl);
             Credential resourceVc = this.credentialService.createCredential(json, this.wizardHost + hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.credentialSubject().get("gx:name").toString())
@@ -87,34 +104,54 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return null;
     }
 
+    private String hostOdrlPolicy(Participant participant) throws JsonProcessingException {
+        Map<String, Object> policyMap = new HashMap<>();
+
+        String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + ".json";
+        policyMap.put("@context", this.contextConfig.ODRLPolicy());
+        policyMap.put("type", "Offer");
+        policyMap.put("id", this.wizardHost + hostUrl);
+        List<Map<String, Object>> permission = getMaps(participant);
+        policyMap.put("permission", permission);
+        String policyJson = this.objectMapper.writeValueAsString(policyMap);
+        File file = new File("/tmp/" + hostUrl);
+        try {
+            FileUtils.writeStringToFile(file, policyJson, Charset.defaultCharset());
+            this.s3Utils.uploadFile(hostUrl, file);
+        } catch (Exception e) {
+            log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+            return this.wizardHost + hostUrl;
+        }
+    }
+
     private void validateResourceRequest(CreateResourceRequest request) {
         Validate.isFalse(StringUtils.hasText(request.credentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
     }
 
-    public String resourceVc(CreateResourceRequest request, Participant participant) throws JsonProcessingException {
+    public String resourceVc(CreateResourceRequest request, Participant participant, String host) throws JsonProcessingException {
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
-        resourceRequest.put("id", this.wizardHost + "resource" + "/" + UUID.randomUUID() + ".json");
+        resourceRequest.put("id", host);
         resourceRequest.put("issuer", participant.getDid());
         resourceRequest.put("issuanceDate", issuanceDate);
         Map<String, Object> credentialSub = request.credentialSubject();
         if (credentialSub != null) {
             credentialSub.put("@context", this.contextConfig.resource());
-            credentialSub.put("id", this.wizardHost + participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json");
+            credentialSub.put("id", host);
             if (request.credentialSubject().get("type").toString().contains("Physical")) {
                 credentialSub.put("type", "gx:" + request.credentialSubject().get("type").toString());
             } else {
                 credentialSub.put("type", "gx:" + request.credentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
+                credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
             }
         }
         resourceRequest.put("credentialSubject", credentialSub);
-
-
         //Todo singer code remaining
-
         String resourceJson = this.objectMapper.writeValueAsString(resourceRequest);
         return resourceJson;
     }

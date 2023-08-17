@@ -244,8 +244,8 @@ public class SignerService {
             return serviceOfferingString;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
+            throw new RuntimeException(e.getMessage());
         }
-        return null;
     }
 
     public void validateRequestUrl(List<String> urls, String message) {
@@ -257,7 +257,7 @@ public class SignerService {
                 log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
-                throw new BadDataException(message + url);
+                throw new BadDataException(message + ",url=" + url);
             }
         });
     }
