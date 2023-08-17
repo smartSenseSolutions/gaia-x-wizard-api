@@ -88,7 +88,6 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
         participant = this.create(Participant.builder()
                 .email(request.email())
-                .did(onboardRequest.issuerDid())
                 .legalName(onboardRequest.legalName())
                 .shortName(onboardRequest.shortName())
                 .entityType(entityType)
@@ -107,6 +106,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isFalse(StringUtils.hasText(request.legalName())).launch("invalid.legal.name");
         Validate.isFalse(StringUtils.hasText(request.shortName())).launch("invalid.short.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.credential())).launch("invalid.credential");
+        Validate.isFalse(request.acceptedTnC()).launch("tnc.acceptance.required");
         Map<String, Object> credential = request.credential();
         Object legalParticipant = credential.get("legalParticipant");
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {

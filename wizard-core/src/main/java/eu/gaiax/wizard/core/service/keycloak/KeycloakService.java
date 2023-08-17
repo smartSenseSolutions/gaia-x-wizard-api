@@ -84,12 +84,16 @@ public class KeycloakService {
         Validate.isNull(userRepresentation).launch(new BadDataException("User not found"));
 
         UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
-        userResource.executeActionsEmail(
-                this.keycloakSettings.publicClientId(),
-                this.keycloakSettings.requiredActionsEmailRedirectionUrl(),
-                this.keycloakSettings.actionTokenLifespan(),
-                List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue())
-        );
+        try {
+            userResource.executeActionsEmail(
+                    this.keycloakSettings.publicClientId(),
+                    this.keycloakSettings.requiredActionsEmailRedirectionUrl(),
+                    this.keycloakSettings.actionTokenLifespan(),
+                    List.of(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue())
+            );
+        } catch (Exception e) {
+            log.error("error while sending email to user: {}", email, e);
+        }
 
         log.info("Required actions email sent to the user");
     }
