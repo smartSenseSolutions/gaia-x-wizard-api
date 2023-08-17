@@ -35,6 +35,7 @@ wizard:
     clientId:
     clientSecret:
     publicClientId:
+    apiDocsClient:
     webAuthRedirectUrl:
     actionTokenLifespan:
     requiredActionsEmailRedirectionUrl:
@@ -176,7 +177,7 @@ management:
 springdoc:
   swagger-ui:
     oauth:
-      clientId: ${wizard.keycloak.public-client-id}
+      clientId: ${wizard.keycloak.api-docs-client}
       clientSecret:
     disable-swagger-default-url: true
     path: /ui/swagger-ui
