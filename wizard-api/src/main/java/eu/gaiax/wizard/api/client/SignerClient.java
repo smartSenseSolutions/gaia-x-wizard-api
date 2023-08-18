@@ -5,10 +5,9 @@
 package eu.gaiax.wizard.api.client;
 
 import eu.gaiax.wizard.api.model.CreateVCRequest;
-import eu.gaiax.wizard.api.model.CreateVPRequest;
 import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
-import eu.gaiax.wizard.api.model.VerifyRequest;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
+import eu.gaiax.wizard.api.model.did.ValidateDidRequest;
 import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -27,18 +26,12 @@ public interface SignerClient {
     @PostMapping(path = "/v1/gaia-x/legal-participant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createVc(@RequestBody CreateVCRequest request);
 
-
-    @PostMapping(path = "createVP", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Map<String, Object>> createVP(@RequestBody CreateVPRequest request);
-
-    @PostMapping(path = "verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Map<String, Object>> verifyV1(@RequestBody VerifyRequest request);
-
     @PostMapping(path = "/v1/gaia-x/verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> verify(@RequestBody ParticipantVerifyRequest request);
 
     @PostMapping(path = "/v1/gaia-x/service-offering", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createServiceOfferVc(@RequestBody SignerServiceRequest request);
 
-
+    @PostMapping(path = "/v1/verify-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> validateDid(@RequestBody ValidateDidRequest request);
 }
