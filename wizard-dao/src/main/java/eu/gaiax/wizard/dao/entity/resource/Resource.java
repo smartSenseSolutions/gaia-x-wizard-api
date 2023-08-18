@@ -1,12 +1,14 @@
 package eu.gaiax.wizard.dao.entity.resource;
 
-import com.smartsensesolutions.java.commons.base.entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -16,7 +18,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-public class Resource extends SuperEntity implements BaseEntity {
+public class Resource extends SuperEntity {
+
     @Column(name = "credential_id", insertable = false, updatable = false)
     private UUID credentialId;
 
@@ -42,8 +45,8 @@ public class Resource extends SuperEntity implements BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "participant_id", nullable = false, referencedColumnName = "id")
     private Participant participant;
-    @Column(name = "publish_to_kafka", nullable = false)
 
+    @Column(name = "publish_to_kafka", nullable = false)
     private boolean publishToKafka;
 
     public String getVcUrl() {
@@ -51,5 +54,12 @@ public class Resource extends SuperEntity implements BaseEntity {
             return this.credential.getVcUrl();
         }
         return null;
+    }
+
+    @Override
+    @JsonIgnore(value = false)
+    @JsonProperty
+    public Date getCreatedAt() {
+        return super.getCreatedAt();
     }
 }

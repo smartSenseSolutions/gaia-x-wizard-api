@@ -42,9 +42,13 @@ public class StringPool {
      */
     public static final String DID = "did";
     /**
+     * The constant ID.
+     */
+    public static final String ID = "id";
+    /**
      * The constant PARTICIPANT_ID.
      */
-    public static final String PARTICIPANT_ID = "id";
+    public static final String PARTICIPANT_ID = "participantId";
     /**
      * The constant JOB_TYPE.
      */
@@ -53,10 +57,6 @@ public class StringPool {
      * The constant ROLE.
      */
     public static final String ROLE = "role";
-    /**
-     * The constant ID.
-     */
-    public static final String ID = "id";
     /**
      * The constant EMAIL.
      */

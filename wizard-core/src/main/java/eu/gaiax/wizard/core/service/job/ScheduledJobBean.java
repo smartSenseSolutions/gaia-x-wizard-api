@@ -42,7 +42,7 @@ public class ScheduledJobBean extends QuartzJobBean {
     protected void executeInternal(JobExecutionContext context) {
         JobDetail jobDetail = context.getJobDetail();
         String jobType = jobDetail.getJobDataMap().getString(StringPool.JOB_TYPE);
-        UUID participantId = UUID.fromString(jobDetail.getJobDataMap().getString(StringPool.PARTICIPANT_ID));
+        UUID participantId = UUID.fromString(jobDetail.getJobDataMap().getString(StringPool.ID));
         switch (jobType) {
             case StringPool.JOB_TYPE_CREATE_SUB_DOMAIN -> this.domainService.createSubDomain(participantId);
             case StringPool.JOB_TYPE_CREATE_CERTIFICATE ->

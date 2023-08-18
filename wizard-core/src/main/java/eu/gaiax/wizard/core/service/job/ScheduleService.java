@@ -52,7 +52,7 @@ public class ScheduleService {
                 .withIdentity(UUID.randomUUID().toString(), type)
                 .storeDurably()
                 .requestRecovery()
-                .usingJobData(StringPool.PARTICIPANT_ID, id)
+                .usingJobData(StringPool.ID, id)
                 .usingJobData(StringPool.JOB_TYPE, type)
                 .build();
 

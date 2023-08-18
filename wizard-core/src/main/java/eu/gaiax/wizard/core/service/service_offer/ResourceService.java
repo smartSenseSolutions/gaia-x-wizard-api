@@ -6,10 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.filter.FilterCriteria;
+import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.model.ResourceFilterResponse;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -168,9 +171,19 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    public PageResponse<ServiceAndResourceListDTO> getResourceList(FilterRequest filterRequest) {
+    public PageResponse<ResourceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
+
+//        todo: resolve error (InvalidDataAccessApiUsageException: Can't compare test expression of type [BasicSqmPathSource(participantId : UUID)] with element of type [basicType@6(java.lang.String,12)])
+        if (StringUtils.hasText(participantId)) {
+            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.EQUALS, Collections.singletonList(participantId));
+
+            List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
+            filterCriteriaList.add(participantCriteria);
+            filterRequest.setCriteria(filterCriteriaList);
+        }
+
         Page<Resource> resourcePage = this.filter(filterRequest);
-        List<ServiceAndResourceListDTO> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
+        List<ResourceFilterResponse> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
         });
 
         return PageResponse.of(resourceList, resourcePage, filterRequest.getSort());

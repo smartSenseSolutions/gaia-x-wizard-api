@@ -42,6 +42,7 @@ public class AuthenticationConfig {
                         .requestMatchers("/public/**").permitAll()
                         .requestMatchers(ONBOARD_PARTICIPANT, PARTICIPANT_CONFIG).hasRole(PARTICIPANT_ROLE)
                         .requestMatchers(SERVICE_OFFER).hasRole(PARTICIPANT_ROLE)
+                        .requestMatchers(RESOURCE + "/**").hasRole(PARTICIPANT_ROLE)
                 )
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> jwt.jwtAuthenticationConverter(new CustomAuthenticationConverter(this.configProperties.clientId()))))
                 .build();
