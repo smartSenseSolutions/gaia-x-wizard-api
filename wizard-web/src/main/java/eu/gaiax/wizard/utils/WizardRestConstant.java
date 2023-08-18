@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WizardRestConstant {
 
-    public static final String RESOURCE_ROOT = "/resource";
+    public static final String PARTICIPANT_ROOT = "/participant";
 
     public static final String REGISTER = "/public/register";
 
@@ -48,8 +48,7 @@ public class WizardRestConstant {
 
     public static final String RESOURCE_FILTER = "/public/resource/filter";
 
-    public static final String RESOURCE = "/resource";
-    public static final String PARTICIPANT_RESOURCE_FILTER = "/resource/filter";
+    public static final String PARTICIPANT_RESOURCE_FILTER = "/participant/{participantId}/resource/filter";
 
     public static final String ONBOARD_PARTICIPANT = "/onboard/participant/{participantId}";
 

@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,14 +54,7 @@ public class ResourceController extends BaseController {
     @Tag(name = "Resources")
     @Operation(summary = "Resource filter API")
     @PostMapping(path = {PARTICIPANT_RESOURCE_FILTER}, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@Valid @RequestBody FilterRequest filterRequest, Principal principal) {
-        String participantId = null;
-        try {
-            participantId = (String) this.requestForClaim(StringPool.ID, principal);
-        } catch (Exception ignored) {
-
-        }
-
+    public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
         return CommonResponse.of(this.resourceService.filterResource(filterRequest, participantId));
     }
 
