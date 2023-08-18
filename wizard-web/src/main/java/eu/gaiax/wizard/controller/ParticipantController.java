@@ -1,6 +1,5 @@
 package eu.gaiax.wizard.controller;
 
-import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -23,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -767,11 +765,8 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Participant not found.")
     })
     @GetMapping(PARTICIPANT_CONFIG)
-    public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
-        String userId = (String) this.requestForClaim(StringPool.ID, principal);
-        Validate.isNull(userId).launch(new BadDataException("User ID not present in token"));
-
-        return CommonResponse.of(this.participantService.getParticipantConfig(userId));
+    public CommonResponse<ParticipantConfigDTO> getConfig(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+        return CommonResponse.of(this.participantService.getParticipantConfig(participantId));
     }
 
     @Operation(
