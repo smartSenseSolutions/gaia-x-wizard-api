@@ -29,8 +29,8 @@ public class WizardRestConstant {
     public static final String CHECK_REGISTRATION = "/public/check-registration";
 
     public static final String POLICY_EVALUATE = "/public/policy/evaluate";
-    
-    public static final String PARTICIPANT_CONFIG = "/participant/config";
+
+    public static final String PARTICIPANT_CONFIG = "/participant/{participantId}/config";
 
     public static final String SERVICE_OFFER = "/service-offer";
 
