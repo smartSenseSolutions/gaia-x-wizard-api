@@ -14,6 +14,7 @@ import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.did.ServiceEndpoints;
+import eu.gaiax.wizard.api.model.did.ValidateDidRequest;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
@@ -288,6 +289,18 @@ public class SignerService {
             throw new BadDataException("not.able.to.add.service.endpoint");
         } finally {
             CommonUtils.deleteFile(file, updatedFile);
+        }
+    }
+
+    public boolean validateDid(String issuerDid, String verificationMethod, String privateKey) {
+        try {
+            ValidateDidRequest request = new ValidateDidRequest(issuerDid, verificationMethod, HashingService.encodeToBase64(privateKey));
+            ResponseEntity<Map<String, Object>> response = this.signerClient.validateDid(request);
+            boolean valid = (boolean) ((Map<String, Object>) response.getBody().get("data")).get("isValid");
+            return valid;
+        } catch (Exception ex) {
+            log.error("Issue occurred while validating did {} with verification method {}", issuerDid, verificationMethod);
+            return false;
         }
     }
 }

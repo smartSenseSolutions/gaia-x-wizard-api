@@ -183,9 +183,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
     }
 
-    //TODO need to resolve DID and validate the private key from given verification method
     private boolean validateDidWithPrivateKey(String did, String verificationMethod, String privateKey) {
-        return true;
+        return this.signerService.validateDid(did, verificationMethod, privateKey);
     }
 
     @SneakyThrows
