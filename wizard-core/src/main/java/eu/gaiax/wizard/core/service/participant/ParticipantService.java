@@ -50,13 +50,6 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class ParticipantService extends BaseService<Participant, UUID> {
-
-    private static final List<String> policies = Arrays.asList(
-            "integrityCheck",
-            "holderSignature",
-            "complianceSignature",
-            "complianceCheck"
-    );
     private final ParticipantRepository participantRepository;
     private final EntityTypeMasterRepository entityTypeMasterRepository;
     private final SignerService signerService;
@@ -172,14 +165,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
+            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
         }
     }
 
@@ -190,7 +183,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found");
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;

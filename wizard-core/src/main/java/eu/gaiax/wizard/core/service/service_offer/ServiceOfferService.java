@@ -81,7 +81,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (email != null) {
             participant = this.participantRepository.getByEmail(email);
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found");
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
@@ -238,7 +238,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         String termsAndConditionsUrl = termsCondition.get("gx:URL").toString();
-        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ");
+        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ", null);
     }
 
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -257,7 +257,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found");
+        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", null);
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -273,7 +273,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, "depends.on.not.found");
+            this.signerService.validateRequestUrl(ids, "depends.on.not.found", null);
         }
 
     }

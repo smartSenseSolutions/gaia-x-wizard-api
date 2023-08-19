@@ -3,6 +3,9 @@ package eu.gaiax.wizard.core.service.service_offer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
@@ -35,6 +38,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -86,6 +92,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return permission;
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRES_NEW)
     public Resource createResource(CreateResourceRequest request, String email) throws JsonProcessingException {
         Participant participant;
         if (StringUtils.hasText(email)) {
@@ -134,10 +141,25 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    private void validateResourceRequest(CreateResourceRequest request) {
+    private void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
         Validate.isFalse(StringUtils.hasText(request.credentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
-        if (request.credentialSubject().containsKey("gx:aggregationOf") && request.credentialSubject().get("gx:aggregationOf") != null) {
-            this.signerService.validateRequestUrl(this.objectMapper.convertValue(request.credentialSubject().get("aggregationOf"), List.class), "not.valid.aggregation");
+        this.validateAggregationOf(request);
+    }
+
+    private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
+        if (request.credentialSubject().containsKey("gx:aggregationOf")) {
+            JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject("credentialSubject")
+                    .getAsJsonArray("gx:aggregationOf");
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get("id").getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
         }
     }
 
@@ -188,8 +210,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
 //        todo: resolve error (InvalidDataAccessApiUsageException: Can't compare test expression of type [BasicSqmPathSource(participantId : UUID)] with element of type [basicType@6(java.lang.String,12)])
         if (StringUtils.hasText(participantId)) {
-            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.EQUALS, Collections.singletonList(participantId));
-
+            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
             List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
             filterCriteriaList.add(participantCriteria);
             filterRequest.setCriteria(filterCriteriaList);
