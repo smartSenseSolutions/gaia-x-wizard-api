@@ -30,6 +30,6 @@ public class LabelLevelService extends BaseService<LabelLevelTypeMaster, String>
     }
 
     public List<LabelLevelTypeInterface> getLabelLevelTypeAndQuestionList() {
-        return this.labelLevelTypeMasterRepository.findAllByActiveIsTrue();
+        return this.labelLevelTypeMasterRepository.findAllByActiveIsTrueAndLabelLevelQuestionMasterListIsNotNull();
     }
 }

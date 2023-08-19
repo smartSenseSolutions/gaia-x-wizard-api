@@ -23,18 +23,19 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "resources")
 public class ResourceController extends BaseController {
 
     private final ResourceService resourceService;
 
-    @Tag(name = "Resources")
+
     @Operation(summary = "Create Resource")
     @PostMapping(path = "/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createResource(@Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
         return CommonResponse.of(this.resourceService.createResource(request, request.email()));
     }
 
-    @Tag(name = "Resources")
+
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
