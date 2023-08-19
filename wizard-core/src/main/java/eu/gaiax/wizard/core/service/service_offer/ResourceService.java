@@ -16,8 +16,10 @@ import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
+import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
+import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
@@ -60,6 +62,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private final SpecificationUtil<Resource> specificationUtil;
 
+    private final SignerService signerService;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -84,7 +88,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         if (StringUtils.hasText(email)) {
             participant = this.participantRepository.getByEmail(email);
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.validation().get("participantJson").toString(), request.validation().get("verificationMethod").toString(), request.validation().get("privateKey").toString(), (boolean) request.validation().get("vault"));
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.participantJson(), request.verificationMethod(), request.privateKey(), request.vault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
         this.validateResourceRequest(request);
@@ -118,21 +122,26 @@ public class ResourceService extends BaseService<Resource, UUID> {
         try {
             FileUtils.writeStringToFile(file, policyJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostUrl, file);
+            return this.wizardHost + hostUrl;
         } catch (Exception e) {
             log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
+            throw new RuntimeException(e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
-            return this.wizardHost + hostUrl;
         }
     }
 
     private void validateResourceRequest(CreateResourceRequest request) {
         Validate.isFalse(StringUtils.hasText(request.credentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
+        if (request.credentialSubject().containsKey("gx:aggregationOf") && request.credentialSubject().get("gx:aggregationOf") != null) {
+            this.signerService.validateRequestUrl(this.objectMapper.convertValue(request.credentialSubject().get("aggregationOf"), List.class), "not.valid.aggregation");
+        }
     }
 
     public String resourceVc(CreateResourceRequest request, Participant participant, String host) throws JsonProcessingException {
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
         resourceRequest.put("id", host);
@@ -151,9 +160,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
             }
         }
         resourceRequest.put("credentialSubject", credentialSub);
-        //Todo singer code remaining
-        String resourceJson = this.objectMapper.writeValueAsString(resourceRequest);
-        return resourceJson;
+        map.put("resource", resourceRequest);
+        Map<String, Object> resourceMap = new HashMap<>();
+        resourceMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
+        resourceMap.put("issuer", participant.getDid());
+        resourceMap.put("verificationMethod", request.verificationMethod());
+        resourceMap.put("vcs", map);
+        return this.signerService.signResource(resourceMap);
     }
 
     public void hostResourceJson(String resourceJson, String hostedPath) {

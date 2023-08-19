@@ -37,6 +37,5 @@ CREATE TABLE label_level_upload_files(
     CONSTRAINT fk_service_offer_id FOREIGN KEY (service_offer_id) REFERENCES service_offer(id)
 );
 
---liquibase formatted sql
---changeset Mittal:1
+--changeset Mittal:2
 ALTER TABLE service_offer ADD veracity_data text NULL;
