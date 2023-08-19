@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class WizardRestConstant {
 
+    public static final String PARTICIPANT_ROOT = "/participant";
+
     public static final String REGISTER = "/public/register";
 
     public static final String SEND_REQUIRED_ACTIONS_EMAIL = "/public/registration/send-email";
@@ -29,7 +31,7 @@ public class WizardRestConstant {
     public static final String CHECK_REGISTRATION = "/public/check-registration";
 
     public static final String POLICY_EVALUATE = "/public/policy/evaluate";
-    
+
     public static final String PARTICIPANT_CONFIG = "/participant/config";
 
     public static final String SERVICE_OFFER = "/service-offer";
@@ -44,7 +46,9 @@ public class WizardRestConstant {
 
     public static final String SERVICE_OFFER_LIST = "/public/service-offer/list";
 
-    public static final String RESOURCE_LIST = "/public/resource/list";
+    public static final String RESOURCE_FILTER = "/public/resource/filter";
+
+    public static final String PARTICIPANT_RESOURCE_FILTER = "/participant/{participantId}/resource/filter";
 
     public static final String ONBOARD_PARTICIPANT = "/onboard/participant/{participantId}";
 
