@@ -1,10 +1,10 @@
 package eu.gaiax.wizard.controller;
 
-import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
+import eu.gaiax.wizard.core.service.participant.ParticipantAndKeyResponse;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantCreationRequest;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -152,11 +151,8 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Participant not found.")
     })
     @GetMapping(PARTICIPANT_CONFIG)
-    public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
-        String userId = (String) this.requestForClaim(StringPool.ID, principal);
-        Validate.isNull(userId).launch(new BadDataException("User ID not present in token"));
-
-        return CommonResponse.of(this.participantService.getParticipantConfig(userId));
+    public CommonResponse<ParticipantConfigDTO> getConfig(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+        return CommonResponse.of(this.participantService.getParticipantConfig(participantId));
     }
 
     @Operation(
@@ -173,4 +169,18 @@ public class ParticipantController extends BaseController {
         return CommonResponse.of("Registration email sent successfully");
     }
 
+    @Operation(
+            summary = "Participant export",
+            description = "This endpoint returns participant json and private key (optional) for newly created participant."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Participant exported successfully."),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access."),
+            @ApiResponse(responseCode = "403", description = "User does not have access to this API."),
+            @ApiResponse(responseCode = "404", description = "Participant not found.")
+    })
+    @GetMapping(PARTICIPANT_EXPORT)
+    public CommonResponse<ParticipantAndKeyResponse> exportParticipantAndKey(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+        return CommonResponse.of(this.participantService.exportParticipantAndKey(participantId));
+    }
 }
