@@ -16,8 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import static eu.gaiax.wizard.utils.RoleConstant.ADMIN_ROLE;
-import static eu.gaiax.wizard.utils.RoleConstant.ENTERPRISE_ROLE;
+import static eu.gaiax.wizard.api.utils.RoleConstant.PARTICIPANT_ROLE;
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 
 @Slf4j
@@ -41,12 +40,8 @@ public class AuthenticationConfig {
                         .requestMatchers("/certificate/**").permitAll()
                         .requestMatchers("/.well-known/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
-                        .requestMatchers(ENTERPRISE_LIST).hasRole(ADMIN_ROLE)
-                        .requestMatchers(ENTERPRISE_BY_ID).hasRole(ADMIN_ROLE)
-                        .requestMatchers(ENTERPRISE).hasRole(ENTERPRISE_ROLE)
-                        .requestMatchers(ENTERPRISE + "/**").hasRole(ENTERPRISE_ROLE)
-                        .requestMatchers(CATALOGUE).hasRole(ENTERPRISE_ROLE)
-                        .requestMatchers(PARTICIPANT_CONFIG).hasRole(ENTERPRISE_ROLE)
+                        .requestMatchers(ONBOARD_PARTICIPANT, PARTICIPANT_CONFIG).hasRole(PARTICIPANT_ROLE)
+                        .requestMatchers(SERVICE_OFFER).hasRole(PARTICIPANT_ROLE)
                 )
                 .oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> jwt.jwtAuthenticationConverter(new CustomAuthenticationConverter(this.configProperties.clientId()))))
                 .build();

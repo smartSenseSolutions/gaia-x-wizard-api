@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
@@ -77,14 +78,16 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isFalse(StringUtils.hasText(request.email())).launch("email.required");
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
+
         EntityTypeMaster entityType = this.entityTypeMasterRepository.findById(UUID.fromString(onboardRequest.entityType())).orElse(null);
         Validate.isNull(entityType).launch("invalid.entity.type");
+
         Participant participant = this.participantRepository.getByEmail(request.email());
         Validate.isNotNull(participant).launch("participant.already.registered");
         Validate.isNotNull(this.participantRepository.getByLegalName(request.onboardRequest().legalName())).launch("legal.name.already.registered");
+
         participant = this.create(Participant.builder()
                 .email(request.email())
-                .did(onboardRequest.issuerDid())
                 .legalName(onboardRequest.legalName())
                 .shortName(onboardRequest.shortName())
                 .entityType(entityType)
@@ -93,8 +96,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
                 .credential(this.mapper.writeValueAsString(onboardRequest.credential()))
                 .ownDidSolution(onboardRequest.ownDid())
                 .build());
+
         this.keycloakService.createParticipantUser(participant.getId().toString(), participant.getLegalName(), participant.getEmail());
-        this.keycloakService.sendRequiredActionsEmail(participant.getEmail());
+
         return participant;
     }
 
@@ -102,6 +106,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isFalse(StringUtils.hasText(request.legalName())).launch("invalid.legal.name");
         Validate.isFalse(StringUtils.hasText(request.shortName())).launch("invalid.short.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.credential())).launch("invalid.credential");
+        Validate.isFalse(request.acceptedTnC()).launch("tnc.acceptance.required");
         Map<String, Object> credential = request.credential();
         Object legalParticipant = credential.get("legalParticipant");
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
@@ -262,9 +267,19 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
-        Validate.isNull(participant).launch(new EntityNotFoundException("Invalid participant ID"));
-        ParticipantConfigDTO participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
+        Participant participant;
+        try {
+            participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
+        } catch (Exception e) {
+            throw new BadDataException("Invalid participant ID");
+        }
+        ParticipantConfigDTO participantConfigDTO;
+
+        try {
+            participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
+        } catch (Exception e) {
+            throw new BadDataException("Invalid participant ID");
+        }
 
         if (participant.isOwnDidSolution()) {
             participantConfigDTO.setPrivateKeyRequired(!StringUtils.hasText(participant.getPrivateKeyId()));

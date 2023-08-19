@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.utils;
+package eu.gaiax.wizard.api.utils;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -7,5 +7,5 @@ import lombok.NoArgsConstructor;
 public class RoleConstant {
     public static final String ADMIN_ROLE = "admin";
 
-    public static final String ENTERPRISE_ROLE = "enterprise";
+    public static final String PARTICIPANT_ROLE = "participant";
 }
