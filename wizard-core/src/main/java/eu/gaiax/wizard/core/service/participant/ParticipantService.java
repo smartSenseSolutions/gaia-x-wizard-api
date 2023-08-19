@@ -292,6 +292,28 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return participantConfigDTO;
     }
 
+    public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
+        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
+        ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
+
+        try {
+            participantAndKeyResponse.setParticipantJson(this.credentialService.getLegalParticipantCredential(participant.getId()).getVcUrl());
+        } catch (Exception e) {
+            throw new EntityNotFoundException("Invalid participant ID");
+        }
+
+        if (participant.isOwnDidSolution()) {
+            return participantAndKeyResponse;
+        }
+
+        Map<String, Object> vaultData = this.vault.get(participant.getId().toString());
+        if (vaultData != null && vaultData.containsKey(participant.getId() + ".key")) {
+            participantAndKeyResponse.setPrivateKey((String) vaultData.get(participant.getId() + ".key"));
+        }
+
+        return participantAndKeyResponse;
+    }
+
     public void sendRegistrationLink(String email) {
         this.keycloakService.sendRequiredActionsEmail(email);
         log.info("registration email sent to email: {}", email);

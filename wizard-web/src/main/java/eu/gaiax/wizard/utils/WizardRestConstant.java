@@ -32,6 +32,8 @@ public class WizardRestConstant {
 
     public static final String PARTICIPANT_CONFIG = "/participant/{participantId}/config";
 
+    public static final String PARTICIPANT_EXPORT = "/participant/{participantId}/export";
+
     public static final String SERVICE_OFFER = "/service-offer";
 
     public static final String PUBLIC_SERVICE_OFFER = "/public/service-offer";
