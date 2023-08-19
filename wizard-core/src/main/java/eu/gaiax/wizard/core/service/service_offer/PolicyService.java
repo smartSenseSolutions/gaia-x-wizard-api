@@ -19,6 +19,7 @@ import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -89,16 +90,10 @@ public class PolicyService {
 
     public String[] getLocationByServiceOfferingId(String serviceOfferingId) {
         JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId);
-        String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
+        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
-        if (StringUtils.hasText(policyUrl)) {
-            Constraint constraint;
-            try {
-                constraint = this.getLocationConstraintFromPolicy(policyUrl);
-            } catch (Exception e) {
-                log.info("Error encountered while fetching policy for service Id: {}", serviceOfferingId);
-                return new String[]{};
-            }
+        if (policyArray != null && policyArray.has(0)) {
+            Constraint constraint = this.getLocationConstraintFromPolicy(policyArray);
 
             if (constraint != null) {
                 return constraint.getRightOperand();
@@ -123,20 +118,22 @@ public class PolicyService {
         }
 
         JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        String policyUrl = this.getPolicyUrlFromServiceOffer(serviceOffer);
+        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
-        if (StringUtils.hasText(policyUrl)) {
-            Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
+        if (policyArray != null && policyArray.has(0)) {
+            policyArray.forEach(policyUrl -> {
+                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
 
-            if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
-            }
+                if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                    throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                }
+            });
         }
 
         return serviceOffer;
     }
 
-    private String getPolicyUrlFromServiceOffer(JsonNode serviceOffer) {
+    private JsonNode getPolicyArrayFromServiceOffer(JsonNode serviceOffer) {
         JsonNode selfDescriptionCredential = serviceOffer.get("selfDescriptionCredential");
         ObjectReader reader = this.objectMapper.readerFor(new TypeReference<List<JsonNode>>() {
         });
@@ -152,7 +149,7 @@ public class PolicyService {
                 .filter(vc -> vc.get(StringPool.CREDENTIAL_SUBJECT).get("type").asText().equals("gx:ServiceOffering"))
                 .findFirst();
         if (policyVcOptional.isPresent() && policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).has(StringPool.GX_POLICY)) {
-            return policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).get(StringPool.GX_POLICY).asText();
+            return policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).get(StringPool.GX_POLICY);
         }
 
         return null;
@@ -164,10 +161,11 @@ public class PolicyService {
         return this.objectMapper.valueToTree(catalogue);
     }
 
+    @SneakyThrows
     private JsonNode getServiceOffering(String serviceOfferingUrl) {
         String serviceOffering = InvokeService.executeRequest(serviceOfferingUrl, HttpMethod.GET);
-        Validate.isNull(serviceOffering).launch(new BadDataException("IInvalid Service Offering ID"));
-        return this.objectMapper.valueToTree(serviceOffering);
+        Validate.isNull(serviceOffering).launch(new BadDataException("Invalid Service Offering ID"));
+        return this.objectMapper.readValue(serviceOffering, JsonNode.class);
     }
 
     private Policy getPolicyForServiceOffer(String policyUrl) {
@@ -196,6 +194,33 @@ public class PolicyService {
                     .findAny()
                     .orElse(null);
         }
+        return constraint;
+    }
+
+    private Constraint getLocationConstraintFromPolicy(JsonNode policyArray) {
+        List<String> policyUrlList = this.objectMapper.convertValue(policyArray, List.class);
+        if (CollectionUtils.isEmpty(policyUrlList)) {
+            throw new EntityNotFoundException("Policy not found for the specified entity.");
+        }
+
+        Policy accessPolicy;
+        Constraint constraint = null;
+        for (String policyUrl : policyUrlList) {
+            accessPolicy = this.getPolicyForServiceOffer(policyUrl);
+
+            if (accessPolicy != null && accessPolicy.getPermission().stream().anyMatch(rule -> rule.getAction().equalsIgnoreCase("view"))) {
+                Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+                if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
+                    constraint = rule.get().getConstraint().stream()
+                            .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                            .findAny()
+                            .orElse(null);
+                }
+
+                break;
+            }
+        }
+
         return constraint;
     }
 
