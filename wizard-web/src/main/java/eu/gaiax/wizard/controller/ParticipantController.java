@@ -42,6 +42,23 @@ public class ParticipantController extends BaseController {
             summary = "Check for user existence",
             description = "This endpoint used to check whether user exists or not."
     )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Participant registered successfully.",
+                    content = {
+                            @Content(
+                                    examples = {
+                                            @ExampleObject(name = "Success Response", value = """
+                                                    {
+                                                       "status": 200,
+                                                       "payload": {
+                                                         "userRegistered": false
+                                                       }
+                                                    }                                                                                                        
+                                                    """)
+                                    }
+                            )
+                    })
+    })
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
         return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
@@ -759,10 +776,42 @@ public class ParticipantController extends BaseController {
             description = "This endpoint returns participant's general configuration."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Participant config fetched successfully."),
+            @ApiResponse(responseCode = "200", description = "Participant config fetched successfully.",
+                    content = {
+                            @Content(examples = {
+                                    @ExampleObject(name = "Success response.", value = """
+                                            {
+                                               "status": 200,
+                                               "payload": {
+                                                 "id": "b1ab279c-9a77-4528-89b1-abfa6a8ce56a",
+                                                 "email": "admin@smartsensesolutions.com",
+                                                 "legalName": "smartSense Consulting Solutions",
+                                                 "participantType": "REGISTERED",
+                                                 "ownDidSolution": false,
+                                                 "status": 3
+                                               }
+                                            }""")
+                            })
+                    }),
             @ApiResponse(responseCode = "401", description = "Unauthorized access."),
             @ApiResponse(responseCode = "403", description = "User does not have access to this API."),
-            @ApiResponse(responseCode = "404", description = "Participant not found.")
+            @ApiResponse(responseCode = "404", description = "Participant not found.",
+                    content = {
+                            @Content(examples = {
+                                    @ExampleObject(name = "Success response.", value = """
+                                            {
+                                               "message": "Participant not found.",
+                                               "status": 404,
+                                               "payload": {
+                                                 "error": {
+                                                   "message": "Participant not found.",
+                                                   "status": 404,
+                                                   "timeStamp": 1692425548427
+                                                 }
+                                               }
+                                            }""")
+                            })
+                    })
     })
     @GetMapping(PARTICIPANT_CONFIG)
     public CommonResponse<ParticipantConfigDTO> getConfig(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
