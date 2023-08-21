@@ -52,6 +52,7 @@ public class ParticipantController extends BaseController {
                                             @ExampleObject(name = "Success Response", value = """
                                                     {
                                                        "status": 200,
+                                                       "message": "User is not registered in the application",
                                                        "payload": {
                                                          "userRegistered": false
                                                        }
