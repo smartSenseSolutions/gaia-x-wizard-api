@@ -156,7 +156,7 @@ public class SignerService {
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
-            String participantString = this.mapper.writeValueAsString(responseEntity.getBody().get("data"));
+            String participantString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(responseEntity.getBody()).get("data")).get("completeSD"));
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
