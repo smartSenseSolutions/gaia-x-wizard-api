@@ -127,22 +127,6 @@ public class ResourceController extends BaseController {
                             """)
             })
     })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Participant registered successfully.",
-                    content = {
-                            @Content(
-                                    examples = {
-                                            @ExampleObject(name = "Success Response", value = """
-                                                    {
-                                                       "status": 200,
-                                                       "payload": {
-                                                       }
-                                                    }                                                                                                        
-                                                    """)
-                                    }
-                            )
-                    })
-    })
     public CommonResponse<Resource> createResource(@Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
         return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()));
     }
@@ -237,22 +221,6 @@ public class ResourceController extends BaseController {
                                }                   
                             """)
             })
-    })
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Participant registered successfully.",
-                    content = {
-                            @Content(
-                                    examples = {
-                                            @ExampleObject(name = "Success Response", value = """
-                                                    {
-                                                       "status": 200,
-                                                       "payload": {
-                                                       }
-                                                    }                                                                                                        
-                                                    """)
-                                    }
-                            )
-                    })
     })
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
