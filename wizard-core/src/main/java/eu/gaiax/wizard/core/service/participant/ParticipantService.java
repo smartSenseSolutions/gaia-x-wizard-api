@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
@@ -272,18 +271,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant;
-        try {
-            participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
-        } catch (Exception e) {
-            throw new BadDataException("Invalid participant ID");
-        }
+        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
         ParticipantConfigDTO participantConfigDTO;
-
         try {
             participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         } catch (Exception e) {
-            throw new BadDataException("Invalid participant ID");
+            throw new EntityNotFoundException("Participant not found");
         }
 
         if (participant.isOwnDidSolution()) {

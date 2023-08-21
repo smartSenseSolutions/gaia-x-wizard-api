@@ -14,7 +14,7 @@ public class MasterDataServiceFactory {
     private final Map<String, BaseService> indexServiceMap;
 
     public BaseService getInstance(String indexName) {
-        BaseService indexService = this.indexServiceMap.get(indexName);
+        BaseService indexService = this.indexServiceMap.get(indexName + "TypeMasterService");
         if (indexService == null) {
             throw new BadDataException("Master data not found with name '" + indexName + "'");
         }
