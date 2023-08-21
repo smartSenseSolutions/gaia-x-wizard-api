@@ -89,7 +89,7 @@ public class SignerService {
         log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> Prepare credential subject for signer tool.");
         TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
         };
-        Map<String, Object> credential = this.mapper.readValue(participant.getCredential(), typeReference);
+        Map<String, Object> credential = this.mapper.readValue(participant.getCredentialRequest(), typeReference);
         Map<String, Object> legalParticipant = this.mapper.convertValue(credential.get("legalParticipant"), typeReference);
         Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get("legalRegistrationNumber"), typeReference);
         //Add @context in the credential
@@ -130,7 +130,7 @@ public class SignerService {
         credential.put("legalParticipant", legalParticipant);
         credential.put("legalRegistrationNumber", legalRegistrationNumber);
         credential.put("gaiaXTermsAndConditions", tncVc);
-        participant.setCredential(this.mapper.writeValueAsString(credential));
+        participant.setCredentialRequest(this.mapper.writeValueAsString(credential));
         log.info("ParticipantService(prepareCredentialSubjectForLegalParticipant) -> CredentialSubject has been created successfully.");
         return credential;
     }
@@ -151,7 +151,7 @@ public class SignerService {
             }
             TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
             };
-            Map<String, Object> credentials = this.mapper.readValue(participant.getCredential(), typeReference);
+            Map<String, Object> credentials = this.mapper.readValue(participant.getCredentialRequest(), typeReference);
             CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), participant.getDid(), participant.getDid(), credentials);
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
