@@ -62,8 +62,10 @@ public class ParticipantController extends BaseController {
                     })
     })
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
-        return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
+    public CommonResponse<CheckParticipantRegisteredResponse> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
+        CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email);
+        String message = checkParticipantRegisteredResponse.userRegistered() ? "User is registered in the application" : "User is not registered in the application";
+        return CommonResponse.of(checkParticipantRegisteredResponse, message);
     }
 
     @Operation(
