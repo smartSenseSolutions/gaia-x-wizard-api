@@ -4,6 +4,7 @@ WORKDIR /home/app
 RUN gradle clean build --no-daemon -i -x test -x javadoc
 
 FROM openjdk:17-alpine
+RUN apk add openssl
 RUN adduser -D smartsense && chown -R smartsense /home
 USER smartsense
 RUN mkdir /home/app
