@@ -2,7 +2,9 @@ package eu.gaiax.wizard.dao.entity.data_master;
 
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.UUID;
@@ -12,8 +14,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class LabelLevelTypeMaster extends SuperEntity {
 
     @Column(name = "name")

@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
@@ -86,7 +85,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName() + "." + this.domain)
                 .participantType("REGISTERED")
-                .credential(this.mapper.writeValueAsString(onboardRequest.credential()))
+                .credentialRequest(this.mapper.writeValueAsString(onboardRequest.credential()))
                 .ownDidSolution(onboardRequest.ownDid())
                 .build());
 
@@ -112,6 +111,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+
+        if (Objects.equals(request.ownDid(), Boolean.FALSE) && participant.isOwnDidSolution()) {
+            participant.setOwnDidSolution(false);
+            this.participantRepository.save(participant);
+        }
+
         if (participant.isOwnDidSolution()) {
             log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Validate participant {} has own did solution.", participantId);
             Validate.isFalse(StringUtils.hasText(request.issuer())).launch("invalid.did");
@@ -259,18 +264,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant;
-        try {
-            participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
-        } catch (Exception e) {
-            throw new BadDataException("Invalid participant ID");
-        }
+        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
         ParticipantConfigDTO participantConfigDTO;
-
         try {
             participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         } catch (Exception e) {
-            throw new BadDataException("Invalid participant ID");
+            throw new EntityNotFoundException("Participant not found");
         }
 
         if (participant.isOwnDidSolution()) {
@@ -286,14 +285,13 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
-        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
+        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
+        Validate.isNull(participant).launch(new EntityNotFoundException("Participant not found"));
         ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
 
-        try {
-            participantAndKeyResponse.setParticipantJson(this.credentialService.getLegalParticipantCredential(participant.getId()).getVcUrl());
-        } catch (Exception e) {
-            throw new EntityNotFoundException("Invalid participant ID");
-        }
+        Credential legalParticipantCredential = this.credentialService.getLegalParticipantCredential(participant.getId());
+        Validate.isNull(legalParticipantCredential).launch(new BadDataException("Legal participant credential not found"));
+        participantAndKeyResponse.setParticipantJson(legalParticipantCredential.getVcUrl());
 
         if (participant.isOwnDidSolution()) {
             return participantAndKeyResponse;
