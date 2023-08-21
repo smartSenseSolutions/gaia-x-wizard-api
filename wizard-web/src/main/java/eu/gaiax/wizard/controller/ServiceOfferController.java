@@ -376,7 +376,7 @@ public class ServiceOfferController extends BaseController {
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, request.getEmail()));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim("email", principal).toString()));
     }
 
     @Tag(name = "Service-Offering")
