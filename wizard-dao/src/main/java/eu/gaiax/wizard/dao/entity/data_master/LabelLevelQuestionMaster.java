@@ -5,6 +5,7 @@ import eu.gaiax.wizard.api.model.ApplicableLevelCriterionEnum;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.UUID;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Table(name = "label_level_question_master")
 @Getter
 @Setter
+@NoArgsConstructor
 public class LabelLevelQuestionMaster extends SuperEntity {
 
     @Column(name = "type_id", insertable = false, updatable = false)
