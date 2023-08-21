@@ -87,22 +87,270 @@ public class ServiceOfferController extends BaseController {
                                                     {
                                                       "status": 200,
                                                       "payload": {
-                                                        "id": "785651fd-8292-4555-b05c-77c03cea2312",
-                                                        "email": "participant@example.in",
-                                                        "legalName": "Participant Example",
-                                                        "shortName": "ParticipantShortName",
-                                                        "entityType": {
-                                                          "id": "933fde99-d815-4d10-b414-ea2d88d10474",
-                                                          "type": "Social Enterprise",
-                                                          "active": true
-                                                        },
-                                                        "domain": "ParticipantShortName.smart-x.smartsenselabs.com",
-                                                        "participantType": "REGISTERED",
-                                                        "status": 0,
-                                                        "credential": "{\\"legalParticipant\\":{\\"credentialSubject\\":{\\"gx:legalName\\":\\"Participant Example\\",\\"gx:headquarterAddress\\":{\\"gx:countrySubdivisionCode\\":\\"BE-BRU\\"},\\"gx:legalAddress\\":{\\"gx:countrySubdivisionCode\\":\\"BE-BRU\\"}}},\\"legalRegistrationNumber\\":{\\"gx:leiCode\\":\\"9695007586XZAKPYJ703\\"}}",
-                                                        "ownDidSolution": false
-                                                      }
-                                                    }                                                                                                        
+                                                       {
+                                                               "status": 200,
+                                                               "payload": {
+                                                                 "name": "Service_soft_testttt2",
+                                                                 "description": "test service data",
+                                                                 "vcUrl": "https://exmaple.json",
+                                                                 "vcJson": [
+                                                                   {
+                                                                     "selfDescriptionCredential": {
+                                                                       "@context": "https://www.w3.org/2018/credentials/v1",
+                                                                       "type": [
+                                                                         "VerifiablePresentation"
+                                                                       ],
+                                                                       "verifiableCredential": [
+                                                                         {
+                                                                           "credentialSubject": {
+                                                                             "gx:legalName": "Green World",
+                                                                             "gx:headquarterAddress": {
+                                                                               "gx:countrySubdivisionCode": "BE-BRU"
+                                                                             },
+                                                                             "gx:legalAddress": {
+                                                                               "gx:countrySubdivisionCode": "BE-BRU"
+                                                                             },
+                                                                             "id": "https://exmaple/participant.json#0",
+                                                                             "type": "gx:LegalParticipant",
+                                                                             "gx:legalRegistrationNumber": {
+                                                                               "id": "https://example.com/125/participant.json#1"
+                                                                             }
+                                                                           },
+                                                                           "@context": [
+                                                                             "https://www.w3.org/2018/credentials/v1",
+                                                                             "https://w3id.org/security/suites/jws-2020/v1",
+                                                                             "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                           ],
+                                                                           "type": [
+                                                                             "VerifiableCredential"
+                                                                           ],
+                                                                           "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuanceDate": "2023-08-07T16:04:30.307219451Z",
+                                                                           "proof": {
+                                                                             "type": "JsonWebSignature2020",
+                                                                             "created": "2023-08-07T10:34:33.838Z",
+                                                                             "proofPurpose": "assertionMethod",
+                                                                             "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                             "jws": ""
+                                                                           }
+                                                                         },
+                                                                         {
+                                                                           "@context": [
+                                                                             "https://www.w3.org/2018/credentials/v1",
+                                                                             "https://w3id.org/security/suites/jws-2020/v1"
+                                                                           ],
+                                                                           "type": "VerifiableCredential",
+                                                                           "id": "https://example.com/125/participant.json#1",
+                                                                           "issuer": "did:web:registration.lab.gaia-x.eu:development",
+                                                                           "issuanceDate": "2023-08-07T10:34:32.101Z",
+                                                                           "credentialSubject": {
+                                                                             "@context": "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+                                                                             "type": "gx:legalRegistrationNumber",
+                                                                             "id": "https://example.com/125/participant.json#1",
+                                                                             "gx:leiCode": "9695007586GCAKPYJ703",
+                                                                             "gx:leiCode-countryCode": "FR"
+                                                                           },
+                                                                           "evidence": [
+                                                                             {
+                                                                               "gx:evidenceURL": "https://api.gleif.org/api/v1/lei-records/",
+                                                                               "gx:executionDate": "2023-08-07T10:34:32.101Z",
+                                                                               "gx:evidenceOf": "gx:leiCode"
+                                                                             }
+                                                                           ],
+                                                                           "proof": {
+                                                                             "type": "JsonWebSignature2020",
+                                                                             "created": "2023-08-07T10:34:33.102Z",
+                                                                             "proofPurpose": "assertionMethod",
+                                                                             "verificationMethod": "did:web:registration.lab.gaia-x.eu:development#X509-JWK2020",
+                                                                             "jws": ""
+                                                                           }
+                                                                         },
+                                                                         {
+                                                                           "@context": [
+                                                                             "https://www.w3.org/2018/credentials/v1",
+                                                                             "https://w3id.org/security/suites/jws-2020/v1",
+                                                                             "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                           ],
+                                                                           "credentialSubject": {
+                                                                             "@Context": [
+                                                                               "https://www.w3.org/2018/credentials/v1",
+                                                                               "https://w3id.org/security/suites/jws-2020/v1",
+                                                                               "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                             ],
+                                                                             "gx:termsAndConditions": "The PARTICIPANT signing the Self-Description agrees as follows:\\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\\n\\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).",
+                                                                             "id": "https://example.com/125/participant.json#2",
+                                                                             "type": "gx:GaiaXTermsAndConditions"
+                                                                           },
+                                                                           "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuanceDate": "2023-08-07T16:04:30.307219451Z",
+                                                                           "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "type": [
+                                                                             "VerifiableCredential"
+                                                                           ],
+                                                                           "proof": {
+                                                                             "type": "JsonWebSignature2020",
+                                                                             "created": "2023-08-07T10:34:34.513Z",
+                                                                             "proofPurpose": "assertionMethod",
+                                                                             "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                             "jws": ""
+                                                                           }
+                                                                         },
+                                                                         {
+                                                                           "type": "VerifiableCredential",
+                                                                           "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuanceDate": "2023-08-21T14:09:58.805414431Z",
+                                                                           "credentialSubject": {
+                                                                             "gx:termsAndConditions": {
+                                                                               "gx:URL": "https://aws.amazon.com/service-terms/",
+                                                                               "gx:hash": "bc9f9f66fa34a52a8da4d0d14f4594cbb7cc6d929c5de1e161dbbd6f0b1985b9"
+                                                                             },
+                                                                             "gx:policy": [
+                                                                               "https://example.com/125/service_Fmai_policy.json"
+                                                                             ],
+                                                                             "gx:dataAccountExport": {
+                                                                               "gx:requestType": "API",
+                                                                               "gx:accessType": "physical",
+                                                                               "gx:formatType": "pdf"
+                                                                             },
+                                                                             "gx:aggregationOf": [
+                                                                               {
+                                                                                 "id": "https://example.com/125/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
+                                                                               }
+                                                                             ],
+                                                                             "gx:dependsOn": [
+                                                                               {
+                                                                                 "id": "https://example.com/125/service_S7GZ.json"
+                                                                               }
+                                                                             ],
+                                                                             "gx:dataProtectionRegime": "GDPR2016",
+                                                                             "type": "gx:ServiceOffering",
+                                                                             "gx:providedBy": {
+                                                                               "id": "https://example.com/125/participant.json#0"
+                                                                             },
+                                                                             "id": "https://example.com/125/service_Fmai.json",
+                                                                             "gx:name": "Service_soft_testttt2",
+                                                                             "gx:description": "test service data"
+                                                                           },
+                                                                           "@context": [
+                                                                             "https://www.w3.org/2018/credentials/v1",
+                                                                             "https://w3id.org/security/suites/jws-2020/v1"
+                                                                           ],
+                                                                           "proof": {
+                                                                             "type": "JsonWebSignature2020",
+                                                                             "created": "2023-08-21T08:39:59.839Z",
+                                                                             "proofPurpose": "assertionMethod",
+                                                                             "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                             "jws": ""
+                                                                           }
+                                                                         },
+                                                                         {
+                                                                           "type": "VerifiableCredential",
+                                                                           "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                           "issuanceDate": "2023-08-19T18:14:15.643722304Z",
+                                                                           "credentialSubject": {
+                                                                             "gx:termsAndConditions": {
+                                                                               "gx:URL": "https://aws.amazon.com/service-terms/",
+                                                                               "gx:hash": "bc9f9f66fa34a52a8da4d0d14f4594cbb7cc6d929c5de1e161dbbd6f0b1985b9"
+                                                                             },
+                                                                             "gx:policy": [
+                                                                               "https://example.com/125/service_S7GZ_policy.json"
+                                                                             ],
+                                                                             "gx:location": [
+                                                                               "BE-BRU"
+                                                                             ],
+                                                                             "gx:dataAccountExport": {
+                                                                               "gx:requestType": "API",
+                                                                               "gx:accessType": "physical",
+                                                                               "gx:formatType": "pdf"
+                                                                             },
+                                                                             "gx:aggregationOf": [
+                                                                               {
+                                                                                 "id": "https://example.com/125/resource_86e8a7a9-c341-4049-abc7-dcf20e1736fe.json"
+                                                                               }
+                                                                             ],
+                                                                             "gx:dataProtectionRegime": "GDPR2016",
+                                                                             "type": "gx:ServiceOffering",
+                                                                             "gx:providedBy": {
+                                                                               "id": "https://example.com/125/participant.json#0"
+                                                                             },
+                                                                             "id": "https://example.com/125/service_S7GZ.json",
+                                                                             "gx:name": "Service_soft_res_1",
+                                                                             "gx:description": "test service data"
+                                                                           },
+                                                                           "@context": [
+                                                                             "https://www.w3.org/2018/credentials/v1",
+                                                                             "https://w3id.org/security/suites/jws-2020/v1"
+                                                                           ],
+                                                                           "proof": {
+                                                                             "type": "JsonWebSignature2020",
+                                                                             "created": "2023-08-19T12:44:16.295Z",
+                                                                             "proofPurpose": "assertionMethod",
+                                                                             "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                             "jws": ""
+                                                                           }
+                                                                         }
+                                                                       ]
+                                                                     },
+                                                                     "complianceCredential": {
+                                                                       "@context": [
+                                                                         "https://www.w3.org/2018/credentials/v1",
+                                                                         "https://w3id.org/security/suites/jws-2020/v1",
+                                                                         "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                       ],
+                                                                       "type": [
+                                                                         "VerifiableCredential"
+                                                                       ],
+                                                                       "id": "https://compliance.lab.gaia-x.eu/development/credential-offers/55427329-5d44-43cb-a425-308f874a4dc9",
+                                                                       "issuer": "did:web:compliance.lab.gaia-x.eu:development",
+                                                                       "issuanceDate": "2023-08-21T08:40:14.393Z",
+                                                                       "expirationDate": "2023-11-19T08:40:14.393Z",
+                                                                       "credentialSubject": [
+                                                                         {
+                                                                           "type": "gx:compliance",
+                                                                           "id": "https://example.com/125/participant.json#0",
+                                                                           "integrity": "sha256-372994ed4b18b7f4252626a48c510aa170cb3a04717d2501ccf1982ed85a9b12",
+                                                                           "version": "22.10"
+                                                                         },
+                                                                         {
+                                                                           "type": "gx:compliance",
+                                                                           "id": "https://example.com/125/participant.json#1",
+                                                                           "integrity": "sha256-20059a7a182d8a840ee25f8773446aa2f0564c0ff82d359b8a1b194bf1f98045",
+                                                                           "version": "22.10"
+                                                                         },
+                                                                         {
+                                                                           "type": "gx:compliance",
+                                                                           "id": "https://example.com/125/participant.json#2",
+                                                                           "integrity": "sha256-f897639cb8a0236874ec395a3b0443986fcf5e3b1ac4ac1f3978e72e685dea2f",
+                                                                           "version": "22.10"
+                                                                         },
+                                                                         {
+                                                                           "type": "gx:compliance",
+                                                                           "id": "https://example.com/125/service_Fmai.json",
+                                                                           "integrity": "sha256-7fd1168cf7fd7c3e36c8293db3e04938c750b06992b779cbc7b828fc7eb060c3",
+                                                                           "version": "22.10"
+                                                                         },
+                                                                         {
+                                                                           "type": "gx:compliance",
+                                                                           "id": "https://example.com/125/service_S7GZ.json",
+                                                                           "integrity": "sha256-70515740d132923073c25fba85b1af920164ac7ec94d9cd08cb99b5374d49edf",
+                                                                           "version": "22.10"
+                                                                         }
+                                                                       ],
+                                                                       "proof": {
+                                                                         "type": "JsonWebSignature2020",
+                                                                         "created": "2023-08-21T08:40:15.041Z",
+                                                                         "proofPurpose": "assertionMethod",
+                                                                         "jws": "",
+                                                                         "verificationMethod": "did:web:compliance.lab.gaia-x.eu:development#X509-JWK2020"
+                                                                       }
+                                                                     }
+                                                                   }
+                                                                 ]
+                                                               }
+                                                             }                                                                                                
                                                     """)
                                     }
                             )
@@ -258,22 +506,270 @@ public class ServiceOfferController extends BaseController {
                                                     {
                                                       "status": 200,
                                                       "payload": {
-                                                        "id": "785651fd-8292-4555-b05c-77c03cea2312",
-                                                        "email": "participant@example.in",
-                                                        "legalName": "Participant Example",
-                                                        "shortName": "ParticipantShortName",
-                                                        "entityType": {
-                                                          "id": "933fde99-d815-4d10-b414-ea2d88d10474",
-                                                          "type": "Social Enterprise",
-                                                          "active": true
-                                                        },
-                                                        "domain": "ParticipantShortName.smart-x.smartsenselabs.com",
-                                                        "participantType": "REGISTERED",
-                                                        "status": 0,
-                                                        "credential": "{\\"legalParticipant\\":{\\"credentialSubject\\":{\\"gx:legalName\\":\\"Participant Example\\",\\"gx:headquarterAddress\\":{\\"gx:countrySubdivisionCode\\":\\"BE-BRU\\"},\\"gx:legalAddress\\":{\\"gx:countrySubdivisionCode\\":\\"BE-BRU\\"}}},\\"legalRegistrationNumber\\":{\\"gx:leiCode\\":\\"9695007586XZAKPYJ703\\"}}",
-                                                        "ownDidSolution": false
-                                                      }
-                                                    }                                                                                                        
+                                                      {
+                                                        "status": 200,
+                                                        "payload": {
+                                                          "name": "Service_soft_testttt2",
+                                                          "description": "test service data",
+                                                          "vcUrl": "https://exmaple.json",
+                                                          "vcJson": [
+                                                            {
+                                                              "selfDescriptionCredential": {
+                                                                "@context": "https://www.w3.org/2018/credentials/v1",
+                                                                "type": [
+                                                                  "VerifiablePresentation"
+                                                                ],
+                                                                "verifiableCredential": [
+                                                                  {
+                                                                    "credentialSubject": {
+                                                                      "gx:legalName": "Green World",
+                                                                      "gx:headquarterAddress": {
+                                                                        "gx:countrySubdivisionCode": "BE-BRU"
+                                                                      },
+                                                                      "gx:legalAddress": {
+                                                                        "gx:countrySubdivisionCode": "BE-BRU"
+                                                                      },
+                                                                      "id": "https://exmaple/participant.json#0",
+                                                                      "type": "gx:LegalParticipant",
+                                                                      "gx:legalRegistrationNumber": {
+                                                                        "id": "https://example.com/125/participant.json#1"
+                                                                      }
+                                                                    },
+                                                                    "@context": [
+                                                                      "https://www.w3.org/2018/credentials/v1",
+                                                                      "https://w3id.org/security/suites/jws-2020/v1",
+                                                                      "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                    ],
+                                                                    "type": [
+                                                                      "VerifiableCredential"
+                                                                    ],
+                                                                    "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuanceDate": "2023-08-07T16:04:30.307219451Z",
+                                                                    "proof": {
+                                                                      "type": "JsonWebSignature2020",
+                                                                      "created": "2023-08-07T10:34:33.838Z",
+                                                                      "proofPurpose": "assertionMethod",
+                                                                      "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                      "jws": ""
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "@context": [
+                                                                      "https://www.w3.org/2018/credentials/v1",
+                                                                      "https://w3id.org/security/suites/jws-2020/v1"
+                                                                    ],
+                                                                    "type": "VerifiableCredential",
+                                                                    "id": "https://example.com/125/participant.json#1",
+                                                                    "issuer": "did:web:registration.lab.gaia-x.eu:development",
+                                                                    "issuanceDate": "2023-08-07T10:34:32.101Z",
+                                                                    "credentialSubject": {
+                                                                      "@context": "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+                                                                      "type": "gx:legalRegistrationNumber",
+                                                                      "id": "https://example.com/125/participant.json#1",
+                                                                      "gx:leiCode": "9695007586GCAKPYJ703",
+                                                                      "gx:leiCode-countryCode": "FR"
+                                                                    },
+                                                                    "evidence": [
+                                                                      {
+                                                                        "gx:evidenceURL": "https://api.gleif.org/api/v1/lei-records/",
+                                                                        "gx:executionDate": "2023-08-07T10:34:32.101Z",
+                                                                        "gx:evidenceOf": "gx:leiCode"
+                                                                      }
+                                                                    ],
+                                                                    "proof": {
+                                                                      "type": "JsonWebSignature2020",
+                                                                      "created": "2023-08-07T10:34:33.102Z",
+                                                                      "proofPurpose": "assertionMethod",
+                                                                      "verificationMethod": "did:web:registration.lab.gaia-x.eu:development#X509-JWK2020",
+                                                                      "jws": ""
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "@context": [
+                                                                      "https://www.w3.org/2018/credentials/v1",
+                                                                      "https://w3id.org/security/suites/jws-2020/v1",
+                                                                      "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                    ],
+                                                                    "credentialSubject": {
+                                                                      "@Context": [
+                                                                        "https://www.w3.org/2018/credentials/v1",
+                                                                        "https://w3id.org/security/suites/jws-2020/v1",
+                                                                        "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                      ],
+                                                                      "gx:termsAndConditions": "The PARTICIPANT signing the Self-Description agrees as follows:\\n- to update its descriptions about any changes, be it technical, organizational, or legal - especially but not limited to contractual in regards to the indicated attributes present in the descriptions.\\n\\nThe keypair used to sign Verifiable Credentials will be revoked where Gaia-X Association becomes aware of any inaccurate statements in regards to the claims which result in a non-compliance with the Trust Framework and policy rules defined in the Policy Rules and Labelling Document (PRLD).",
+                                                                      "id": "https://example.com/125/participant.json#2",
+                                                                      "type": "gx:GaiaXTermsAndConditions"
+                                                                    },
+                                                                    "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuanceDate": "2023-08-07T16:04:30.307219451Z",
+                                                                    "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "type": [
+                                                                      "VerifiableCredential"
+                                                                    ],
+                                                                    "proof": {
+                                                                      "type": "JsonWebSignature2020",
+                                                                      "created": "2023-08-07T10:34:34.513Z",
+                                                                      "proofPurpose": "assertionMethod",
+                                                                      "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                      "jws": ""
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "type": "VerifiableCredential",
+                                                                    "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuanceDate": "2023-08-21T14:09:58.805414431Z",
+                                                                    "credentialSubject": {
+                                                                      "gx:termsAndConditions": {
+                                                                        "gx:URL": "https://aws.amazon.com/service-terms/",
+                                                                        "gx:hash": "bc9f9f66fa34a52a8da4d0d14f4594cbb7cc6d929c5de1e161dbbd6f0b1985b9"
+                                                                      },
+                                                                      "gx:policy": [
+                                                                        "https://example.com/125/service_Fmai_policy.json"
+                                                                      ],
+                                                                      "gx:dataAccountExport": {
+                                                                        "gx:requestType": "API",
+                                                                        "gx:accessType": "physical",
+                                                                        "gx:formatType": "pdf"
+                                                                      },
+                                                                      "gx:aggregationOf": [
+                                                                        {
+                                                                          "id": "https://example.com/125/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
+                                                                        }
+                                                                      ],
+                                                                      "gx:dependsOn": [
+                                                                        {
+                                                                          "id": "https://example.com/125/service_S7GZ.json"
+                                                                        }
+                                                                      ],
+                                                                      "gx:dataProtectionRegime": "GDPR2016",
+                                                                      "type": "gx:ServiceOffering",
+                                                                      "gx:providedBy": {
+                                                                        "id": "https://example.com/125/participant.json#0"
+                                                                      },
+                                                                      "id": "https://example.com/125/service_Fmai.json",
+                                                                      "gx:name": "Service_soft_testttt2",
+                                                                      "gx:description": "test service data"
+                                                                    },
+                                                                    "@context": [
+                                                                      "https://www.w3.org/2018/credentials/v1",
+                                                                      "https://w3id.org/security/suites/jws-2020/v1"
+                                                                    ],
+                                                                    "proof": {
+                                                                      "type": "JsonWebSignature2020",
+                                                                      "created": "2023-08-21T08:39:59.839Z",
+                                                                      "proofPurpose": "assertionMethod",
+                                                                      "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                      "jws": ""
+                                                                    }
+                                                                  },
+                                                                  {
+                                                                    "type": "VerifiableCredential",
+                                                                    "id": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuer": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                    "issuanceDate": "2023-08-19T18:14:15.643722304Z",
+                                                                    "credentialSubject": {
+                                                                      "gx:termsAndConditions": {
+                                                                        "gx:URL": "https://aws.amazon.com/service-terms/",
+                                                                        "gx:hash": "bc9f9f66fa34a52a8da4d0d14f4594cbb7cc6d929c5de1e161dbbd6f0b1985b9"
+                                                                      },
+                                                                      "gx:policy": [
+                                                                        "https://example.com/125/service_S7GZ_policy.json"
+                                                                      ],
+                                                                      "gx:location": [
+                                                                        "BE-BRU"
+                                                                      ],
+                                                                      "gx:dataAccountExport": {
+                                                                        "gx:requestType": "API",
+                                                                        "gx:accessType": "physical",
+                                                                        "gx:formatType": "pdf"
+                                                                      },
+                                                                      "gx:aggregationOf": [
+                                                                        {
+                                                                          "id": "https://example.com/125/resource_86e8a7a9-c341-4049-abc7-dcf20e1736fe.json"
+                                                                        }
+                                                                      ],
+                                                                      "gx:dataProtectionRegime": "GDPR2016",
+                                                                      "type": "gx:ServiceOffering",
+                                                                      "gx:providedBy": {
+                                                                        "id": "https://example.com/125/participant.json#0"
+                                                                      },
+                                                                      "id": "https://example.com/125/service_S7GZ.json",
+                                                                      "gx:name": "Service_soft_res_1",
+                                                                      "gx:description": "test service data"
+                                                                    },
+                                                                    "@context": [
+                                                                      "https://www.w3.org/2018/credentials/v1",
+                                                                      "https://w3id.org/security/suites/jws-2020/v1"
+                                                                    ],
+                                                                    "proof": {
+                                                                      "type": "JsonWebSignature2020",
+                                                                      "created": "2023-08-19T12:44:16.295Z",
+                                                                      "proofPurpose": "assertionMethod",
+                                                                      "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
+                                                                      "jws": ""
+                                                                    }
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "complianceCredential": {
+                                                                "@context": [
+                                                                  "https://www.w3.org/2018/credentials/v1",
+                                                                  "https://w3id.org/security/suites/jws-2020/v1",
+                                                                  "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"
+                                                                ],
+                                                                "type": [
+                                                                  "VerifiableCredential"
+                                                                ],
+                                                                "id": "https://compliance.lab.gaia-x.eu/development/credential-offers/55427329-5d44-43cb-a425-308f874a4dc9",
+                                                                "issuer": "did:web:compliance.lab.gaia-x.eu:development",
+                                                                "issuanceDate": "2023-08-21T08:40:14.393Z",
+                                                                "expirationDate": "2023-11-19T08:40:14.393Z",
+                                                                "credentialSubject": [
+                                                                  {
+                                                                    "type": "gx:compliance",
+                                                                    "id": "https://example.com/125/participant.json#0",
+                                                                    "integrity": "sha256-372994ed4b18b7f4252626a48c510aa170cb3a04717d2501ccf1982ed85a9b12",
+                                                                    "version": "22.10"
+                                                                  },
+                                                                  {
+                                                                    "type": "gx:compliance",
+                                                                    "id": "https://example.com/125/participant.json#1",
+                                                                    "integrity": "sha256-20059a7a182d8a840ee25f8773446aa2f0564c0ff82d359b8a1b194bf1f98045",
+                                                                    "version": "22.10"
+                                                                  },
+                                                                  {
+                                                                    "type": "gx:compliance",
+                                                                    "id": "https://example.com/125/participant.json#2",
+                                                                    "integrity": "sha256-f897639cb8a0236874ec395a3b0443986fcf5e3b1ac4ac1f3978e72e685dea2f",
+                                                                    "version": "22.10"
+                                                                  },
+                                                                  {
+                                                                    "type": "gx:compliance",
+                                                                    "id": "https://example.com/125/service_Fmai.json",
+                                                                    "integrity": "sha256-7fd1168cf7fd7c3e36c8293db3e04938c750b06992b779cbc7b828fc7eb060c3",
+                                                                    "version": "22.10"
+                                                                  },
+                                                                  {
+                                                                    "type": "gx:compliance",
+                                                                    "id": "https://example.com/125/service_S7GZ.json",
+                                                                    "integrity": "sha256-70515740d132923073c25fba85b1af920164ac7ec94d9cd08cb99b5374d49edf",
+                                                                    "version": "22.10"
+                                                                  }
+                                                                ],
+                                                                "proof": {
+                                                                  "type": "JsonWebSignature2020",
+                                                                  "created": "2023-08-21T08:40:15.041Z",
+                                                                  "proofPurpose": "assertionMethod",
+                                                                  "jws": "",
+                                                                  "verificationMethod": "did:web:compliance.lab.gaia-x.eu:development#X509-JWK2020"
+                                                                }
+                                                              }
+                                                            }
+                                                          ]
+                                                        }
+                                                      }                                                                                            
                                                     """)
                                     }
                             )
