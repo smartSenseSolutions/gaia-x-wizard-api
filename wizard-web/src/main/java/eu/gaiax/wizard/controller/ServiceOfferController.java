@@ -811,6 +811,92 @@ public class ServiceOfferController extends BaseController {
 
     @Tag(name = "Service-Offering")
     @Operation(summary = "Get service list for dropdown")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
+            @Content(examples = {
+                    @ExampleObject(name = "Filter request with sort",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      }
+                                    }"""
+                    ),
+                    @ExampleObject(name = "Filter request with sort and search",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      },
+                                      "criteriaOperator": "AND",
+                                      "criteria": [
+                                        {
+                                          "column": "name",
+                                          "operator": "CONTAIN",
+                                          "values": [
+                                            "xyz"
+                                          ]
+                                        }
+                                      ]
+                                    }"""
+                    ),
+            })
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Master data fetched successfully.", content = {
+                    @Content(examples = {
+                            @ExampleObject(name = "Successful request", value = """
+                                    {
+                                       "status": 200,
+                                       "payload": {
+                                         "content": [
+                                           {
+                                             "id": "0fa1180c-a8bf-4994-8798-66744886acea",
+                                             "name": "Storage service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Storage service.json"
+                                           },
+                                           {
+                                             "id": "ab06e01c-978a-459c-9104-1018cb5e1ec9",
+                                             "name": "Clould service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Clould_service.json"
+                                           },
+                                           {
+                                             "id": "0749b43f-b187-4a57-8119-8d72ea7dd01f",
+                                             "name": "Database service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Database_service.json"
+                                           },
+                                           {
+                                             "id": "c6a04238-fa3a-45b9-af1d-1d92872bcaf3",
+                                             "name": "Sertvice_offer_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_QTJG.json"
+                                           },
+                                           {
+                                             "id": "bcb1e1e1-347e-4aa8-ba38-ac35d331e2c6",
+                                             "name": "Sertvice_of_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_6vSP.json"
+                                           }
+                                         ],
+                                         "pageable": {
+                                           "pageSize": 5,
+                                           "totalPages": 4,
+                                           "pageNumber": 0,
+                                           "numberOfElements": 5,
+                                           "totalElements": 18
+                                         }
+                                       }
+                                    }"""
+                            )
+                    })
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(examples = {})
+            }),
+    })
     @PostMapping(path = SERVICE_OFFER_LIST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceAndResourceListDTO>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
         return CommonResponse.of(this.serviceOfferService.getServiceOfferingList(filterRequest));

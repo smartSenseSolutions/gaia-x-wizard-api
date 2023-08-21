@@ -113,8 +113,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
-        if (Objects.equals(request.ownDid(), Boolean.FALSE) && participant.isOwnDidSolution()) {
-            participant.setOwnDidSolution(false);
+        if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
+            participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
 
@@ -125,6 +125,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
             Validate.isTrue(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
         }
+
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request.privateKey());
