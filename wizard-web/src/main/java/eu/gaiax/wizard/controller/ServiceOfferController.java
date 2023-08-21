@@ -4,6 +4,7 @@ import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
@@ -376,7 +377,7 @@ public class ServiceOfferController extends BaseController {
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim("email", principal).toString()));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString()));
     }
 
     @Tag(name = "Service-Offering")

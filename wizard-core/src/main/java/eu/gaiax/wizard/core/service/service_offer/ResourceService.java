@@ -12,6 +12,7 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.filter.FilterCriteria;
 import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
@@ -93,14 +94,15 @@ public class ResourceService extends BaseService<Resource, UUID> {
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRES_NEW)
-    public Resource createResource(CreateResourceRequest request, String email) throws JsonProcessingException {
+    public Resource createResource(CreateResourceRequest request, String id) throws JsonProcessingException {
         Participant participant;
-        if (StringUtils.hasText(email)) {
-            participant = this.participantRepository.getByEmail(email);
+        if (StringUtils.hasText(id)) {
+            participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.participantJson(), request.verificationMethod(), request.privateKey(), request.vault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         this.validateResourceRequest(request);
         String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
         String json = this.resourceVc(request, participant, this.wizardHost + hostUrl);

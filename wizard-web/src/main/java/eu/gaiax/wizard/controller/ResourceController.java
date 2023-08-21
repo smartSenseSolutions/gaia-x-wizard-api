@@ -2,6 +2,7 @@ package eu.gaiax.wizard.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
@@ -139,7 +140,7 @@ public class ResourceController extends BaseController {
                     })
     })
     public CommonResponse<Resource> createResource(@Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
-        return CommonResponse.of(this.resourceService.createResource(request, request.email()));
+        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()));
     }
 
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
