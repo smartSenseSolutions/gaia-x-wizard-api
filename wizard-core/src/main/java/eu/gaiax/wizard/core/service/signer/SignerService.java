@@ -253,11 +253,26 @@ public class SignerService {
         }
     }
 
-    public void validateRequestUrl(List<String> urls, String message) {
+    public String signResource(Map<String, Object> resourceRequest) {
+        try {
+            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signResource(resourceRequest);
+            String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            return signResource;
+        } catch (Exception e) {
+            log.debug("Service vc not created", e.getMessage());
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    public void validateRequestUrl(List<String> urls, String message, List<String> policy) {
         AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
+        if (policy == null) {
+            policy = policies;
+        }
+        List<String> finalPolicy = policy;
         urls.parallelStream().forEach(url -> {
             try {
-                participantValidatorRequest.set(new ParticipantVerifyRequest(url, policies));
+                participantValidatorRequest.set(new ParticipantVerifyRequest(url, finalPolicy));
                 ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
                 log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
             } catch (Exception e) {

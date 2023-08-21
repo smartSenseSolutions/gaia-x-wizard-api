@@ -74,20 +74,21 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private String wizardHost;
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String email) throws IOException {
+    public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id) throws IOException {
         Map<String, Object> response = new HashMap<>();
         this.validateServiceOfferRequest(request);
         Participant participant;
-        if (email != null) {
-            participant = this.participantRepository.getByEmail(email);
+        if (id != null) {
+            participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
+            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found");
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
+            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
 
-        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         String serviceName = "service_" + this.getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
@@ -238,7 +239,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         String termsAndConditionsUrl = termsCondition.get("gx:URL").toString();
-        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ");
+        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ", null);
     }
 
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -257,7 +258,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found");
+        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", null);
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -273,7 +274,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, "depends.on.not.found");
+            this.signerService.validateRequestUrl(ids, "depends.on.not.found", null);
         }
 
     }

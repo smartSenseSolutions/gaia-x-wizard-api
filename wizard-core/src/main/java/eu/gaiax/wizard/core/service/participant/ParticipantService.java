@@ -8,6 +8,7 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.StringPool;
@@ -50,13 +51,6 @@ import java.util.*;
 @Slf4j
 @RequiredArgsConstructor
 public class ParticipantService extends BaseService<Participant, UUID> {
-
-    private static final List<String> policies = Arrays.asList(
-            "integrityCheck",
-            "holderSignature",
-            "complianceSignature",
-            "complianceCheck"
-    );
     private final ParticipantRepository participantRepository;
     private final EntityTypeMasterRepository entityTypeMasterRepository;
     private final SignerService signerService;
@@ -120,8 +114,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
-        if (Objects.equals(request.ownDid(), Boolean.FALSE) && participant.isOwnDidSolution()) {
-            participant.setOwnDidSolution(false);
+        if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
+            participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
 
@@ -132,6 +126,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
             Validate.isTrue(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
         }
+
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request.privateKey());
@@ -178,14 +173,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
+            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization"));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
         }
     }
 
@@ -195,7 +190,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found");
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;
@@ -251,8 +246,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
     }
 
-    public Map<String, Object> checkIfParticipantRegistered(String email) {
-        return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
+    public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
+        return new CheckParticipantRegisteredResponse(this.keycloakService.getKeycloakUserByEmail(email) != null);
     }
 
     public Participant changeStatus(UUID participantId, int status) {

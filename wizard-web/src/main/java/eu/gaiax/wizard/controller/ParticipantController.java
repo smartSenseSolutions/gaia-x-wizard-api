@@ -52,6 +52,7 @@ public class ParticipantController extends BaseController {
                                             @ExampleObject(name = "Success Response", value = """
                                                     {
                                                        "status": 200,
+                                                       "message": "User is not registered in the application",
                                                        "payload": {
                                                          "userRegistered": false
                                                        }
@@ -62,8 +63,10 @@ public class ParticipantController extends BaseController {
                     })
     })
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
-        return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
+    public CommonResponse<CheckParticipantRegisteredResponse> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
+        CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email);
+        String message = checkParticipantRegisteredResponse.userRegistered() ? "User is registered in the application" : "User is not registered in the application";
+        return CommonResponse.of(checkParticipantRegisteredResponse, message);
     }
 
     @Operation(
@@ -189,23 +192,33 @@ public class ParticipantController extends BaseController {
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
-                    @ExampleObject(name = "Onboard Participant with store PrivateKey", value = """
+                    @ExampleObject(name = "Onboard Participant and store PrivateKey", value = """
                             {
                               "issuer": "did:web:eu.gaia-x.com",
                               "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
                               "privateKey": "pk",
-                              "store": true
+                              "store": true,
+                              "ownDid": true
                             }
                             """),
-                    @ExampleObject(name = "Onboard Participant without store PrivateKey", value = """
+                    @ExampleObject(name = "Onboard Participant and do not store PrivateKey", value = """
                             {
                               "issuer": "did:web:eu.gaia-x.com",
                               "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
                               "privateKey": "pk",
-                              "store": false
+                              "store": false,
+                              "ownDid": true
                             }
                             """),
-                    @ExampleObject(name = "Onboard Participant Who don't have DID solution", value = """
+                    @ExampleObject(name = "Onboard Participant who selected they had their own DID during registration but do not have a DID solution", value = """
+                            {
+                               "ownDid": false
+                            }
+                            """),
+                    @ExampleObject(name = "Onboard Participant without DID solution", value = """
+                            {
+                             
+                            }
                             """)
             })
     })

@@ -3,21 +3,27 @@ package eu.gaiax.wizard.core.service.service_offer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.filter.FilterCriteria;
+import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
+import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
+import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
@@ -30,6 +36,9 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -60,6 +69,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private final SpecificationUtil<Resource> specificationUtil;
 
+    private final SignerService signerService;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -79,14 +90,16 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return permission;
     }
 
-    public Resource createResource(CreateResourceRequest request, String email) throws JsonProcessingException {
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRES_NEW)
+    public Resource createResource(CreateResourceRequest request, String id) throws JsonProcessingException {
         Participant participant;
-        if (StringUtils.hasText(email)) {
-            participant = this.participantRepository.getByEmail(email);
+        if (StringUtils.hasText(id)) {
+            participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.validation().get("participantJson").toString(), request.validation().get("verificationMethod").toString(), request.validation().get("privateKey").toString(), (boolean) request.validation().get("vault"));
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.participantJson(), request.verificationMethod(), request.privateKey(), request.vault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         this.validateResourceRequest(request);
         String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
         String json = this.resourceVc(request, participant, this.wizardHost + hostUrl);
@@ -118,21 +131,41 @@ public class ResourceService extends BaseService<Resource, UUID> {
         try {
             FileUtils.writeStringToFile(file, policyJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostUrl, file);
+            return this.wizardHost + hostUrl;
         } catch (Exception e) {
             log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
+            throw new RuntimeException(e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
-            return this.wizardHost + hostUrl;
         }
     }
 
-    private void validateResourceRequest(CreateResourceRequest request) {
+    private void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
         Validate.isFalse(StringUtils.hasText(request.credentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
+        this.validateAggregationOf(request);
+    }
+
+    private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
+        if (request.credentialSubject().containsKey("gx:aggregationOf")) {
+            JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject("credentialSubject")
+                    .getAsJsonArray("gx:aggregationOf");
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get("id").getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+        }
     }
 
     public String resourceVc(CreateResourceRequest request, Participant participant, String host) throws JsonProcessingException {
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
+        Map<String, Object> map = new HashMap<>();
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
         resourceRequest.put("id", host);
@@ -151,9 +184,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
             }
         }
         resourceRequest.put("credentialSubject", credentialSub);
-        //Todo singer code remaining
-        String resourceJson = this.objectMapper.writeValueAsString(resourceRequest);
-        return resourceJson;
+        map.put("resource", resourceRequest);
+        Map<String, Object> resourceMap = new HashMap<>();
+        resourceMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
+        resourceMap.put("issuer", participant.getDid());
+        resourceMap.put("verificationMethod", request.verificationMethod());
+        resourceMap.put("vcs", map);
+        return this.signerService.signResource(resourceMap);
     }
 
     public void hostResourceJson(String resourceJson, String hostedPath) {
@@ -166,6 +203,23 @@ public class ResourceService extends BaseService<Resource, UUID> {
         } finally {
             CommonUtils.deleteFile(file);
         }
+    }
+
+    public PageResponse<ResourceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
+
+//        todo: resolve error (InvalidDataAccessApiUsageException: Can't compare test expression of type [BasicSqmPathSource(participantId : UUID)] with element of type [basicType@6(java.lang.String,12)])
+        if (StringUtils.hasText(participantId)) {
+            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
+            List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
+            filterCriteriaList.add(participantCriteria);
+            filterRequest.setCriteria(filterCriteriaList);
+        }
+
+        Page<Resource> resourcePage = this.filter(filterRequest);
+        List<ResourceFilterResponse> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
+        });
+
+        return PageResponse.of(resourceList, resourcePage, filterRequest.getSort());
     }
 
     public PageResponse<ServiceAndResourceListDTO> getResourceList(FilterRequest filterRequest) {
