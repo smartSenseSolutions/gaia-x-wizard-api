@@ -40,6 +40,7 @@ public class AuthenticationConfig {
                         .requestMatchers("/certificate/**").permitAll()
                         .requestMatchers("/.well-known/**").permitAll()
                         .requestMatchers("/public/**").permitAll()
+                        .requestMatchers(PARTICIPANT_JSON).permitAll()
                         .requestMatchers(ONBOARD_PARTICIPANT, PARTICIPANT_ROOT + "/**").hasRole(PARTICIPANT_ROLE)
                         .requestMatchers(SERVICE_OFFER).hasRole(PARTICIPANT_ROLE)
                 )
