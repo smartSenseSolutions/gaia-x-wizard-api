@@ -189,23 +189,33 @@ public class ParticipantController extends BaseController {
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
-                    @ExampleObject(name = "Onboard Participant with store PrivateKey", value = """
+                    @ExampleObject(name = "Onboard Participant and store PrivateKey", value = """
                             {
                               "issuer": "did:web:eu.gaia-x.com",
                               "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
                               "privateKey": "pk",
-                              "store": true
+                              "store": true,
+                              "ownDid": true
                             }
                             """),
-                    @ExampleObject(name = "Onboard Participant without store PrivateKey", value = """
+                    @ExampleObject(name = "Onboard Participant and do not store PrivateKey", value = """
                             {
                               "issuer": "did:web:eu.gaia-x.com",
                               "verificationMethod": "did:web:casio50.smart-x.smartsenselabs.com",
                               "privateKey": "pk",
-                              "store": false
+                              "store": false,
+                              "ownDid": true
                             }
                             """),
-                    @ExampleObject(name = "Onboard Participant Who don't have DID solution", value = """
+                    @ExampleObject(name = "Onboard Participant who selected they had their own DID during registration but do not have a DID solution", value = """
+                            {
+                               "ownDid": false
+                            }
+                            """),
+                    @ExampleObject(name = "Onboard Participant without DID solution", value = """
+                            {
+                             
+                            }
                             """)
             })
     })
