@@ -21,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
@@ -151,7 +152,8 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Participant not found.")
     })
     @GetMapping(PARTICIPANT_CONFIG)
-    public CommonResponse<ParticipantConfigDTO> getConfig(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+    public CommonResponse<ParticipantConfigDTO> getConfig(Principal principal) {
+        String participantId = (String) this.requestForClaim(StringPool.ID, principal);
         return CommonResponse.of(this.participantService.getParticipantConfig(participantId));
     }
 
