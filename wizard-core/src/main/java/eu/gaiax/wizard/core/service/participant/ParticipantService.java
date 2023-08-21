@@ -8,6 +8,7 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.StringPool;
@@ -252,8 +253,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
     }
 
-    public Map<String, Object> checkIfParticipantRegistered(String email) {
-        return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
+    public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
+        return new CheckParticipantRegisteredResponse(this.keycloakService.getKeycloakUserByEmail(email) != null);
     }
 
     public Participant changeStatus(UUID participantId, int status) {
