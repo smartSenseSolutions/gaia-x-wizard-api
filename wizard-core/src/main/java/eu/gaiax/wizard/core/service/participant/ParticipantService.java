@@ -113,8 +113,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
-
+        Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
         if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
+            participant.setDomain(request.ownDid() ? null : participant.getShortName() + "." + this.domain);
             participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
@@ -180,7 +181,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.sub.organization", null));
         }
     }
 
@@ -272,7 +273,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         try {
             participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         } catch (Exception e) {
-            throw new EntityNotFoundException("Participant not found");
+            throw new EntityNotFoundException("participant.not.found");
         }
 
         if (participant.isOwnDidSolution()) {
@@ -289,11 +290,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
         Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("Participant not found"));
+        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
 
         Credential legalParticipantCredential = this.credentialService.getLegalParticipantCredential(participant.getId());
-        Validate.isNull(legalParticipantCredential).launch(new BadDataException("Legal participant credential not found"));
+        Validate.isNull(legalParticipantCredential).launch(new BadDataException("participant.credential.not.found"));
         participantAndKeyResponse.setParticipantJson(legalParticipantCredential.getVcUrl());
 
         if (participant.isOwnDidSolution()) {
