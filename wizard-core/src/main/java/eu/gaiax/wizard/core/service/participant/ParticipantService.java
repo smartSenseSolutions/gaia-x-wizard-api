@@ -83,7 +83,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName())
+                .shortName(onboardRequest.shortName().toLowerCase())
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName() + "." + this.domain)
                 .participantType("REGISTERED")
@@ -115,7 +115,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
         if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
-            participant.setDomain(request.ownDid() ? null : participant.getShortName() + "." + this.domain);
+            participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
             participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
@@ -132,7 +132,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
+            participant.setOwnCertificate(request.store());
             this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
+            this.participantRepository.save(participant);
         }
         return participant;
     }
