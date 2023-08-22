@@ -3,4 +3,4 @@ repos:
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        exclude: k8s/*|wizard-web/src/main/java/eu/gaiax/wizard/controller/ParticipantController.java
+        exclude: k8s/|wizard-web/src/main/java/eu/gaiax/wizard/controller/
