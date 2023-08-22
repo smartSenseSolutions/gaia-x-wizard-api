@@ -207,7 +207,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     public PageResponse<ResourceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
 
-//        todo: resolve error (InvalidDataAccessApiUsageException: Can't compare test expression of type [BasicSqmPathSource(participantId : UUID)] with element of type [basicType@6(java.lang.String,12)])
         if (StringUtils.hasText(participantId)) {
             FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
             List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
