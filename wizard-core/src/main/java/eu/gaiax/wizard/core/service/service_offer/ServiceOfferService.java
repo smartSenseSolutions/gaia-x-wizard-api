@@ -98,7 +98,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
-            String hostPolicyJson = this.policyService.createPolicy(odrlPolicyRequest, policyUrl);
+            String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createPolicy(odrlPolicyRequest, policyUrl));
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
