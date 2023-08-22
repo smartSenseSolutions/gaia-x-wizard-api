@@ -134,7 +134,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             return this.wizardHost + hostUrl;
         } catch (Exception e) {
             log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            throw new BadDataException(e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
         }

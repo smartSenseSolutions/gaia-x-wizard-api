@@ -249,7 +249,7 @@ public class SignerService {
             return serviceOfferingString;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            throw new BadDataException(e.getMessage());
         }
     }
 
@@ -260,7 +260,7 @@ public class SignerService {
             return signResource;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
-            throw new RuntimeException(e.getMessage());
+            throw new BadDataException(e.getMessage());
         }
     }
 
