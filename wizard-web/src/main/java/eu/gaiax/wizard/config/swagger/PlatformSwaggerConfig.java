@@ -26,6 +26,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class PlatformSwaggerConfig {
     private final SecurityConfigProperties properties;
+    private final ApplicationInfo info;
 
     /**
      * Spring identity open api.
@@ -44,13 +45,13 @@ public class PlatformSwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title("The Smart-X API Documentation")
-                .description("This API documentation contains all the APIs for The Smart-X")
-                .version("1.0.0")
+                .title(this.info.name())
+                .description(this.info.description())
+                .version(this.info.version())
                 .contact(new Contact()
-                        .name("The Smart-X")
-                        .email("admin@smartsensesolutions.com")
-                        .url("https://gaiaxapi.proofsense.io/")
+                        .name(this.info.contact().name())
+                        .email(this.info.contact().email())
+                        .url(this.info.contact().url())
                 );
     }
 
@@ -61,7 +62,7 @@ public class PlatformSwaggerConfig {
                 new SecurityScheme()
                         .type(SecurityScheme.Type.OAUTH2)
                         .flows(new OAuthFlows()
-                                .authorizationCode(new OAuthFlow()
+                                .clientCredentials(new OAuthFlow()
                                         .authorizationUrl(this.properties.authUrl())
                                         .tokenUrl(this.properties.tokenUrl())
                                         .refreshUrl(this.properties.refreshTokenUrl()

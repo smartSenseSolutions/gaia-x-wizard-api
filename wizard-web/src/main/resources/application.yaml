@@ -7,6 +7,14 @@ server:
 wizard:
   application:
     name: "gaia-x-wizard"
+  info:
+    name:
+    description:
+    version:
+    contact:
+      name:
+      email:
+      url:
   aws:
     accessKey:
     secretKey:
