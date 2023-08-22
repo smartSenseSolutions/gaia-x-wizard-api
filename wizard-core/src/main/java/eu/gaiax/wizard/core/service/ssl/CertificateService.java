@@ -37,7 +37,7 @@ import java.util.UUID;
 @Slf4j
 public class CertificateService {
 
-    private static final File USER_KEY_FILE = new File("user.key");
+    private static final File USER_KEY_FILE = new File("/temp/user.key");
 
     //Challenge type to be used
     private static final ChallengeType CHALLENGE_TYPE = ChallengeType.DNS;
