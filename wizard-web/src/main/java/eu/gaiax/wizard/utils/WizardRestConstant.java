@@ -46,7 +46,9 @@ public class WizardRestConstant {
 
     public static final String SERVICE_OFFER_LOCATION = "/public/service-offer/location";
 
-    public static final String SERVICE_OFFER_LIST = "/public/service-offer/list";
+    public static final String SERVICE_OFFER_FILTER = "/public/service-offer/filter";
+
+    public static final String PARTICIPANT_SERVICE_OFFER_FILTER = "/participant/{participantId}/service-offer/filter";
 
     public static final String RESOURCE_FILTER = "/public/resource/filter";
 

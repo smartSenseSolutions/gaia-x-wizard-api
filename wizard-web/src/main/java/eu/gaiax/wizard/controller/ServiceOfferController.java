@@ -3,12 +3,12 @@ package eu.gaiax.wizard.controller;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
-import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferingLocationResponse;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -797,6 +798,51 @@ public class ServiceOfferController extends BaseController {
 
     @Tag(name = "Service-Offering")
     @Operation(summary = "Get service locations from policy")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
+            @Content(examples = {
+                    @ExampleObject(name = "Get location from service offering", value = """
+                            {
+                               "id": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_EgOk.json"
+                            }"""
+                    )
+            })
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Service offering location displayed successfully.", content = {
+                    @Content(examples = {
+                            @ExampleObject(name = "Successful request", value = """
+                                    {
+                                       "status": 200,
+                                       "payload": {
+                                         "serviceAvailabilityLocation": [
+                                           "BE-BRU"
+                                         ]
+                                       }
+                                    }"""
+                            )
+                    })
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(examples = {
+                            @ExampleObject(name = "Invalid data type", value = """
+                                    {
+                                       "message": "Please enter service Id",
+                                       "status": 400,
+                                       "payload": {
+                                         "error": {
+                                           "message": "Validation failed",
+                                           "status": 400,
+                                           "timeStamp": 1692620670223,
+                                           "fieldErrors": {
+                                             "id": "Please enter service Id"
+                                           }
+                                         }
+                                       }
+                                    }"""
+                            )
+                    })
+            }),
+    })
     @PostMapping(path = SERVICE_OFFER_LOCATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Object> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
         ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
@@ -891,9 +937,16 @@ public class ServiceOfferController extends BaseController {
                     @Content(examples = {})
             }),
     })
-    @PostMapping(path = SERVICE_OFFER_LIST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ServiceAndResourceListDTO>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
-        return CommonResponse.of(this.serviceOfferService.getServiceOfferingList(filterRequest));
+    @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
+        return CommonResponse.of(this.serviceOfferService.filterResource(filterRequest, null));
+    }
+
+    @Tag(name = "Service-Offering")
+    @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
+        this.validateParticipantId(participantId, principal);
+        return CommonResponse.of(this.serviceOfferService.filterResource(filterRequest, participantId));
     }
 
 

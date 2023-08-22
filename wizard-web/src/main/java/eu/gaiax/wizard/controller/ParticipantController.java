@@ -1,6 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;

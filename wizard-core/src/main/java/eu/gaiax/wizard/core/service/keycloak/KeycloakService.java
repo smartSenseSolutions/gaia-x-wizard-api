@@ -3,9 +3,9 @@ package eu.gaiax.wizard.core.service.keycloak;
 
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.KeycloakRequiredActionsEnum;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.KeycloakSettings;
 import eu.gaiax.wizard.api.utils.RoleConstant;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;

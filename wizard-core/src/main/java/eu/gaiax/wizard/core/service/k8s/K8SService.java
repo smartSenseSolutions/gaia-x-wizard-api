@@ -6,8 +6,8 @@ package eu.gaiax.wizard.core.service.k8s;
 
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.setting.K8SSettings;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;

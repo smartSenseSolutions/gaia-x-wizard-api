@@ -2,8 +2,8 @@ package eu.gaiax.wizard.core.service.ssl;
 
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
