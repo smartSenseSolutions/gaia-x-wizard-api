@@ -271,7 +271,7 @@ public class ParticipantController extends BaseController {
                     }),
     })
     @PostMapping(value = ONBOARD_PARTICIPANT, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Participant> registerParticipant(@PathVariable("participantId") String participantId, @RequestBody ParticipantCreationRequest request) {
+    public CommonResponse<Participant> initiateOnboardParticipantProcess(@PathVariable("participantId") String participantId, @RequestBody ParticipantCreationRequest request) {
         return CommonResponse.of(this.participantService.initiateOnboardParticipantProcess(participantId, request));
     }
 

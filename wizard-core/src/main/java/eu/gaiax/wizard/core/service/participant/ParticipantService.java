@@ -124,7 +124,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.issuer())).launch("invalid.did");
             Validate.isFalse(StringUtils.hasText(request.privateKey())).launch("invalid.private.key");
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
-            Validate.isTrue(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
+            Validate.isFalse(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
         }
 
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
