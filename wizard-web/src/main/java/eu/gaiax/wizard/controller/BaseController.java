@@ -1,7 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
-import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.utils.StringPool;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
 

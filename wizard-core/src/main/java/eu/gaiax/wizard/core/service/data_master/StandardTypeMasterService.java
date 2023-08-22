@@ -8,6 +8,8 @@ import eu.gaiax.wizard.dao.repository.data_master.StandardTypeMasterRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service(value = "standardTypeMasterService")
 @RequiredArgsConstructor
 public class StandardTypeMasterService extends BaseService<StandardTypeMaster, String> {
@@ -24,5 +26,9 @@ public class StandardTypeMasterService extends BaseService<StandardTypeMaster, S
     @Override
     protected SpecificationUtil<StandardTypeMaster> getSpecificationUtil() {
         return this.specificationUtil;
+    }
+
+    public List<StandardTypeMaster> findAllByTypeIn(List<String> standardNameList) {
+        return this.standardTypeMasterRepository.findAllByTypeIn(standardNameList);
     }
 }

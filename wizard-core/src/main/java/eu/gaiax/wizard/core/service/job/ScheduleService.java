@@ -5,7 +5,7 @@
 package eu.gaiax.wizard.core.service.job;
 
 
-import eu.gaiax.wizard.api.model.StringPool;
+import eu.gaiax.wizard.api.utils.StringPool;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.slf4j.Logger;
