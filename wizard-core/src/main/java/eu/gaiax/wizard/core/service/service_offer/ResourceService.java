@@ -13,11 +13,14 @@ import com.smartsensesolutions.java.commons.filter.FilterCriteria;
 import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
@@ -216,14 +219,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
         Page<Resource> resourcePage = this.filter(filterRequest);
         List<ResourceFilterResponse> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
-        });
-
-        return PageResponse.of(resourceList, resourcePage, filterRequest.getSort());
-    }
-
-    public PageResponse<ServiceAndResourceListDTO> getResourceList(FilterRequest filterRequest) {
-        Page<Resource> resourcePage = this.filter(filterRequest);
-        List<ServiceAndResourceListDTO> resourceList = this.objectMapper.convertValue(resourcePage.getContent(), new TypeReference<>() {
         });
 
         return PageResponse.of(resourceList, resourcePage, filterRequest.getSort());

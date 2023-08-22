@@ -2,8 +2,8 @@ package eu.gaiax.wizard.core.service.ssl;
 
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
@@ -37,7 +37,7 @@ import java.util.UUID;
 @Slf4j
 public class CertificateService {
 
-    private static final File USER_KEY_FILE = new File("user.key");
+    private static final File USER_KEY_FILE = new File("/temp/user.key");
 
     //Challenge type to be used
     private static final ChallengeType CHALLENGE_TYPE = ChallengeType.DNS;

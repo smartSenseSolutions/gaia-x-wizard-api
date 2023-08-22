@@ -1,11 +1,16 @@
 package eu.gaiax.wizard.dao.entity.service_offer;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
+import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -40,10 +45,27 @@ public class ServiceOffer extends SuperEntity {
     @Column(name = "veracity_data")
     private String veracityData;
 
+    @Column(name = "label_level")
+    private Integer labelLevel;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "service_offer_standard_type",
+            joinColumns = @JoinColumn(name = "service_offer_id"),
+            inverseJoinColumns = @JoinColumn(name = "standard_type_id"))
+    private List<StandardTypeMaster> serviceOfferStandardType;
+
     public String getVcUrl() {
         if (this.credential != null) {
             return this.credential.getVcUrl();
         }
         return null;
+    }
+
+    @Override
+    @JsonIgnore(value = false)
+    @JsonProperty
+    public Date getCreatedAt() {
+        return super.getCreatedAt();
     }
 }
