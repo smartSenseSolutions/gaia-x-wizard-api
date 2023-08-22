@@ -138,9 +138,9 @@ public class SignerService {
 
     private String formParticipantJsonUrl(String domain, UUID participantId) {
         if (StringUtils.hasText(domain)) {
-            return "https://" + domain + participantId.toString() + "/participant.json";
+            return "https://" + domain + "/" + participantId.toString() + "/participant.json";
         }
-        return this.wizardHost + participantId.toString() + "/participant.json";
+        return this.wizardHost + "/" + participantId.toString() + "/participant.json";
     }
 
     public void createParticipantJson(Participant participant, String key, boolean ownDid) {
