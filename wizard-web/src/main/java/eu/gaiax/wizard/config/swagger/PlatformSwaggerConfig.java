@@ -62,7 +62,7 @@ public class PlatformSwaggerConfig {
                 new SecurityScheme()
                         .type(SecurityScheme.Type.OAUTH2)
                         .flows(new OAuthFlows()
-                                .clientCredentials(new OAuthFlow()
+                                .authorizationCode(new OAuthFlow()
                                         .authorizationUrl(this.properties.authUrl())
                                         .tokenUrl(this.properties.tokenUrl())
                                         .refreshUrl(this.properties.refreshTokenUrl()
