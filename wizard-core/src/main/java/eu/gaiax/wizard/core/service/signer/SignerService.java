@@ -10,6 +10,7 @@ import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
@@ -214,8 +215,8 @@ public class SignerService {
         }
     }
 
-    public String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
-        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
+    public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+        String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put("id", request.getParticipantJsonUrl() + "#0");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
@@ -245,22 +246,57 @@ public class SignerService {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
             String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            if (serviceOfferingString != null) {
+                this.hostJsonFile(serviceOfferingString, participant.getId(), name);
+            }
             log.debug("Send request to signer for service create vc");
             return serviceOfferingString;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
-            throw new BadDataException(e.getMessage());
+            throw new SignerException(e);
         }
     }
 
-    public String signResource(Map<String, Object> resourceRequest) {
+    public String signResource(Map<String, Object> resourceRequest, UUID id, String name) {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signResource(resourceRequest);
             String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            if (signResource != null) {
+                this.hostJsonFile(signResource, id, name);
+            }
             return signResource;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
+            throw new SignerException(e.getMessage());
+        }
+    }
+
+    private void hostJsonFile(String hostServiceOfferJson, UUID id, String name) {
+        File file = new File("/tmp/" + name + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
+            String hostedPath = id + "/" + name + ".json";
+            this.s3Utils.uploadFile(hostedPath, file);
+        } catch (Exception e) {
+            log.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
             throw new BadDataException(e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
+    }
+
+
+    public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
+        try {
+            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
+            String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("selfDescriptionCredential"));
+            if (signResource != null) {
+                this.hostJsonFile(signResource, id, name);
+            }
+            return signResource;
+        } catch (Exception e) {
+            log.debug("Service vc not created", e.getMessage());
+            throw new SignerException(e.getMessage());
         }
     }
 

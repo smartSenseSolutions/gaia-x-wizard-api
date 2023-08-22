@@ -101,10 +101,11 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         this.validateResourceRequest(request);
-        String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
-        String json = this.resourceVc(request, participant, this.wizardHost + hostUrl);
+        String name = "resource_" + UUID.randomUUID();
+        String json = this.resourceVc(request, participant, name);
+        String hostUrl = participant.getId() + "/" + name + ".json";
+
         if (StringUtils.hasText(json)) {
-            this.hostResourceJson(json, hostUrl);
             Credential resourceVc = this.credentialService.createCredential(json, this.wizardHost + hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.credentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
@@ -134,7 +135,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             return this.wizardHost + hostUrl;
         } catch (Exception e) {
             log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
-            throw new BadDataException(e.getMessage());
+            throw new RuntimeException(e.getMessage());
         } finally {
             CommonUtils.deleteFile(file);
         }
@@ -162,19 +163,20 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    public String resourceVc(CreateResourceRequest request, Participant participant, String host) throws JsonProcessingException {
+    public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws JsonProcessingException {
+        String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
         Map<String, Object> map = new HashMap<>();
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
-        resourceRequest.put("id", host);
+        resourceRequest.put("id", id);
         resourceRequest.put("issuer", participant.getDid());
         resourceRequest.put("issuanceDate", issuanceDate);
         Map<String, Object> credentialSub = request.credentialSubject();
         if (credentialSub != null) {
             credentialSub.put("@context", this.contextConfig.resource());
-            credentialSub.put("id", host);
+            credentialSub.put("id", id);
             if (request.credentialSubject().get("type").toString().contains("Physical")) {
                 credentialSub.put("type", "gx:" + request.credentialSubject().get("type").toString());
             } else {
@@ -190,7 +192,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceMap.put("issuer", participant.getDid());
         resourceMap.put("verificationMethod", request.verificationMethod());
         resourceMap.put("vcs", map);
-        return this.signerService.signResource(resourceMap);
+        return this.signerService.signResource(resourceMap, participant.getId(), name);
     }
 
     public void hostResourceJson(String resourceJson, String hostedPath) {

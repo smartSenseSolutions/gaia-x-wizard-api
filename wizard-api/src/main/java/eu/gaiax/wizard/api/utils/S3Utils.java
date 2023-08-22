@@ -6,6 +6,7 @@ package eu.gaiax.wizard.api.utils;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -60,4 +61,13 @@ public class S3Utils {
         this.s3Client.getObject(new GetObjectRequest(this.awsSettings.bucket(), key), localFile);
         return localFile;
     }
+
+    public String getObject(String fileName) {
+        try {
+            return this.s3Client.getUrl(this.awsSettings.bucket(), fileName).toString();
+        } catch (Exception e) {
+            throw new BadDataException("not.able.to.get.file");
+        }
+    }
+
 }
