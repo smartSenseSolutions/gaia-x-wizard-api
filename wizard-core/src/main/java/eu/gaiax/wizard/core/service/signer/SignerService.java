@@ -155,7 +155,7 @@ public class SignerService {
             if (!ownDid) {
                 privateKey = (String) this.vault.get(key).get("pkcs8.key");
                 Validate.isFalse(StringUtils.hasText(privateKey)).launch(new EntityNotFoundException("keys.not.found"));
-                log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from vault with key {}", key);
+                log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from store with key {}", key);
             }
             TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
             };

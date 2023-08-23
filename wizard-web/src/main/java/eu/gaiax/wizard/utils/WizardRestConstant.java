@@ -53,6 +53,7 @@ public class WizardRestConstant {
     public static final String RESOURCE_FILTER = "/public/resource/filter";
 
     public static final String PARTICIPANT_RESOURCE_FILTER = "/participant/{participantId}/resource/filter";
+    public static final String PARTICIPANT_RESOURCE = "/participant/{participantId}/resource";
 
     public static final String ONBOARD_PARTICIPANT = "/onboard/participant/{participantId}";
 

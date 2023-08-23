@@ -24,8 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 
-import static eu.gaiax.wizard.utils.WizardRestConstant.PARTICIPANT_RESOURCE_FILTER;
-import static eu.gaiax.wizard.utils.WizardRestConstant.RESOURCE_FILTER;
+import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
@@ -37,7 +36,7 @@ public class ResourceController extends BaseController {
 
 
     @Operation(summary = "Create Resource")
-    @PostMapping(path = "/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    @PostMapping(path = PARTICIPANT_RESOURCE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Create physical resource", value = """
@@ -129,7 +128,8 @@ public class ResourceController extends BaseController {
                             """)
             })
     })
-    public CommonResponse<Resource> createResource(@Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
+    public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
+        this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()));
     }
 

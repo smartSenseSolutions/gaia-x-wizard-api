@@ -38,6 +38,7 @@ import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
+import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -73,6 +74,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
     private final ServiceEndpointConfig serviceEndpointConfig;
     private final StandardTypeMasterService standardTypeMasterService;
+    private final Vault vault;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;

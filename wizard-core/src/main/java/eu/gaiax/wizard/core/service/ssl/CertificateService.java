@@ -160,9 +160,9 @@ public class CertificateService {
             //convert private key in pkcs8 format
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
-            //save files in vault
+            //save files in store
             this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
-
+            participant.setKeyStored(true);
 
             //create Job tp create ingress and tls secret
             this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_INGRESS, 0);
@@ -379,6 +379,6 @@ public class CertificateService {
             data.put("pkcs8.key", pkcs8Key);
         }
         this.vault.put(secretName, data);
-        log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
+        log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on store.");
     }
 }

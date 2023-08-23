@@ -132,7 +132,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
-            participant.setOwnCertificate(request.store());
+            participant.setKeyStored(request.store());
             this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
             this.participantRepository.save(participant);
         }
@@ -207,6 +207,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         if (Objects.isNull(participant)) {
             participant = Participant.builder()
                     .did(issuer)
+                    .keyStored(request.store())
                     .build();
         }
         participant = this.participantRepository.save(participant);
@@ -214,8 +215,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         if (Objects.isNull(credential)) {
             credential = this.credentialService.createCredential(participantJson, request.participantJsonUrl(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
         }
+
         if (request.store()) {
-            this.certificateService.uploadCertificatesToVault(participant.getDomain(), participant.getId().toString(), null, null, null, request.privateKey());
+            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), null, null, null, request.privateKey());
         }
         return participant;
     }
