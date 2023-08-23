@@ -80,18 +80,18 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
+            request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
         if (participant.isKeyStored()) {
-            if (this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
-                request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
-                request.setVerificationMethod(participant.getDid());
-            } else {
+            if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
                 throw new BadDataException("private.key.not.found");
             }
+            request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
+            request.setVerificationMethod(participant.getDid());
         }
         if (request.isStoreVault()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
@@ -126,6 +126,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             request.getCredentialSubject().remove("gx:criteria");
             if (labelLevelVc != null) {
                 request.getCredentialSubject().put("gx:labelLevel", List.of(labelLevelVc.get("vcUrl")));
+                if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
+                    JsonNode rootNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(labelLevelVc.get("labelLevelVc")));
+                    JsonNode labelLevelNode = rootNode.path("gx:labelLevel");
+                    int labelLevelValue = labelLevelNode.asInt();
+                }
             }
         }
         request.setCredentialSubject(credentialSubject);
@@ -138,11 +143,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (response.containsKey("trustIndex")) {
             serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
-        if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
-            JsonNode rootNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(labelLevelVc.get("labelLevelVc")));
-            JsonNode labelLevelNode = rootNode.path("gx:labelLevel");
-            int labelLevelValue = labelLevelNode.asInt();
-        }
+
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
         if (!CollectionUtils.isEmpty(labelLevelVc)) {
@@ -322,7 +323,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
-    public PageResponse<ServiceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
+    public PageResponse<ServiceFilterResponse> filterServiceOffering(FilterRequest filterRequest, String participantId) {
 
         if (StringUtils.hasText(participantId)) {
             FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
