@@ -12,7 +12,6 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.filter.FilterCriteria;
 import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
@@ -20,6 +19,7 @@ import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.*;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
@@ -35,9 +35,6 @@ import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -76,7 +73,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Participant participant;
         if (id != null) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
-            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+            if (participant.isOwnCertificate()) {
+                Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+            }
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
@@ -94,7 +93,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
-            String hostPolicyJson = this.policyService.createPolicy(odrlPolicyRequest, policyUrl);
+            String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createPolicy(odrlPolicyRequest, policyUrl));
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
