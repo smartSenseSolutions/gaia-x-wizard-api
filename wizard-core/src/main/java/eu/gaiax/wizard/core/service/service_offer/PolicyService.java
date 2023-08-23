@@ -44,6 +44,20 @@ public class PolicyService {
     private final S3Utils s3Utils;
     private final ContextConfig contextConfig;
 
+
+    public Map<String, Object> createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
+        Map<String, Object> policyMap = new HashMap<>();
+        policyMap.put("@context", this.contextConfig.ODRLPolicy());
+        policyMap.put("type", "policy");
+        if (hostUrl == null) {
+            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
+        }
+        policyMap.put("id", hostUrl);
+        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
+        policyMap.put("permission", permission);
+        return policyMap;
+    }
+
     @NotNull
     private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permission = new ArrayList<>();
@@ -60,19 +74,6 @@ public class PolicyService {
         perMap.put("constraint", constraint);
         permission.add(perMap);
         return permission;
-    }
-
-    public Map<String, Object> createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
-        Map<String, Object> policyMap = new HashMap<>();
-        policyMap.put("@context", this.contextConfig.ODRLPolicy());
-        policyMap.put("type", "policy");
-        if (hostUrl == null) {
-            hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
-        }
-        policyMap.put("id", hostUrl);
-        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
-        policyMap.put("permission", permission);
-        return policyMap;
     }
 
     public void hostODRLPolicy(String hostPolicyJson, String hostedPath) {

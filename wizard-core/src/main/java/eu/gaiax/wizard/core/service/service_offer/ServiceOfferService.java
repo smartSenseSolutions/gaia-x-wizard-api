@@ -27,12 +27,14 @@ import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
+import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
+import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,6 +64,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final ServiceEndpointConfig serviceEndpointConfig;
     private final StandardTypeMasterService standardTypeMasterService;
     private final ServiceLabelLevelService labelLevelService;
+    private final Vault vault;
+    private final CertificateService certificateService;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -73,9 +77,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Participant participant;
         if (id != null) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
-            if (participant.isOwnCertificate()) {
-                Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
-            }
+            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
@@ -83,7 +85,17 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
-
+        if (participant.isKeyStored()) {
+            if (this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
+                request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
+                request.setVerificationMethod(participant.getDid());
+            } else {
+                throw new BadDataException("private.key.not.found");
+            }
+        }
+        if (request.isStoreVault()) {
+            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+        }
         String serviceName = "service_" + this.getRandomString();
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
@@ -125,6 +137,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         ServiceOffer serviceOffer = ServiceOffer.builder().name(request.getName()).participant(participant).credential(serviceOffVc).description(request.getDescription() == null ? "" : request.getDescription()).build();
         if (response.containsKey("trustIndex")) {
             serviceOffer.setVeracityData(response.get("trustIndex").toString());
+        }
+        if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
+            JsonNode rootNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(labelLevelVc.get("labelLevelVc")));
+            JsonNode labelLevelNode = rootNode.path("gx:labelLevel");
+            int labelLevelValue = labelLevelNode.asInt();
         }
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
@@ -193,7 +210,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     public void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
         Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
-        Validate.isFalse(StringUtils.hasText(request.getPrivateKey())).launch("invalid.private.key");
     }
 
     public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
