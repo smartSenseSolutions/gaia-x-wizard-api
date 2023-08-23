@@ -310,7 +310,7 @@ public class SignerService {
             try {
                 participantValidatorRequest.set(new ParticipantVerifyRequest(url, finalPolicy));
                 ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
-                log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
+                log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").toString());
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
                 throw new BadDataException(message + ",url=" + url);
@@ -320,9 +320,9 @@ public class SignerService {
 
     public void addServiceEndpoint(UUID participantId, String id, String type, String url) {
         Map<String, String> map = Map.of("id", id, "type", type, "serviceEndpoints", url);
-        String didPath = "/tmp/" + UUID.randomUUID().toString() + ".json";
+        String didPath = "/tmp/" + UUID.randomUUID() + ".json";
         File file = null;
-        File updatedFile = new File("/tmp/" + UUID.randomUUID().toString() + ".json");
+        File updatedFile = new File("/tmp/" + UUID.randomUUID() + ".json");
         try {
             file = this.s3Utils.getObject(participantId + "/did.json", didPath);
             String didString = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
@@ -347,7 +347,7 @@ public class SignerService {
         try {
             ValidateDidRequest request = new ValidateDidRequest(issuerDid, verificationMethod, HashingService.encodeToBase64(privateKey));
             ResponseEntity<Map<String, Object>> response = this.signerClient.validateDid(request);
-            boolean valid = (boolean) ((Map<String, Object>) response.getBody().get("data")).get("isValid");
+            boolean valid = (boolean) ((Map<String, Object>) Objects.requireNonNull(response.getBody()).get("data")).get("isValid");
             return valid;
         } catch (Exception ex) {
             log.error("Issue occurred while validating did {} with verification method {}", issuerDid, verificationMethod);

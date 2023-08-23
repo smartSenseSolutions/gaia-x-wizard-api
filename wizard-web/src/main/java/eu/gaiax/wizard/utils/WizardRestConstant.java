@@ -37,6 +37,9 @@ public class WizardRestConstant {
     public static final String PARTICIPANT_EXPORT = "/participant/{participantId}/export";
 
     public static final String SERVICE_OFFER = "/service-offer";
+    public static final String LABEL_LEVEL = "/label-level";
+    public static final String LABEL_LEVEL_FILE_UPLOAD = "label-level/file";
+    public static final String LABEL_LEVEL_FILE_DOWNLOAD = "label-level/file/{fileName}/**";
 
     public static final String PUBLIC_SERVICE_OFFER = "/public/service-offer";
 

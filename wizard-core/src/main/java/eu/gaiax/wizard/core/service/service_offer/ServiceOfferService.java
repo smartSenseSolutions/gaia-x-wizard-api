@@ -9,15 +9,12 @@ import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.*;
-import eu.gaiax.wizard.api.model.setting.ContextConfig;
-import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
@@ -28,11 +25,8 @@ import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
-import eu.gaiax.wizard.dao.repository.service_offer.ServiceLabelLevelRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -48,23 +42,17 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceOfferService.class);
 
-    private final SignerClient signerClient;
     private final CredentialService credentialService;
     private final ServiceOfferRepository serviceOfferRepository;
     private final ObjectMapper objectMapper;
     private final ParticipantRepository participantRepository;
     private final ParticipantService participantService;
-    private final ContextConfig contextConfig;
     private final SignerService signerService;
-    private final HashingService hashingService;
-    private final S3Utils s3Utils;
     private final PolicyService policyService;
     private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
     private final ServiceEndpointConfig serviceEndpointConfig;
     private final ServiceLabelLevelService labelLevelService;
-    private final ServiceLabelLevelRepository serviceLabelLevelRepository;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -113,6 +101,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             LabelLevelRequest labelLevelRequest = new LabelLevelRequest(this.objectMapper.convertValue(request.getCredentialSubject().get("gx:criteria"), Map.class), request.getPrivateKey(), request.getParticipantJsonUrl(), request.getVerificationMethod(), request.isStoreVault());
             labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, hostUrl);
             request.getCredentialSubject().remove("gx:criteria");
+            if (labelLevelVc != null) {
+                request.getCredentialSubject().put("gx:labelLevel", List.of(labelLevelVc.get("vcUrl")));
+            }
         }
         request.setCredentialSubject(credentialSubject);
         String responseData = this.signerService.signService(participant, request, serviceName);
@@ -120,12 +111,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
 
         Credential serviceOffVc = this.credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
-        ServiceOffer serviceOffer = ServiceOffer.builder()
-                .name(request.getName())
-                .participant(participant)
-                .credential(serviceOffVc)
-                .description(request.getDescription() == null ? "" : request.getDescription())
-                .build();
+        ServiceOffer serviceOffer = ServiceOffer.builder().name(request.getName()).participant(participant).credential(serviceOffVc).description(request.getDescription() == null ? "" : request.getDescription()).build();
         if (response.containsKey("trustIndex")) {
             serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
@@ -138,13 +124,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         };
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         List<Map<String, Object>> vc = this.objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
-        return ServiceOfferResponse.builder()
-                .vcUrl(serviceOffer.getCredential().getVcUrl())
-                .name(serviceOffer.getName())
-                .veracityData(serviceOffer.getVeracityData())
-                .vcJson(vc)
-                .description(serviceOffer.getDescription())
-                .build();
+        return ServiceOfferResponse.builder().vcUrl(serviceOffer.getCredential().getVcUrl()).name(serviceOffer.getName()).veracityData(serviceOffer.getVeracityData()).vcJson(vc).description(serviceOffer.getDescription()).build();
     }
 
     private String getRandomString() {
@@ -206,12 +186,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.validateDataAccountExport(request);
     }
 
-    private void validateName(CreateServiceOfferingRequest request) {
-        if (StringUtils.hasText(request.getName())) {
-            throw new BadDataException("invalid.service.name");
-        }
-    }
-
     private void validateCredentialSubject(CreateServiceOfferingRequest request) {
         if (CollectionUtils.isEmpty(request.getCredentialSubject())) {
             throw new BadDataException("invalid.credential");
@@ -224,8 +198,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             throw new BadDataException("term.condition.not.found");
         }
 
-        Map termsCondition = this.objectMapper.convertValue(
-                credentialSubject.get("gx:termsAndConditions"), Map.class);
+        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
 
         if (!termsCondition.containsKey("gx:URL")) {
             throw new BadDataException("term.condition.not.found");
@@ -236,8 +209,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
-        if (request.getCredentialSubject().containsKey("gx:aggregationOf")
-                || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+        if (request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         }
         JsonNode jsonNode = this.objectMapper.readTree(request.getCredentialSubject().toString());
@@ -281,8 +253,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         };
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-        Map<String, Object> export = this.objectMapper.readValue(
-                credentialSubject.get("gx:dataAccountExport").toString(), typeReference);
+        Map<String, Object> export = this.objectMapper.readValue(credentialSubject.get("gx:dataAccountExport").toString(), typeReference);
 
         this.validateExportField(export, "gx:requestType", "requestType.of.not.found");
         this.validateExportField(export, "gx:accessType", "accessType.of.not.found");

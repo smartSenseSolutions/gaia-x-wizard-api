@@ -12,13 +12,11 @@ import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
-import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceLabelLevel;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
-import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceLabelLevelRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,8 +42,6 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
 
     private final S3Utils s3Utils;
     private final ContextConfig contextConfig;
-    private final ParticipantRepository participantRepository;
-    private final ParticipantService participantService;
     private final SignerService signerService;
     private final CredentialService credentialService;
     private final SpecificationUtil<ServiceLabelLevel> specificationUtil;
@@ -81,7 +77,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(labelLevelFileUpload.file().getBytes());
             fos.close();
-            this.s3Utils.uploadFile(fileName, file);
+            this.s3Utils.uploadFileWithPublicAcl(fileName, file);
             return this.s3Utils.getObject(fileName);
         } catch (Exception e) {
             throw new RemoteException("File not Upload " + e.getMessage());
@@ -89,11 +85,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
             file.delete();
         }
     }
-
-
-    private void hostResourceJson(String json, String hostUrl) {
-    }
-
+    
     private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, String assignerTo) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
