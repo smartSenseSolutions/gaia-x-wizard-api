@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
@@ -16,6 +15,7 @@ import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static eu.gaiax.wizard.api.model.StringPool.POLICY_LOCATION_LEFT_OPERAND;
+import static eu.gaiax.wizard.api.utils.StringPool.POLICY_LOCATION_LEFT_OPERAND;
 
 @Service
 @RequiredArgsConstructor

@@ -8,11 +8,12 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
-import eu.gaiax.wizard.api.model.StringPool;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
@@ -82,7 +83,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName())
+                .shortName(onboardRequest.shortName().toLowerCase())
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName() + "." + this.domain)
                 .participantType("REGISTERED")
@@ -112,8 +113,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
-
+        Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
         if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
+            participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
             participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
@@ -123,14 +125,16 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.issuer())).launch("invalid.did");
             Validate.isFalse(StringUtils.hasText(request.privateKey())).launch("invalid.private.key");
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
-            Validate.isTrue(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
+            Validate.isFalse(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
         }
 
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
+            participant.setOwnCertificate(request.store());
             this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
+            this.participantRepository.save(participant);
         }
         return participant;
     }
@@ -179,7 +183,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.sub.organization", null));
         }
     }
 
@@ -245,8 +249,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
     }
 
-    public Map<String, Object> checkIfParticipantRegistered(String email) {
-        return Map.of(StringPool.USER_REGISTERED, this.keycloakService.getKeycloakUserByEmail(email) != null);
+    public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
+        return new CheckParticipantRegisteredResponse(this.keycloakService.getKeycloakUserByEmail(email) != null);
     }
 
     public Participant changeStatus(UUID participantId, int status) {
@@ -271,7 +275,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         try {
             participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         } catch (Exception e) {
-            throw new EntityNotFoundException("Participant not found");
+            throw new EntityNotFoundException("participant.not.found");
         }
 
         if (participant.isOwnDidSolution()) {
@@ -288,11 +292,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
         Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("Participant not found"));
+        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
 
         Credential legalParticipantCredential = this.credentialService.getLegalParticipantCredential(participant.getId());
-        Validate.isNull(legalParticipantCredential).launch(new BadDataException("Legal participant credential not found"));
+        Validate.isNull(legalParticipantCredential).launch(new BadDataException("participant.credential.not.found"));
         participantAndKeyResponse.setParticipantJson(legalParticipantCredential.getVcUrl());
 
         if (participant.isOwnDidSolution()) {

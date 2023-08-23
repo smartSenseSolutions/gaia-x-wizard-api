@@ -42,3 +42,6 @@ ALTER TABLE participant ADD CONSTRAINT email_unique UNIQUE (email);
 
 --changeset Neha:5
 ALTER TABLE participant RENAME COLUMN credential TO credential_request;
+
+--changeset Dilip:6
+ALTER TABLE participant ADD own_cert Boolean default false;

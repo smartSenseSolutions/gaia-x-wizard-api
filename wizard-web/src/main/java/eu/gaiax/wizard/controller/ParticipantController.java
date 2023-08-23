@@ -1,6 +1,7 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
@@ -52,6 +53,7 @@ public class ParticipantController extends BaseController {
                                             @ExampleObject(name = "Success Response", value = """
                                                     {
                                                        "status": 200,
+                                                       "message": "User is not registered in the application",
                                                        "payload": {
                                                          "userRegistered": false
                                                        }
@@ -62,8 +64,10 @@ public class ParticipantController extends BaseController {
                     })
     })
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Map<String, Object>> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
-        return CommonResponse.of(this.participantService.checkIfParticipantRegistered(email));
+    public CommonResponse<CheckParticipantRegisteredResponse> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
+        CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email);
+        String message = checkParticipantRegisteredResponse.userRegistered() ? "User is registered in the application" : "User is not registered in the application";
+        return CommonResponse.of(checkParticipantRegisteredResponse, message);
     }
 
     @Operation(
@@ -268,7 +272,7 @@ public class ParticipantController extends BaseController {
                     }),
     })
     @PostMapping(value = ONBOARD_PARTICIPANT, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Participant> registerParticipant(@PathVariable("participantId") String participantId, @RequestBody ParticipantCreationRequest request) {
+    public CommonResponse<Participant> initiateOnboardParticipantProcess(@PathVariable("participantId") String participantId, @RequestBody ParticipantCreationRequest request) {
         return CommonResponse.of(this.participantService.initiateOnboardParticipantProcess(participantId, request));
     }
 

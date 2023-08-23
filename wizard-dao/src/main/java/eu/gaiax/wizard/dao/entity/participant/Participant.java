@@ -50,4 +50,7 @@ public class Participant extends SuperEntity {
     @Column(name = "own_did_solution")
     private boolean ownDidSolution;
 
+    @Column(name = "own_cert")
+    private boolean ownCertificate;
+
 }

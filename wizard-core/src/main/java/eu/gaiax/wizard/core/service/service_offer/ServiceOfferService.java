@@ -5,28 +5,39 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
+import com.smartsensesolutions.java.commons.filter.FilterCriteria;
+import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
+import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
+import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
+import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -52,6 +63,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final PolicyService policyService;
     private final SpecificationUtil<ServiceOffer> serviceOfferSpecificationUtil;
     private final ServiceEndpointConfig serviceEndpointConfig;
+    private final StandardTypeMasterService standardTypeMasterService;
     private final ServiceLabelLevelService labelLevelService;
 
     @Value("${wizard.host.wizard}")
@@ -82,7 +94,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
-            String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createPolicy(odrlPolicyRequest, policyUrl));
+            String hostPolicyJson = this.policyService.createPolicy(odrlPolicyRequest, policyUrl);
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
@@ -125,6 +137,35 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         List<Map<String, Object>> vc = this.objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
         return ServiceOfferResponse.builder().vcUrl(serviceOffer.getCredential().getVcUrl()).name(serviceOffer.getName()).veracityData(serviceOffer.getVeracityData()).vcJson(vc).description(serviceOffer.getDescription()).build();
+    }
+
+    @SneakyThrows
+    private List<StandardTypeMaster> getSupportedStandardList(String serviceJsonString) {
+        JsonNode serviceOfferingJsonNode = this.getServiceCredentialSubject(serviceJsonString);
+        assert serviceOfferingJsonNode != null;
+        if (serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).isValueNode()) {
+            String dataProtectionRegime = serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).asText();
+            return this.standardTypeMasterService.findAllByTypeIn(List.of(dataProtectionRegime));
+        } else {
+            ObjectReader reader = this.objectMapper.readerFor(new TypeReference<List<String>>() {
+            });
+
+            List<String> standardNameList = reader.readValue(serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME));
+            return this.standardTypeMasterService.findAllByTypeIn(standardNameList);
+        }
+    }
+
+    @SneakyThrows
+    private JsonNode getServiceCredentialSubject(String serviceJsonString) {
+        JsonNode serviceOffer = this.objectMapper.readTree(serviceJsonString);
+        JsonNode verifiableCredential = serviceOffer.get("selfDescriptionCredential").get("verifiableCredential");
+
+        for (JsonNode credential : verifiableCredential) {
+            if (credential.get("credentialSubject").get("type").asText().equals("gx:ServiceOffering")) {
+                return credential.get("credentialSubject");
+            }
+        }
+        return null;
     }
 
     private String getRandomString() {
@@ -264,6 +305,22 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (!export.containsKey(fieldName) || StringUtils.hasText(export.get(fieldName).toString())) {
             throw new BadDataException(errorMessage);
         }
+    }
+
+    public PageResponse<ServiceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
+
+        if (StringUtils.hasText(participantId)) {
+            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
+            List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
+            filterCriteriaList.add(participantCriteria);
+            filterRequest.setCriteria(filterCriteriaList);
+        }
+
+        Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
+        List<ServiceFilterResponse> resourceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
+        });
+
+        return PageResponse.of(resourceList, serviceOfferPage, filterRequest.getSort());
     }
 
 }

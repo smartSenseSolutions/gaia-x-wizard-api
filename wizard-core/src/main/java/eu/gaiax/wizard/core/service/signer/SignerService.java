@@ -21,6 +21,7 @@ import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
@@ -102,9 +103,10 @@ public class SignerService {
         legalParticipant.put("issuanceDate", issuanceDate);
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
-        participantCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#0");
+        String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
+        participantCredentialSubject.put("id", participantJsonUrl + "#0");
         participantCredentialSubject.put("type", "gx:LegalParticipant");
-        String registrationId = this.formParticipantJsonUrl(participant.getId()) + "#1";
+        String registrationId = participantJsonUrl + "#1";
         participantCredentialSubject.put("gx:legalRegistrationNumber", Map.of("id", registrationId));
 
         legalParticipant.put("credentialSubject", participantCredentialSubject);
@@ -123,7 +125,7 @@ public class SignerService {
         Map<String, Object> tncCredentialSubject = new HashMap<>();
         tncCredentialSubject.put("type", "gx:GaiaXTermsAndConditions");
         tncCredentialSubject.put("@Context", this.contextConfig.tnc());
-        tncCredentialSubject.put("id", this.formParticipantJsonUrl(participant.getId()) + "#2");
+        tncCredentialSubject.put("id", participantJsonUrl + "#2");
         tncCredentialSubject.put("gx:termsAndConditions", this.tnc.replaceAll("\\\\n", "\n"));
 
         tncVc.put("credentialSubject", tncCredentialSubject);
@@ -136,8 +138,11 @@ public class SignerService {
         return credential;
     }
 
-    private String formParticipantJsonUrl(UUID participantId) {
-        return this.wizardHost + participantId.toString() + "/participant.json";
+    private String formParticipantJsonUrl(String domain, UUID participantId) {
+        if (StringUtils.hasText(domain)) {
+            return "https://" + domain + "/" + participantId.toString() + "/participant.json";
+        }
+        return this.wizardHost + "/" + participantId.toString() + "/participant.json";
     }
 
     public void createParticipantJson(Participant participant, String key, boolean ownDid) {
@@ -157,11 +162,11 @@ public class SignerService {
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
-            String participantString = this.mapper.writeValueAsString(responseEntity.getBody().get("data"));
+            String participantString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(responseEntity.getBody()).get("data")).get("completeSD"));
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
-            String participantJsonUrl = this.formParticipantJsonUrl(participant.getId());
+            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
