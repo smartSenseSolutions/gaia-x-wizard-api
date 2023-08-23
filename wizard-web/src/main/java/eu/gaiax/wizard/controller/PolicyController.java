@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.Map;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.PUBLIC_POLICY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -28,7 +29,7 @@ public class PolicyController extends BaseController {
     @Tag(name = "Policy")
     @Operation(summary = "Create Policy")
     @PostMapping(path = PUBLIC_POLICY, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Object> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
+    public CommonResponse<Map<String, Object>> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
         return CommonResponse.of(this.policyService.createPolicy(odrlPolicyRequest, null));
     }
 

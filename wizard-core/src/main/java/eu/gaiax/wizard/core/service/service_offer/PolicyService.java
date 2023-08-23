@@ -45,7 +45,7 @@ public class PolicyService {
     private final ContextConfig contextConfig;
 
 
-    public String createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
+    public Map<String, Object> createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
         Map<String, Object> policyMap = new HashMap<>();
         policyMap.put("@context", this.contextConfig.ODRLPolicy());
         policyMap.put("type", "policy");
@@ -55,7 +55,7 @@ public class PolicyService {
         policyMap.put("id", hostUrl);
         List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
         policyMap.put("permission", permission);
-        return this.objectMapper.writeValueAsString(policyMap);
+        return policyMap;
     }
 
     @NotNull
