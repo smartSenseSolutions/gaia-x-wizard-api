@@ -27,11 +27,13 @@ import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
+import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.resource.ResourceRepository;
+import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -60,6 +62,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private final ParticipantService participantService;
 
+    private final CertificateService certificateService;
+
     private final ParticipantRepository participantRepository;
 
     private final ContextConfig contextConfig;
@@ -73,6 +77,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
     private final SpecificationUtil<Resource> specificationUtil;
 
     private final SignerService signerService;
+
+    private final Vault vault;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -98,24 +104,47 @@ public class ResourceService extends BaseService<Resource, UUID> {
         Participant participant;
         if (StringUtils.hasText(id)) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
+            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+
+            if (participant.isKeyStored()) {
+                if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
+                    throw new BadDataException("private.key.not.found");
+                }
+
+                request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
+                request.setVerificationMethod(participant.getDid());
+            }
+            if (request.isStoreVault()) {
+                this.certificateService.uploadCertificatesToVault(participant.getDomain(), null, null, null, request.getPrivateKey());
+            }
+            Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.participantJson(), request.verificationMethod(), request.privateKey(), request.vault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJson(), request.getVerificationMethod(), request.getPrivateKey(), false);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
+
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         this.validateResourceRequest(request);
-        String hostUrl = participant.getId() + "/" + "resource_" + UUID.randomUUID() + ".json";
-        String json = this.resourceVc(request, participant, this.wizardHost + hostUrl);
+        String name = "resource_" + UUID.randomUUID();
+        String json = this.resourceVc(request, participant, name);
+        String hostUrl = participant.getId() + "/" + name + ".json";
+
         if (StringUtils.hasText(json)) {
-            this.hostResourceJson(json, hostUrl);
             Credential resourceVc = this.credentialService.createCredential(json, this.wizardHost + hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
-            Resource resource = Resource.builder().name(request.credentialSubject().get("gx:name").toString())
+            Resource resource = Resource.builder().name(request.getCredentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
-                    .type(request.credentialSubject().get("type").toString())
-                    .subType(request.credentialSubject().get("subType") == null ? null : request.credentialSubject().get("subType").toString())
-                    .description(request.credentialSubject().get("gx:description") == null ? null : request.credentialSubject().get("gx:description").toString())
+                    .type(request.getCredentialSubject().get("type").toString())
+                    .subType(request.getCredentialSubject().get("subType") == null ? null : request.getCredentialSubject().get("subType").toString())
+                    .description(request.getCredentialSubject().get("gx:description") == null ? null : request.getCredentialSubject().get("gx:description").toString())
                     .participant(participant).build();
             return this.repository.save(resource);
+        }
+
+        if (StringUtils.hasText(id) && request.isStoreVault()) {
+            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+            participant.setKeyStored(true);
+            this.participantRepository.save(participant);
         }
         return null;
     }
@@ -144,12 +173,12 @@ public class ResourceService extends BaseService<Resource, UUID> {
     }
 
     private void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
-        Validate.isFalse(StringUtils.hasText(request.credentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
+        Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
         this.validateAggregationOf(request);
     }
 
     private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
-        if (request.credentialSubject().containsKey("gx:aggregationOf")) {
+        if (request.getCredentialSubject().containsKey("gx:aggregationOf")) {
             JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
             JsonArray aggregationArray = jsonObject
                     .getAsJsonObject("credentialSubject")
@@ -165,23 +194,24 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    public String resourceVc(CreateResourceRequest request, Participant participant, String host) throws JsonProcessingException {
+    public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws JsonProcessingException {
+        String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
         Map<String, Object> map = new HashMap<>();
         resourceRequest.put("@context", this.contextConfig.resource());
         resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
-        resourceRequest.put("id", host);
+        resourceRequest.put("id", id);
         resourceRequest.put("issuer", participant.getDid());
         resourceRequest.put("issuanceDate", issuanceDate);
-        Map<String, Object> credentialSub = request.credentialSubject();
+        Map<String, Object> credentialSub = request.getCredentialSubject();
         if (credentialSub != null) {
             credentialSub.put("@context", this.contextConfig.resource());
-            credentialSub.put("id", host);
-            if (request.credentialSubject().get("type").toString().contains("Physical")) {
-                credentialSub.put("type", "gx:" + request.credentialSubject().get("type").toString());
+            credentialSub.put("id", id);
+            if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
+                credentialSub.put("type", "gx:" + request.getCredentialSubject().get("type").toString());
             } else {
-                credentialSub.put("type", "gx:" + request.credentialSubject().get("subType").toString());
+                credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
                 credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
             }
@@ -189,11 +219,11 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceRequest.put("credentialSubject", credentialSub);
         map.put("resource", resourceRequest);
         Map<String, Object> resourceMap = new HashMap<>();
-        resourceMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
+        resourceMap.put("privateKey", HashingService.encodeToBase64(request.getPrivateKey()));
         resourceMap.put("issuer", participant.getDid());
-        resourceMap.put("verificationMethod", request.verificationMethod());
+        resourceMap.put("verificationMethod", request.getVerificationMethod());
         resourceMap.put("vcs", map);
-        return this.signerService.signResource(resourceMap);
+        return this.signerService.signResource(resourceMap, participant.getId(), name);
     }
 
     public void hostResourceJson(String resourceJson, String hostedPath) {

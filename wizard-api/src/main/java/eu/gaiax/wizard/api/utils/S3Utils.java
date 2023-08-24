@@ -5,7 +5,10 @@
 package eu.gaiax.wizard.api.utils;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,12 @@ public class S3Utils {
      */
     public void uploadFile(String objectName, File file) {
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
+    }
+
+    public void uploadFileWithPublicAcl(String objectName, File file) {
+        PutObjectRequest request = new PutObjectRequest(this.awsSettings.bucket(), objectName, file);
+        request.setCannedAcl(CannedAccessControlList.PublicRead);
+        this.s3Client.putObject(request);
     }
 
     /**
@@ -60,4 +69,13 @@ public class S3Utils {
         this.s3Client.getObject(new GetObjectRequest(this.awsSettings.bucket(), key), localFile);
         return localFile;
     }
+
+    public String getObject(String fileName) {
+        try {
+            return this.s3Client.getUrl(this.awsSettings.bucket(), fileName).toString();
+        } catch (Exception e) {
+            throw new BadDataException("not.able.to.get.file");
+        }
+    }
+
 }

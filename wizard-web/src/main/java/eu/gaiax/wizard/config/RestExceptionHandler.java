@@ -46,11 +46,11 @@ public class RestExceptionHandler {
      * The constant HANDLE_ENTITY_EXCEPTION_ERROR.
      */
     public static final String HANDLE_ENTITY_EXCEPTION_ERROR = "handleEntityException: Error";
-    private static final String INTERNAL_SERVER_ERROR = "internal.server.error";
     /**
      * The constant ERROR.
      */
     public static final String ERROR = "error";
+    private static final String INTERNAL_SERVER_ERROR = "internal.server.error";
     private final MessageSource messageSource;
 
     /**
@@ -80,6 +80,23 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR.value()));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(CommonResponse.builder(map).message(message).status(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+    }
+
+    @ExceptionHandler({SignerException.class})
+    public ResponseEntity<CommonResponse<Map<String, Object>>> handleException(SignerException exception) {
+        log.error("Signer error", exception);
+        String message;
+        try {
+            message = this.messageSource.getMessage(exception.getMessage(), new Object[]{}, LocaleContextHolder.getLocale());
+        } catch (NoSuchMessageException e) {
+            message = exception.getMessage();
+        }
+        message = "Signer service says \"" + message + "\"";
+
+        //send email to admin and save in database
+        Map<String, Object> map = new HashMap<>();
+        map.put(ERROR, new ErrorResponse(message, HttpStatus.valueOf(exception.getStatus()).value()));
+        return ResponseEntity.status(HttpStatus.valueOf(exception.getStatus())).body(CommonResponse.builder(map).message(message).status(HttpStatus.valueOf(exception.getStatus()).value()).build());
     }
 
     /**

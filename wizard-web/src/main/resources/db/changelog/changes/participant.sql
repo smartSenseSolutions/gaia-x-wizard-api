@@ -45,3 +45,6 @@ ALTER TABLE participant RENAME COLUMN credential TO credential_request;
 
 --changeset Dilip:6
 ALTER TABLE participant ADD own_cert Boolean default false;
+
+--changeset Neha:7
+ALTER TABLE participant RENAME COLUMN own_cert TO key_stored;
