@@ -241,7 +241,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
     public void validateServiceOfferMainRequest(CreateServiceOfferingRequest request) throws JsonProcessingException {
         this.validateCredentialSubject(request);
+/*
         this.validateTermsAndConditions(request);
+*/
         this.validateAggregationOf(request);
         this.validateDependsOn(request);
         this.validateDataAccountExport(request);
