@@ -15,6 +15,7 @@ public class ParticipantConfigDTO {
     private String legalName;
     private String participantType;
     private boolean ownDidSolution;
+    private boolean keyStored;
     private Boolean privateKeyRequired;
     private String legalParticipantUrl;
     private int status;
