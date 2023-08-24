@@ -939,14 +939,14 @@ public class ServiceOfferController extends BaseController {
     })
     @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
-        return CommonResponse.of(this.serviceOfferService.filterResource(filterRequest, null));
+        return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, null));
     }
 
     @Tag(name = "Service-Offering")
     @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
         this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.serviceOfferService.filterResource(filterRequest, participantId));
+        return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, participantId));
     }
 
 
