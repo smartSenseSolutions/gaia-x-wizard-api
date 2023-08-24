@@ -2,6 +2,7 @@ package eu.gaiax.wizard.dao.entity.resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.gaiax.wizard.api.model.ResourceType;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -36,9 +37,6 @@ public class Resource extends SuperEntity {
     @Column(name = "type")
     private String type;
 
-    @Column(name = "sub_type")
-    private String subType;
-
     @Column(name = "participant_id", insertable = false, updatable = false)
     private UUID participantId;
 
@@ -48,6 +46,12 @@ public class Resource extends SuperEntity {
 
     @Column(name = "publish_to_kafka", nullable = false)
     private boolean publishToKafka;
+
+    @Column(name = "obsolete_date", nullable = false)
+    private Date obsoleteDate;
+
+    @Column(name = "expiry_date", nullable = false)
+    private Date expiryDate;
 
     public String getVcUrl() {
         if (this.credential != null) {
@@ -61,5 +65,9 @@ public class Resource extends SuperEntity {
     @JsonProperty
     public Date getCreatedAt() {
         return super.getCreatedAt();
+    }
+
+    public String getTypeLabel() {
+        return ResourceType.getByValue(this.type) != null ? ResourceType.getByValue(this.type).getLabel() : null;
     }
 }

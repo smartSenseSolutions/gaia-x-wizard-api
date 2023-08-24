@@ -15,7 +15,7 @@ public class ResourceFilterResponse {
 
     private String name;
 
-    private String type;
+    private String typeLabel;
 
     @JsonAlias("vcUrl")
     private String selfDescription;

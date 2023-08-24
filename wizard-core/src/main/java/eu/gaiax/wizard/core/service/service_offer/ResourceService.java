@@ -135,9 +135,20 @@ public class ResourceService extends BaseService<Resource, UUID> {
             Resource resource = Resource.builder().name(request.getCredentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
                     .type(request.getCredentialSubject().get("type").toString())
-                    .subType(request.getCredentialSubject().get("subType") == null ? null : request.getCredentialSubject().get("subType").toString())
-                    .description(request.getCredentialSubject().get("gx:description") == null ? null : request.getCredentialSubject().get("gx:description").toString())
-                    .participant(participant).build();
+                    .description((String) request.getCredentialSubject().getOrDefault("gx:description", null))
+                    .participant(participant)
+                    .build();
+//todo: save date in DB
+            /*if (resource.getType().equals(ResourceType.VIRTUAL_DATA_RESOURCE.getValue())) {
+             *//*DateTimeFormatter.ISO_LOCAL_DATE.parse((String) request.getCredentialSubject().get("gx:obsoleteDateTime")).to;
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                if (request.getCredentialSubject().containsKey("gx:obsoleteDateTime")) {
+                    resource.setObsoleteDate(formatter.from);
+                }*//*
+                resource.setObsoleteDate((Date) request.getCredentialSubject().getOrDefault("gx:obsoleteDateTime", null));
+                resource.setExpiryDate((Date) request.getCredentialSubject().getOrDefault("gx:expirationDateTime", null));
+            }*/
+
             return this.repository.save(resource);
         }
 
