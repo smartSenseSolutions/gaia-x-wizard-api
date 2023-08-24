@@ -18,4 +18,9 @@ CREATE TABLE resource(
 ALTER TABLE resource ALTER COLUMN "type" TYPE varchar USING "type"::varchar(30);
 ALTER TABLE resource ALTER COLUMN sub_type TYPE varchar USING sub_type::varchar(30);
 
+--changeset Neha:3
+ALTER TABLE resource ADD COLUMN "obsolete_date" timestamp(6) NULL;
+ALTER TABLE resource ADD COLUMN "expiry_date" timestamp(6) NULL;
+ALTER TABLE resource DROP COLUMN "sub_type";
+
 
