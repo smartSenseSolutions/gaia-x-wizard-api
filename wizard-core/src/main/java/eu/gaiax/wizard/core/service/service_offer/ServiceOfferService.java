@@ -284,9 +284,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-/*
-        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", null);
-*/
+        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
