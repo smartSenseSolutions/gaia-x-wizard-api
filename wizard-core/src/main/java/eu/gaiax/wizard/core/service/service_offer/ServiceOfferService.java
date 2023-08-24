@@ -24,6 +24,7 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
+import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
@@ -39,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -127,12 +129,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, hostUrl);
             request.getCredentialSubject().remove("gx:criteria");
             if (labelLevelVc != null) {
-                request.getCredentialSubject().put("gx:labelLevel", List.of(labelLevelVc.get("vcUrl")));
-                if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
-                    JsonNode rootNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(labelLevelVc.get("labelLevelVc")));
-                    JsonNode labelLevelNode = rootNode.path("gx:labelLevel");
-                    int labelLevelValue = labelLevelNode.asInt();
-                }
+                request.getCredentialSubject().put("gx:labelLevel", labelLevelVc.get("vcUrl"));
             }
         }
         request.setCredentialSubject(credentialSubject);
@@ -145,7 +142,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (response.containsKey("trustIndex")) {
             serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
-
+        if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
+            JsonNode descriptionCredential = this.objectMapper.readTree(InvokeService.executeRequest(labelLevelVc.get("vcUrl"), HttpMethod.GET)).path("credentialSubject");
+            if (descriptionCredential != null) {
+                serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asInt());
+            }
+        }
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
         if (!CollectionUtils.isEmpty(labelLevelVc)) {
@@ -268,12 +270,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
-        if (request.getCredentialSubject().containsKey("gx:aggregationOf") || StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
+        if (!request.getCredentialSubject().containsKey("gx:aggregationOf") || !StringUtils.hasText(request.getCredentialSubject().get("gx:aggregationOf").toString())) {
             throw new BadDataException("aggregation.of.not.found");
         }
-        JsonNode jsonNode = this.objectMapper.readTree(request.getCredentialSubject().toString());
+        JsonNode jsonNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(request.getCredentialSubject()));
 
-        JsonNode aggregationOfArray = jsonNode.at("/credentialSubject/gx:aggregationOf");
+        JsonNode aggregationOfArray = jsonNode.at("/gx:aggregationOf");
 
         List<String> ids = new ArrayList<>();
         aggregationOfArray.forEach(item -> {
@@ -282,14 +284,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
+/*
         this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", null);
+*/
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
         if (request.getCredentialSubject().get("gx:dependsOn") != null) {
-            JsonNode jsonNode = this.objectMapper.readTree(request.getCredentialSubject().toString());
+            JsonNode jsonNode = this.objectMapper.readTree(this.objectMapper.writeValueAsString(request.getCredentialSubject()));
 
-            JsonNode aggregationOfArray = jsonNode.at("/credentialSubject/gx:dependsOn");
+            JsonNode aggregationOfArray = jsonNode.at("/gx:dependsOn");
 
             List<String> ids = new ArrayList<>();
             aggregationOfArray.forEach(item -> {
@@ -313,7 +317,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         };
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-        Map<String, Object> export = this.objectMapper.readValue(credentialSubject.get("gx:dataAccountExport").toString(), typeReference);
+        Map<String, Object> export = this.objectMapper.convertValue(credentialSubject.get("gx:dataAccountExport"), typeReference);
 
         this.validateExportField(export, "gx:requestType", "requestType.of.not.found");
         this.validateExportField(export, "gx:accessType", "accessType.of.not.found");
@@ -321,7 +325,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void validateExportField(Map<String, Object> export, String fieldName, String errorMessage) {
-        if (!export.containsKey(fieldName) || StringUtils.hasText(export.get(fieldName).toString())) {
+        if (!export.containsKey(fieldName) || !StringUtils.hasText(export.get(fieldName).toString())) {
             throw new BadDataException(errorMessage);
         }
     }
