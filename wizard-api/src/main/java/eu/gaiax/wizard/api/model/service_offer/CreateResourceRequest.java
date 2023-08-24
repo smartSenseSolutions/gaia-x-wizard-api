@@ -15,6 +15,5 @@ public class CreateResourceRequest {
     private String participantJson;
     private String verificationMethod;
     private boolean storeVault;
-    private boolean ownCertificate;
 }
 

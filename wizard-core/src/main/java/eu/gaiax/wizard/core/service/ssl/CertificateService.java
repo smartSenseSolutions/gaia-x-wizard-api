@@ -54,6 +54,29 @@ public class CertificateService {
     private final ParticipantRepository participantRepository;
     private final ScheduleService scheduleService;
 
+    private static void checkOrderStatus(Order order) throws AcmeException {
+        try {
+            int attempts = 10;
+            while (order.getStatus() != Status.VALID && attempts-- > 0) {
+                log.debug("CertificateService(checkOrderStatus) -> Waiting for order confirmation attempts->{}", attempts);
+                // Did the order fail?
+                if (order.getStatus() == Status.INVALID) {
+                    log.error("CertificateService(checkOrderStatus) -> Order has failed, reason: {}", order.getError());
+                    throw new AcmeException("order.failed");
+                }
+
+                // Wait for a few seconds
+                Thread.sleep(6000L);
+
+                // Then update the status
+                order.update();
+            }
+        } catch (InterruptedException ex) {
+            log.error("interrupted", ex);
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void createSSLCertificate(UUID participantId, JobKey jobKey) {
         log.info("CertificateService(createSSLCertificate) -> Initiate process to create a SSL certificate for participant {}", participantId);
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
@@ -160,7 +183,7 @@ public class CertificateService {
             //convert private key in pkcs8 format
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
-            //save files in store
+            //save files in vault
             this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
             participant.setKeyStored(true);
 
@@ -180,29 +203,6 @@ public class CertificateService {
             //delete files
             CommonUtils.deleteFile(domainChainFile, csrFile, keyfile, pkcs8File);
             log.info("CertificateService(createSSLCertificate) -> Participant details has been updated.");
-        }
-    }
-
-    private static void checkOrderStatus(Order order) throws AcmeException {
-        try {
-            int attempts = 10;
-            while (order.getStatus() != Status.VALID && attempts-- > 0) {
-                log.debug("CertificateService(checkOrderStatus) -> Waiting for order confirmation attempts->{}", attempts);
-                // Did the order fail?
-                if (order.getStatus() == Status.INVALID) {
-                    log.error("CertificateService(checkOrderStatus) -> Order has failed, reason: {}", order.getError());
-                    throw new AcmeException("order.failed");
-                }
-
-                // Wait for a few seconds
-                Thread.sleep(6000L);
-
-                // Then update the status
-                order.update();
-            }
-        } catch (InterruptedException ex) {
-            log.error("interrupted", ex);
-            Thread.currentThread().interrupt();
         }
     }
 
@@ -319,7 +319,6 @@ public class CertificateService {
         }
     }
 
-
     private Challenge dnsChallenge(Authorization auth) throws AcmeException {
         // Find a single dns-01 challenge
         Dns01Challenge challenge = auth.findChallenge(Dns01Challenge.TYPE);
@@ -336,7 +335,6 @@ public class CertificateService {
 
         return challenge;
     }
-
 
     private void convertKeyFileInPKCS8(String file, String outputFile, String did) {
         try {
@@ -359,12 +357,12 @@ public class CertificateService {
     }
 
     private void uploadCertificatesToVault(String participantId, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
-        this.uploadCertificatesToVault(participantId, secretName,
+        this.uploadCertificatesToVault(participantId,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));
     }
 
-    public void uploadCertificatesToVault(String participantId, String secretName, String domainChain, String csr, String key, String pkcs8Key) {
+    public void uploadCertificatesToVault(String participantId, String domainChain, String csr, String key, String pkcs8Key) {
         Map<String, Object> data = new HashMap<>();
         if (StringUtils.hasText(domainChain)) {
             data.put("x509CertificateChain.pem", domainChain);
@@ -378,7 +376,7 @@ public class CertificateService {
         if (StringUtils.hasText(pkcs8Key)) {
             data.put("pkcs8.key", pkcs8Key);
         }
-        this.vault.put(secretName, data);
-        log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on store.");
+        this.vault.put(participantId, data);
+        log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
     }
 }

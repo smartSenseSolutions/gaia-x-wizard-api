@@ -34,6 +34,10 @@ public interface SignerClient {
 
     @PostMapping(path = "/v1/gaia-x/resource", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> signResource(@RequestBody Map<String, Object> request);
+
     @PostMapping(path = "/v1/verify-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> validateDid(@RequestBody ValidateDidRequest request);
+
+    @PostMapping(path = "/v1/gaia-x/label-level", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> signLabelLevel(@RequestBody Map<String, Object> request);
 }

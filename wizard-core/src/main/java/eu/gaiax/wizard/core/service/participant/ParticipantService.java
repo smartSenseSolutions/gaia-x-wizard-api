@@ -133,7 +133,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.createLegalParticipantJson(participant, request.privateKey());
         if (request.store()) {
             participant.setKeyStored(request.store());
-            this.certificateService.uploadCertificatesToVault(participantId, participantId, null, null, null, request.privateKey());
+            this.certificateService.uploadCertificatesToVault(participantId.toString(), null, null, null, request.privateKey());
             this.participantRepository.save(participant);
         }
         return participant;
@@ -217,7 +217,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         if (request.store()) {
-            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), null, null, null, request.privateKey());
+            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.privateKey());
         }
         return participant;
     }

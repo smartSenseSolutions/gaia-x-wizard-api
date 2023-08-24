@@ -10,10 +10,8 @@ import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.model.CreateVCRequest;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
-import eu.gaiax.wizard.api.model.RegistrationStatus;
+import eu.gaiax.wizard.api.exception.SignerException;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.did.ServiceEndpoints;
@@ -222,8 +220,8 @@ public class SignerService {
         }
     }
 
-    public String signService(Participant participant, CreateServiceOfferingRequest request, String serviceName) {
-        String id = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
+    public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+        String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put("id", request.getParticipantJsonUrl() + "#0");
         request.getCredentialSubject().put("gx:providedBy", providedBy);
@@ -253,22 +251,57 @@ public class SignerService {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
             String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            if (serviceOfferingString != null) {
+                this.hostJsonFile(serviceOfferingString, participant.getId(), name);
+            }
             log.debug("Send request to signer for service create vc");
             return serviceOfferingString;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
-            throw new BadDataException(e.getMessage());
+            throw new SignerException(e);
         }
     }
 
-    public String signResource(Map<String, Object> resourceRequest) {
+    public String signResource(Map<String, Object> resourceRequest, UUID id, String name) {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signResource(resourceRequest);
             String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            if (signResource != null) {
+                this.hostJsonFile(signResource, id, name);
+            }
             return signResource;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
+            throw new SignerException(e.getMessage());
+        }
+    }
+
+    private void hostJsonFile(String hostServiceOfferJson, UUID id, String name) {
+        File file = new File("/tmp/" + name + ".json");
+        try {
+            FileUtils.writeStringToFile(file, hostServiceOfferJson, Charset.defaultCharset());
+            String hostedPath = id + "/" + name + ".json";
+            this.s3Utils.uploadFile(hostedPath, file);
+        } catch (Exception e) {
+            log.error("Error while hosting service offer json for participant:{}", id, e.getMessage());
             throw new BadDataException(e.getMessage());
+        } finally {
+            CommonUtils.deleteFile(file);
+        }
+    }
+
+
+    public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
+        try {
+            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
+            String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("selfDescriptionCredential"));
+            if (signResource != null) {
+                this.hostJsonFile(signResource, id, name);
+            }
+            return signResource;
+        } catch (Exception e) {
+            log.debug("Service vc not created", e.getMessage());
+            throw new SignerException(e.getMessage());
         }
     }
 
@@ -282,7 +315,7 @@ public class SignerService {
             try {
                 participantValidatorRequest.set(new ParticipantVerifyRequest(url, finalPolicy));
                 ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
-                log.debug("signer validation response: {}", signerResponse.getBody().get("message").toString());
+                log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").toString());
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
                 throw new BadDataException(message + ",url=" + url);
@@ -292,9 +325,9 @@ public class SignerService {
 
     public void addServiceEndpoint(UUID participantId, String id, String type, String url) {
         Map<String, String> map = Map.of("id", id, "type", type, "serviceEndpoints", url);
-        String didPath = "/tmp/" + UUID.randomUUID().toString() + ".json";
+        String didPath = "/tmp/" + UUID.randomUUID() + ".json";
         File file = null;
-        File updatedFile = new File("/tmp/" + UUID.randomUUID().toString() + ".json");
+        File updatedFile = new File("/tmp/" + UUID.randomUUID() + ".json");
         try {
             file = this.s3Utils.getObject(participantId + "/did.json", didPath);
             String didString = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
@@ -319,7 +352,7 @@ public class SignerService {
         try {
             ValidateDidRequest request = new ValidateDidRequest(issuerDid, verificationMethod, HashingService.encodeToBase64(privateKey));
             ResponseEntity<Map<String, Object>> response = this.signerClient.validateDid(request);
-            boolean valid = (boolean) ((Map<String, Object>) response.getBody().get("data")).get("isValid");
+            boolean valid = (boolean) ((Map<String, Object>) Objects.requireNonNull(response.getBody()).get("data")).get("isValid");
             return valid;
         } catch (Exception ex) {
             log.error("Issue occurred while validating did {} with verification method {}", issuerDid, verificationMethod);
