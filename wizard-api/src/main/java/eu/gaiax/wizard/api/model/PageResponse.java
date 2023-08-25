@@ -1,10 +1,12 @@
 package eu.gaiax.wizard.api.model;
 
 import com.smartsensesolutions.java.commons.sort.Sort;
+import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 
 import java.io.Serializable;
 
+@NoArgsConstructor
 public class PageResponse<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -50,6 +52,7 @@ public class PageResponse<T> implements Serializable {
         this.pageable = pageable;
     }
 
+    @NoArgsConstructor
     public static class Pageable implements Serializable {
 
         private static final Long serialVersionUID = 1L;
