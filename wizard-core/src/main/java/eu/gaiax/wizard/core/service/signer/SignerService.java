@@ -11,7 +11,10 @@ import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.SignerException;
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
+import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.did.ServiceEndpoints;
@@ -294,6 +297,7 @@ public class SignerService {
     public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
+            log.info(this.mapper.writeValueAsString(labelLevelRequest) + ">>>>>>>>>>>>.Label level");
             String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("selfDescriptionCredential"));
             if (signResource != null) {
                 this.hostJsonFile(signResource, id, name);
