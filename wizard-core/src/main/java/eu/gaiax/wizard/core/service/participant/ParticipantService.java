@@ -35,6 +35,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -252,7 +253,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
-        return new CheckParticipantRegisteredResponse(this.keycloakService.getKeycloakUserByEmail(email) != null);
+        UserRepresentation userRepresentation = this.keycloakService.getKeycloakUserByEmail(email);
+
+        return new CheckParticipantRegisteredResponse(
+                userRepresentation != null,
+                userRepresentation != null ? this.keycloakService.isLoginDeviceConfigured(userRepresentation) : null
+        );
     }
 
     public Participant changeStatus(UUID participantId, int status) {
@@ -306,8 +312,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         Map<String, Object> vaultData = this.vault.get(participant.getId().toString());
-        if (vaultData != null && vaultData.containsKey(participant.getId() + "pkcs8.key")) {
-            participantAndKeyResponse.setPrivateKey((String) vaultData.get(participant.getId() + "pkcs8.key"));
+        if (vaultData != null && vaultData.containsKey("pkcs8.key")) {
+            participantAndKeyResponse.setPrivateKey((String) vaultData.get("pkcs8.key"));
         }
 
         return participantAndKeyResponse;
