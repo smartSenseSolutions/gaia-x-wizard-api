@@ -312,8 +312,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         Map<String, Object> vaultData = this.vault.get(participant.getId().toString());
-        if (vaultData != null && vaultData.containsKey(participant.getId() + "pkcs8.key")) {
-            participantAndKeyResponse.setPrivateKey((String) vaultData.get(participant.getId() + "pkcs8.key"));
+        if (vaultData != null && vaultData.containsKey("pkcs8.key")) {
+            participantAndKeyResponse.setPrivateKey((String) vaultData.get("pkcs8.key"));
         }
 
         return participantAndKeyResponse;
