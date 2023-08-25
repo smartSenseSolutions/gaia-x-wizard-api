@@ -71,6 +71,7 @@ wizard:
         threadCount: 10
   management:
     port: 8090
+  signer-policies:
   vault:
     host:
     port:

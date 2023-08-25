@@ -60,12 +60,6 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class SignerService {
 
-    private static final List<String> policies = Arrays.asList(
-            "integrityCheck",
-            "holderSignature",
-            "complianceSignature",
-            "complianceCheck"
-    );
     private final ContextConfig contextConfig;
     private final CredentialService credentialService;
     private final ParticipantRepository participantRepository;
@@ -76,6 +70,8 @@ public class SignerService {
     private final Vault vault;
     private final ServiceEndpointConfig serviceEndpointConfig;
 
+    @Value("${wizard.signer-policies}")
+    private List<String> policies;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
     @Value("${wizard.gaiax.tnc}")
@@ -312,8 +308,9 @@ public class SignerService {
     public void validateRequestUrl(List<String> urls, String message, List<String> policy) {
         AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
         if (policy == null) {
-            policy = policies;
+            policy = this.policies;
         }
+
         List<String> finalPolicy = policy;
         urls.parallelStream().forEach(url -> {
             try {
