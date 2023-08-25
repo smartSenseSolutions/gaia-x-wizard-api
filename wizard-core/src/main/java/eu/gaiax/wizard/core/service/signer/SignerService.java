@@ -296,8 +296,8 @@ public class SignerService {
 
     public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
         try {
-            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
             log.info(this.mapper.writeValueAsString(labelLevelRequest) + ">>>>>>>>>>>>.Label level");
+            ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
             String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("selfDescriptionCredential"));
             if (signResource != null) {
                 this.hostJsonFile(signResource, id, name);
