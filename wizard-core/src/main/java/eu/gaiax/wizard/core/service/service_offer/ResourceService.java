@@ -16,6 +16,7 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
+import eu.gaiax.wizard.api.model.ResourceType;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -35,6 +36,7 @@ import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.resource.ResourceRepository;
 import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
@@ -48,6 +50,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -99,6 +102,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return permission;
     }
 
+    @SneakyThrows
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRES_NEW)
     public Resource createResource(CreateResourceRequest request, String id) throws JsonProcessingException {
         Participant participant;
@@ -138,16 +142,17 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     .description((String) request.getCredentialSubject().getOrDefault("gx:description", null))
                     .participant(participant)
                     .build();
-//todo: save date in DB
-            /*if (resource.getType().equals(ResourceType.VIRTUAL_DATA_RESOURCE.getValue())) {
-             *//*DateTimeFormatter.ISO_LOCAL_DATE.parse((String) request.getCredentialSubject().get("gx:obsoleteDateTime")).to;
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+            if (resource.getType().equals(ResourceType.VIRTUAL_DATA_RESOURCE.getValue())) {
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 if (request.getCredentialSubject().containsKey("gx:obsoleteDateTime")) {
-                    resource.setObsoleteDate(formatter.from);
-                }*//*
-                resource.setObsoleteDate((Date) request.getCredentialSubject().getOrDefault("gx:obsoleteDateTime", null));
-                resource.setExpiryDate((Date) request.getCredentialSubject().getOrDefault("gx:expirationDateTime", null));
-            }*/
+                    resource.setObsoleteDate(formatter.parse((String) request.getCredentialSubject().get("gx:obsoleteDateTime")));
+                }
+
+                if (request.getCredentialSubject().containsKey("gx:expirationDateTime")) {
+                    resource.setExpiryDate(formatter.parse((String) request.getCredentialSubject().get("gx:expirationDateTime")));
+                }
+            }
 
             return this.repository.save(resource);
         }
