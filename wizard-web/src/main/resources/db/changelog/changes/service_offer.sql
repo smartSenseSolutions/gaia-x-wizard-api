@@ -62,3 +62,6 @@ CREATE TABLE service_label_level(
     CONSTRAINT fk_service_offer FOREIGN KEY (service_offer_id) REFERENCES service_offer(id),
     CONSTRAINT fk_credential_id FOREIGN KEY (credential_id) REFERENCES credential(id)
 );
+
+--changeset Neha:5
+ALTER TABLE service_offer ADD message_reference_id varchar(50) NULL;

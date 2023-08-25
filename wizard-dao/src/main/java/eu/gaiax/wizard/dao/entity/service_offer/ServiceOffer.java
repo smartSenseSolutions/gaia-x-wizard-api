@@ -55,6 +55,9 @@ public class ServiceOffer extends SuperEntity {
             inverseJoinColumns = @JoinColumn(name = "standard_type_id"))
     private List<StandardTypeMaster> serviceOfferStandardType;
 
+    @Column(name = "message_reference_id")
+    private String messageReferenceId;
+
     public String getVcUrl() {
         if (this.credential != null) {
             return this.credential.getVcUrl();

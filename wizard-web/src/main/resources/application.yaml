@@ -59,6 +59,7 @@ wizard:
   host:
     signer:
     wizard:
+    messagingQueue:
   server:
     port: 8080
   quartz:
