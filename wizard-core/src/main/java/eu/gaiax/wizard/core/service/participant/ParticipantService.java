@@ -74,8 +74,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
 
-        EntityTypeMaster entityType = this.entityTypeMasterRepository.findById(UUID.fromString(onboardRequest.entityType())).orElse(null);
-        Validate.isNull(entityType).launch("invalid.entity.type");
+        EntityTypeMaster entityType = null;
+
+        if (StringUtils.hasText(onboardRequest.entityType())) {
+            entityType = this.entityTypeMasterRepository.findById(UUID.fromString(onboardRequest.entityType())).orElse(null);
+            Validate.isNull(entityType).launch("invalid.entity.type");
+        }
 
         Participant participant = this.participantRepository.getByEmail(request.email());
         Validate.isNotNull(participant).launch("participant.already.registered");
