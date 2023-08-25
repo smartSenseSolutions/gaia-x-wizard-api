@@ -120,7 +120,18 @@ public class KeycloakService {
         if (CollectionUtils.isEmpty(users)) {
             return null;
         } else {
+            this.getRealmResource().users().get(users.get(0).getId());
             return users.get(0);
+        }
+    }
+
+    public Boolean isLoginDeviceConfigured(UserRepresentation userRepresentation) {
+        try {
+            UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
+            return userResource.credentials().stream().anyMatch(credentialRepresentation -> credentialRepresentation.getType().equals(StringPool.WEBAUTHN_PASSWORDLESS));
+        } catch (Exception e) {
+            log.error("Error while fetching user credential list: ", e);
+            return false;
         }
     }
 
