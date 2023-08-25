@@ -12,11 +12,9 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.filter.FilterCriteria;
 import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
+import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.ServiceAndResourceListDTO;
-import eu.gaiax.wizard.api.model.ServiceFilterResponse;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -38,9 +36,12 @@ import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -53,6 +54,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
     private final CredentialService credentialService;
@@ -68,6 +70,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final ServiceLabelLevelService labelLevelService;
     private final Vault vault;
     private final CertificateService certificateService;
+    private final MessagingQueueClient messagingQueueClient;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -88,6 +91,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
+
         if (participant.isKeyStored()) {
             if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
                 throw new BadDataException("private.key.not.found");
@@ -133,12 +137,23 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             }
         }
         request.setCredentialSubject(credentialSubject);
-        String responseData = this.signerService.signService(participant, request, serviceName);
+        String complianceCredential = this.signerService.signService(participant, request, serviceName);
         //
         this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
 
-        Credential serviceOffVc = this.credentialService.createCredential(responseData, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
-        ServiceOffer serviceOffer = ServiceOffer.builder().name(request.getName()).participant(participant).credential(serviceOffVc).description(request.getDescription() == null ? "" : request.getDescription()).build();
+        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+        List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential);
+        final Integer labelLevel = -1;
+
+        ServiceOffer serviceOffer = ServiceOffer.builder()
+                .name(request.getName())
+                .participant(participant)
+                .credential(serviceOffVc)
+                .serviceOfferStandardType(supportedStandardList)
+                .labelLevel(labelLevel)
+                .description(request.getDescription() == null ? "" : request.getDescription())
+                .build();
+
         if (response.containsKey("trustIndex")) {
             serviceOffer.setVeracityData(response.get("trustIndex").toString());
         }
@@ -148,6 +163,15 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asInt());
             }
         }
+
+        try {
+            String messageReferenceId = this.publishServiceComplianceToMessagingQueue(complianceCredential);
+            log.info("service: {}, messageReferenceId: {}", request.getName(), messageReferenceId);
+            serviceOffer.setMessageReferenceId(messageReferenceId);
+        } catch (Exception e) {
+            log.error("Error encountered while publishing service to message queue", e);
+        }
+
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
         if (!CollectionUtils.isEmpty(labelLevelVc)) {
@@ -157,7 +181,27 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         };
         this.objectMapper.configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
         List<Map<String, Object>> vc = this.objectMapper.readValue(serviceOffer.getCredential().getVcJson(), typeReference);
-        return ServiceOfferResponse.builder().vcUrl(serviceOffer.getCredential().getVcUrl()).name(serviceOffer.getName()).veracityData(serviceOffer.getVeracityData()).vcJson(vc).description(serviceOffer.getDescription()).build();
+        return ServiceOfferResponse.builder()
+                .vcUrl(serviceOffer.getCredential().getVcUrl())
+                .name(serviceOffer.getName())
+                .veracityData(serviceOffer.getVeracityData())
+                .vcJson(vc)
+                .description(serviceOffer.getDescription())
+                .build();
+    }
+
+    private String publishServiceComplianceToMessagingQueue(String complianceCredential) throws JsonProcessingException {
+        PublishToQueueRequest publishToQueueRequest = new PublishToQueueRequest();
+        publishToQueueRequest.setSource(this.wizardHost);
+        publishToQueueRequest.setData((Map<String, Object>) this.objectMapper.readValue(complianceCredential, Map.class).get("complianceCredential"));
+
+        ResponseEntity<Object> publishServiceComplianceResponse = this.messagingQueueClient.publishServiceCompliance(publishToQueueRequest);
+        if (publishServiceComplianceResponse.getStatusCode().equals(HttpStatus.CREATED)) {
+            log.info("Publish Service Response Headers Set: {}", publishServiceComplianceResponse.getHeaders().keySet());
+            String rawMessageId = publishServiceComplianceResponse.getHeaders().get("location").get(0);
+            return rawMessageId.substring(rawMessageId.lastIndexOf("/") + 1);
+        }
+        return null;
     }
 
     @SneakyThrows
