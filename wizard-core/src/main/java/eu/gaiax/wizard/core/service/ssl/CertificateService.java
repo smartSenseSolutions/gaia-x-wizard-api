@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.core.service.ssl;
 
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -184,7 +185,7 @@ public class CertificateService {
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
             //save files in vault
-            this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
+            this.uploadCertificatesToVault(participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
             participant.setKeyStored(true);
 
             //create Job tp create ingress and tls secret
@@ -356,7 +357,7 @@ public class CertificateService {
 
     }
 
-    private void uploadCertificatesToVault(String participantId, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
+    private void uploadCertificatesToVault(String participantId, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
         this.uploadCertificatesToVault(participantId,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));
@@ -378,5 +379,139 @@ public class CertificateService {
         }
         this.vault.put(participantId, data);
         log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
+    }
+
+    @Deprecated
+    public Map<String, String> createSSLCertificate(String domainName) {
+        log.info("CertificateService(createSSLCertificate) -> Initiate process to create a SSL certificate for domain {}", domainName);
+
+        File domainChainFile = new File("/tmp/" + domainName + "_chain.crt");
+        File csrFile = new File("/tmp/" + domainName + ".csr");
+        File keyfile = new File("/tmp/" + domainName + ".key");
+        File pkcs8File = new File("/tmp/pkcs8_" + domainName + ".key");
+
+        try {
+
+            // Load the user key file. If there is no key file, create a new one.
+            KeyPair userKeyPair = this.loadOrCreateUserKeyPair();
+
+            // Create a session for Let's Encrypt.
+            // Use "acme://letsencrypt.org" for production server
+            Session session = new Session("acme://letsencrypt.org");
+
+            // Get the Account.
+            // If there is no account yet, create a new one.
+            Account acct = this.findOrRegisterAccount(session, userKeyPair);
+
+            // Load or create a key pair for the domains. This should not be the userKeyPair!
+            KeyPair domainKeyPair = this.loadOrCreateDomainKeyPair(keyfile);
+
+            // Order the certificate
+            Order order = acct.newOrder().domain(domainName).create();
+
+            // Perform all required authorizations
+            for (Authorization auth : order.getAuthorizations()) {
+                this.authorize(auth);
+            }
+
+            // Generate a CSR for all of the domains, and sign it with the domain key pair.
+            CSRBuilder csrb = new CSRBuilder();
+            csrb.addDomain(domainName);
+            csrb.sign(domainKeyPair);
+
+
+            // Write the CSR to a file, for later use.
+            try (Writer out = new FileWriter(csrFile)) {
+                csrb.write(out);
+            }
+
+            // Order the certificate
+            order.execute(csrb.getEncoded());
+
+            // Wait for the order to complete
+            checkOrderStatus(order);
+
+            // Get the certificate
+            Certificate certificate = order.getCertificate();
+
+            List<X509Certificate> certificateChain1 = certificate.getCertificateChain();
+            X509Certificate cert1 = certificateChain1.get(0);
+            X509Certificate cert2 = certificateChain1.get(1);
+            List<X509Certificate> fileCertificates = List.of(cert1, cert2);
+            try (FileWriter fw = new FileWriter(domainChainFile)) {
+                for (X509Certificate cert : fileCertificates) {
+                    AcmeUtils.writeToPem(cert.getEncoded(), AcmeUtils.PemLabel.CERTIFICATE, fw);
+                }
+                //TODO this flow can be improved
+                //write root certificate
+                fw.append("""
+                        -----BEGIN CERTIFICATE-----
+                        MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw
+                        TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+                        cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
+                        WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu
+                        ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY
+                        MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc
+                        h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+
+                        0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U
+                        A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW
+                        T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH
+                        B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC
+                        B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv
+                        KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn
+                        OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn
+                        jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw
+                        qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI
+                        rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV
+                        HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq
+                        hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL
+                        ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ
+                        3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK
+                        NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5
+                        ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur
+                        TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC
+                        jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc
+                        oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq
+                        4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA
+                        mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d
+                        emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=
+                        -----END CERTIFICATE-----
+                        """);
+            }
+
+
+            log.info("Certificate URL: {}", certificate.getLocation());
+
+            //convert private key in pkcs8 format
+            this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), null);
+
+            //save files in vault
+            this.uploadCertificatesToVault(domainName + "_test_delete", domainChainFile, csrFile, keyfile, pkcs8File);
+
+            Map<String, String> response = new HashMap<>();
+
+            String domainChain = new String(Files.readAllBytes(domainChainFile.toPath()));
+            if (StringUtils.hasText(domainChain)) {
+                response.put("domainChain", domainChain);
+            }
+            String csr = new String(Files.readAllBytes(csrFile.toPath()));
+            if (StringUtils.hasText(csr)) {
+                response.put("csr", csr);
+            }
+            String key = new String(Files.readAllBytes(keyfile.toPath()));
+            if (StringUtils.hasText(key)) {
+                response.put("key", key);
+            }
+            String pkcs8 = new String(Files.readAllBytes(pkcs8File.toPath()));
+            if (StringUtils.hasText(pkcs8)) {
+                response.put("pkcs8", pkcs8);
+            }
+            return response;
+
+        } catch (Exception e) {
+            throw new BadDataException("ssl.creation.failed");
+        } finally {
+            CommonUtils.deleteFile(domainChainFile, csrFile, keyfile, pkcs8File);
+        }
     }
 }

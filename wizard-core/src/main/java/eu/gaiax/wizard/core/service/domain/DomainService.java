@@ -124,7 +124,7 @@ public class DomainService {
 
             request.setHostedZoneId(this.awsSettings.hostedZoneId());
             ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
-            log.info("DomainService(createSubDomain) -> Subdomain {} is created for participant {} and AWS Route result is {}", domainName, participantId, result);
+            log.info("DomainService(createSubDomain) -> Subdomain {} is created for participant {} and AWS Route result is {}", domainName, participant.getId(), result);
             participant.setStatus(RegistrationStatus.DOMAIN_CREATED.getStatus());
 
             //create job to create certificate
@@ -145,6 +145,34 @@ public class DomainService {
         } catch (SchedulerException e) {
             log.error("DomainService(createCertificateCreationJob) -> Process has been failed while schedule certificate creation job for participant {}", participant.getId(), e);
             participant.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());
+        }
+    }
+
+    @Deprecated
+    public void createSubDomain(String domainName) {
+        try {
+            log.info("DomainService(createSubDomain) -> Prepare domain {} ", domainName);
+            ResourceRecord resourceRecord = new ResourceRecord();
+            resourceRecord.setValue(this.awsSettings.serverIp());
+
+            ResourceRecordSet recordsSet = new ResourceRecordSet();
+            recordsSet.setResourceRecords(List.of(resourceRecord));
+            recordsSet.setType(RRType.A);
+            recordsSet.setTTL(900L);
+            recordsSet.setName(domainName);
+
+            Change change = new Change(ChangeAction.CREATE, recordsSet);
+
+            ChangeBatch batch = new ChangeBatch(List.of(change));
+
+            ChangeResourceRecordSetsRequest request = new ChangeResourceRecordSetsRequest();
+            request.setChangeBatch(batch);
+
+            request.setHostedZoneId(this.awsSettings.hostedZoneId());
+            ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
+            log.info("DomainService(createSubDomain) -> Subdomain {} is created for participant {} and AWS Route result is {}", domainName, result);
+        } catch (Exception e) {
+            log.error("DomainService(createSubDomain) -> Error occurred while creating the sub domain {}", domainName, e);
         }
     }
 }

@@ -360,4 +360,27 @@ public class SignerService {
             return false;
         }
     }
+
+    @Deprecated
+    public void createDid(String domain) {
+        log.info("SignerService(createDid) -> Initiate process for creating did document for domain {}", domain);
+        File file = new File("/tmp/did.json");
+        try {
+            log.info("SignerService(createDid) ->  DID creation is initiated for domain {}", domain);
+            CreateDidRequest createDidRequest = new CreateDidRequest(domain, List.of(new ServiceEndpoints(this.serviceEndpointConfig.pdpType(), this.serviceEndpointConfig.pdpUrl())));
+            log.info("SignerService(createDid) -> Initiated signerClient call for create did for domain {}", domain);
+            ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createDid(createDidRequest);
+            log.info("SignerService(createDid): -> Response has been received from signerClient for domain {}", domain);
+            String didString = this.mapper.writeValueAsString(((Map<String, Object>) responseEntity.getBody().get("data")).get("did"));
+            FileUtils.writeStringToFile(file, didString, Charset.defaultCharset());
+            this.s3Utils.uploadFile(domain + "/did.json", file);
+            log.info("SignerService(createDid) -> DID Document has been created for domain  {}", domain);
+        } catch (Exception e) {
+            log.error("SignerService(createDid) -> Error while creating did json for domain -{}", domain, e);
+            throw new BadDataException("did.creation.failed");
+        } finally {
+            CommonUtils.deleteFile(file);
+            log.info("SignerService(createDid) -> Participant details has been updated.");
+        }
+    }
 }
