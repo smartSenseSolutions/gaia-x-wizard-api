@@ -208,6 +208,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private List<StandardTypeMaster> getSupportedStandardList(String serviceJsonString) {
         JsonNode serviceOfferingJsonNode = this.getServiceCredentialSubject(serviceJsonString);
         assert serviceOfferingJsonNode != null;
+
+        if (!serviceOfferingJsonNode.has(StringPool.GX_DATA_PROTECTION_REGIME)) {
+            return Collections.emptyList();
+        }
+
         if (serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).isValueNode()) {
             String dataProtectionRegime = serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).asText();
             return this.standardTypeMasterService.findAllByTypeIn(List.of(dataProtectionRegime));
