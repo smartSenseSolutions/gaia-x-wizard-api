@@ -119,7 +119,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 request.setVerificationMethod(participant.getDid());
             }
             if (request.isStoreVault()) {
-                this.certificateService.uploadCertificatesToVault(participant.getDomain(), null, null, null, request.getPrivateKey());
+                this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             }
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
