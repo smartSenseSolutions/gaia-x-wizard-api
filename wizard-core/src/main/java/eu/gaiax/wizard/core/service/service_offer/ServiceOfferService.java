@@ -78,7 +78,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id) throws IOException {
         Map<String, Object> response = new HashMap<>();
-        this.validateServiceOfferRequest(request);
+        this.validateServiceOfferMainRequest(request);
         Participant participant;
         if (id != null) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
@@ -87,7 +87,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
@@ -99,7 +99,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
             request.setVerificationMethod(participant.getDid());
         }
-        if (request.isStoreVault()) {
+        if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
         }
         String serviceName = "service_" + this.getRandomString();
@@ -143,14 +143,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential);
-        final Integer labelLevel = -1;
 
         ServiceOffer serviceOffer = ServiceOffer.builder()
                 .name(request.getName())
                 .participant(participant)
                 .credential(serviceOffVc)
                 .serviceOfferStandardType(supportedStandardList)
-                .labelLevel(labelLevel)
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
 
@@ -160,7 +158,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
             JsonNode descriptionCredential = this.objectMapper.readTree(InvokeService.executeRequest(labelLevelVc.get("vcUrl"), HttpMethod.GET)).path("credentialSubject");
             if (descriptionCredential != null) {
-                serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asInt());
+                serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asText());
             }
         }
 

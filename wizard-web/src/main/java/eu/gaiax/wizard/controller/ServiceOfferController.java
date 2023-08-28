@@ -451,7 +451,7 @@ public class ServiceOfferController extends BaseController {
                             })
                     }),
     })
-    public void validateServiceOfferRequest(@RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
+    public void validateServiceOfferRequest(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
         this.serviceOfferService.validateServiceOfferMainRequest(request);
     }
