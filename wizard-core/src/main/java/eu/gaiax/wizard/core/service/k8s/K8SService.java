@@ -15,6 +15,7 @@ import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.vault.Vault;
 import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.NetworkingV1Api;
@@ -234,7 +235,7 @@ public class K8SService {
             networkingV1Api.createNamespacedIngress(DEFAULT, v1Ingress, null, null, null, null);
 
         } catch (Exception e) {
-            log.error("K8sService(createIngress) -> Not able to create ingress for domain {}", domainName, e);
+            log.error("K8sService(createIngress) -> Not able to create ingress for domain {} and response {}", domainName, ((ApiException) e).getResponseBody(), e);
             throw new BadDataException("ingress.creation.failed..");
         }
     }
