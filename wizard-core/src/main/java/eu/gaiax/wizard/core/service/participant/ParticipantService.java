@@ -135,7 +135,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
-        this.createLegalParticipantJson(participant, request.privateKey());
+        this.createLegalParticipantJson(participant, request);
         if (request.store()) {
             participant.setKeyStored(request.store());
             this.certificateService.uploadCertificatesToVault(participantId.toString(), null, null, null, request.privateKey());
@@ -144,19 +144,19 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return participant;
     }
 
-    private void createLegalParticipantJson(Participant participant, String privateKey) {
+    private void createLegalParticipantJson(Participant participant, ParticipantCreationRequest request) {
         if (participant.isOwnDidSolution()) {
             log.debug("ParticipantService(createLegalParticipantJson) -> Create Legal participant {} who has own did solutions.", participant.getId());
-            this.createLegalParticipantWithDidSolutions(participant, privateKey);
+            this.createLegalParticipantWithDidSolutions(participant, request);
         } else {
             log.debug("ParticipantService(createLegalParticipantJson) -> Create Legal participant {} who don't have own did solutions.", participant.getId());
             this.createLegalParticipantWithoutDidSolutions(participant);
         }
     }
 
-    private void createLegalParticipantWithDidSolutions(Participant participant, String privateKey) {
+    private void createLegalParticipantWithDidSolutions(Participant participant, ParticipantCreationRequest request) {
         log.debug("ParticipantService(createLegalParticipantJson) -> Create participant json.");
-        this.signerService.createParticipantJson(participant, privateKey, true);
+        this.signerService.createParticipantJson(participant, request.issuer(), request.verificationMethod(), request.privateKey(), true);
     }
 
     private void createLegalParticipantWithoutDidSolutions(Participant participant) {

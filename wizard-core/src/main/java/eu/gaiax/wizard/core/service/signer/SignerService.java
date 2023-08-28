@@ -143,17 +143,21 @@ public class SignerService {
     }
 
     public void createParticipantJson(Participant participant, String key, boolean ownDid) {
+        this.createParticipantJson(participant, participant.getDid(), participant.getDid(), key, ownDid);
+    }
+
+    public void createParticipantJson(Participant participant, String issuer, String verificationMethod, String key, boolean ownDid) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}, ownDid {}", participant.getId(), ownDid);
         File file = new File("/tmp/participant.json");
         try {
             String privateKey = key;
-            if (!ownDid) {
+            if (!ownDid || participant.isKeyStored()) {
                 privateKey = (String) this.vault.get(key).get("pkcs8.key");
                 Validate.isFalse(StringUtils.hasText(privateKey)).launch(new EntityNotFoundException("keys.not.found"));
                 log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from store with key {}", key);
             }
             Map<String, Object> credentials = this.prepareCredentialSubjectForLegalParticipant(participant);
-            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), participant.getDid(), participant.getDid(), credentials);
+            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), issuer, verificationMethod, credentials);
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
@@ -163,7 +167,9 @@ public class SignerService {
             this.s3Utils.uploadFile(hostedPath, file);
             String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
-            this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
+            if (!ownDid) {
+                this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
+            }
             participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATED.getStatus());
             log.debug("SignerService(createParticipantJson) -> Participant json has been created for participant {} with selfDescription {}", participant.getId(), participantString);
         } catch (Exception e) {
