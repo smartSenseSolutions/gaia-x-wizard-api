@@ -88,6 +88,7 @@ wizard:
     tnc:
     serviceOffer:
     ODRLPolicy:
+    labelLevel:
   domain:
   gaiax:
     tnc:

@@ -46,7 +46,7 @@ public class ServiceOffer extends SuperEntity {
     private String veracityData;
 
     @Column(name = "label_level")
-    private Integer labelLevel;
+    private String labelLevel;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

@@ -61,10 +61,12 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
 
     public ServiceLabelLevel saveServiceLabelLevelLink(String json, String path, Participant participant, ServiceOffer serviceOffer) {
         Credential labelLevel = this.credentialService.createCredential(json, path, CredentialTypeEnum.LABEL_LEVEL.getCredentialType(), "", participant);
-        return ServiceLabelLevel.builder()
-                .credential(labelLevel)
-                .serviceOffer(serviceOffer)
-                .participant(participant).build();
+        return this.serviceLabelLevelRepository.save(
+                ServiceLabelLevel.builder()
+                        .credential(labelLevel)
+                        .serviceOffer(serviceOffer)
+                        .participant(participant).build()
+        );
     }
 
 
@@ -85,7 +87,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
             file.delete();
         }
     }
-    
+
     private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, String assignerTo) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
