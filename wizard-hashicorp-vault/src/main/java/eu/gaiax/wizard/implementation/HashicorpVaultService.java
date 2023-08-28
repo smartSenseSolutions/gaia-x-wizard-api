@@ -10,6 +10,7 @@ import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
 
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -31,9 +32,22 @@ public class HashicorpVaultService implements Vault {
     public Map<String, Object> get(String secretName) {
         try {
             VaultResponse response = this.template.opsForKeyValue(this.vaultPathConfiguration.secretPath(), VaultKeyValueOperationsSupport.KeyValueBackend.KV_2).get(secretName);
+            if (Objects.isNull(response)) {
+                return null;
+            }
             return response.getData();
         } catch (Exception ex) {
             throw new VaultException("HashicorpVaultService(get): Issue occur while read the secrets from hashicorp vault.", ex);
+        }
+    }
+
+    @Override
+    public boolean patch(String secretName, Map<String, Object> kv) {
+        try {
+            boolean patch = this.template.opsForKeyValue(this.vaultPathConfiguration.secretPath(), VaultKeyValueOperationsSupport.KeyValueBackend.KV_2).patch(secretName, kv);
+            return patch;
+        } catch (Exception ex) {
+            throw new VaultException("HashicorpVaultService(patch): Issue occur while read the secrets from hashicorp vault.", ex);
         }
     }
 }
