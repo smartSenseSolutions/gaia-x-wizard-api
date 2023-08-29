@@ -5,8 +5,11 @@
 package eu.gaiax.wizard.dao.repository.data_master;
 
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
+import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.dao.entity.data_master.SubdivisionCodeMaster;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 
 /**
@@ -15,4 +18,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SubdivisionCodeMasterRepository extends BaseRepository<SubdivisionCodeMaster, String> {
 
+    List<SubdivisionName> findAllNameBySubdivisionCodeIn(String[] subdivisionCodeArray);
 }

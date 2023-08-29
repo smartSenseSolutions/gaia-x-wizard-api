@@ -844,7 +844,7 @@ public class ServiceOfferController extends BaseController {
             }),
     })
     @PostMapping(path = SERVICE_OFFER_LOCATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Object> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
+    public CommonResponse<ServiceOfferingLocationResponse> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
         ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
         return CommonResponse.of(serviceOfferingLocationResponse);
     }
