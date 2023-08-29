@@ -1,6 +1,8 @@
 package eu.gaiax.wizard.controller;
 
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.LabelLevelFileTypeEnum;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelFileUpload;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelRequest;
 import eu.gaiax.wizard.core.service.service_offer.ServiceLabelLevelService;
@@ -66,6 +68,12 @@ public class LabelLevelController extends BaseController {
 
     @PostMapping(path = LABEL_LEVEL_FILE_UPLOAD, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Object> uploadLabelLevelFile(@Valid @ModelAttribute LabelLevelFileUpload labelLevelFileUpload) throws IOException {
+        try {
+            LabelLevelFileTypeEnum.valueOf(labelLevelFileUpload.fileType());
+        } catch (Exception e) {
+            throw new BadDataException("Please select a valid file type");
+        }
+
         return CommonResponse.of(this.labelLevelService.uploadLabelLevelFile(labelLevelFileUpload));
     }
 }
