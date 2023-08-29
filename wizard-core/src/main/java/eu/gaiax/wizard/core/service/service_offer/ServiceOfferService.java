@@ -16,11 +16,13 @@ import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
+import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
+import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
@@ -71,6 +73,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final Vault vault;
     private final CertificateService certificateService;
     private final MessagingQueueClient messagingQueueClient;
+    private final SubdivisionCodeMasterService subdivisionCodeMasterService;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -264,8 +267,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
     }
 
-    public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
-        return this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
+    public List<String> getLocationFromService(ServiceIdRequest serviceIdRequest) {
+        String[] subdivisionCodeArray = this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
+        if (subdivisionCodeArray.length > 0) {
+            List<SubdivisionName> subdivisionNameList = this.subdivisionCodeMasterService.getNameListBySubdivisionCode(subdivisionCodeArray);
+            if (!CollectionUtils.isEmpty(subdivisionNameList)) {
+                return subdivisionNameList.stream().map(SubdivisionName::name).toList();
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     public PageResponse<ServiceAndResourceListDTO> getServiceOfferingList(FilterRequest filterRequest) {
