@@ -16,7 +16,7 @@ public class ServiceFilterResponse {
 
     private String name;
 
-    private Integer labelLevel;
+    private String labelLevel;
 
     @JsonAlias("vcUrl")
     private String selfDescription;
