@@ -69,11 +69,10 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         );
     }
 
-
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
         File file = null;
         try {
-            String fileName = "public/label-level/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
+            String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
             file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(labelLevelFileUpload.file().getBytes());
