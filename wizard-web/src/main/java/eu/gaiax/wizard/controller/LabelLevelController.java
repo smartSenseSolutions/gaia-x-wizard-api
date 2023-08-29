@@ -26,14 +26,14 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class LabelLevelController extends BaseController {
     private final ServiceLabelLevelService labelLevelService;
 
-    @Operation(summary = "Create Resource")
+    @Operation(summary = "Create Label-Level VC")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Create label level vc", value = """
                             {
                               "gx:criteria": {
                                 "1.1.1": {
-                                  "evi    dence": {
+                                  "evidence": {
                                     "pdf": {
                                       "buffer": {},
                                       "Modified": "2023-08-17T07:01:54.095Z",
@@ -56,8 +56,7 @@ public class LabelLevelController extends BaseController {
                                   "reason": "1.1.1 Reasoning"
                                 }
                               }
-                            }
-                            """)
+                            }""")
             })
     })
     @PostMapping(path = LABEL_LEVEL, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

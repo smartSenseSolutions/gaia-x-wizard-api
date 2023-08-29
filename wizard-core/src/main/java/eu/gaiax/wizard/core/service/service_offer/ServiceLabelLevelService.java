@@ -73,13 +73,12 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
         File file = null;
         try {
-            String uuid = UUID.randomUUID().toString();
-            String fileName = uuid + "/" + labelLevelFileUpload.level() + "/" + labelLevelFileUpload.type() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
+            String fileName = "public/label-level/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
             file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(labelLevelFileUpload.file().getBytes());
             fos.close();
-            this.s3Utils.uploadFileWithPublicAcl(fileName, file);
+            this.s3Utils.uploadFile(fileName, file);
             return this.s3Utils.getObject(fileName);
         } catch (Exception e) {
             throw new RemoteException("File not Upload " + e.getMessage());
