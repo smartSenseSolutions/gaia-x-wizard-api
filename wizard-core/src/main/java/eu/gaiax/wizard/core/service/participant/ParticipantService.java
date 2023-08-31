@@ -39,6 +39,8 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -114,6 +116,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.validateOnboardedCredentialSubject(credentialSubject);
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Participant initiateOnboardParticipantProcess(String participantId, ParticipantCreationRequest request) {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
@@ -302,6 +305,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return this.specificationUtil;
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED, readOnly = true)
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
         Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
         ParticipantConfigDTO participantConfigDTO;
