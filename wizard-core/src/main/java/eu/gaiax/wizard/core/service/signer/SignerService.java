@@ -41,6 +41,9 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -77,10 +80,16 @@ public class SignerService {
     @Value("${wizard.gaiax.tnc}")
     private String tnc;
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createParticipantJson(UUID participantId) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}", participantId);
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+
+        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
+            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
+        }
+
         this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
     }
 
@@ -184,9 +193,15 @@ public class SignerService {
 
     public void createDid(UUID participantId) {
         log.info("SignerService(createDid) -> Initiate process for creating did document for participant {}", participantId);
-        File file = new File("/tmp/did.json");
+
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        if (StringUtils.hasText(participant.getDid())) {
+            log.info("DID exists for participantId {}. Exiting DID creation.", participantId);
+            return;
+        }
+
+        File file = new File("/tmp/did.json");
         try {
             String domain = participant.getDomain();
             log.info("SignerService(createDid) ->  DID creation is initiated for domain {}", domain);
