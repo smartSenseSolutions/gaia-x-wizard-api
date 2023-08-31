@@ -198,7 +198,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found", null);
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.url.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;
