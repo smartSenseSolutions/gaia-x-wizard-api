@@ -88,7 +88,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName())
+                .shortName(onboardRequest.shortName() != null ? onboardRequest.shortName().toLowerCase() : null)
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName().toLowerCase() + "." + this.domain)
                 .participantType("REGISTERED")
