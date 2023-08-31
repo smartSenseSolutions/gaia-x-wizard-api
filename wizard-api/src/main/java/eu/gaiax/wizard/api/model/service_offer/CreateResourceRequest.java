@@ -12,7 +12,7 @@ public class CreateResourceRequest {
     private boolean publish;
     private String email;
     private String privateKey;
-    private String participantJson;
+    private String participantJsonUrl;
     private String verificationMethod;
     private boolean storeVault;
 }
