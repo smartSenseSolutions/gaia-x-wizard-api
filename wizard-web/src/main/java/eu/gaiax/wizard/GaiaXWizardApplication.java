@@ -29,6 +29,7 @@ public class GaiaXWizardApplication {
     public static void main(String[] args) {
         SpringApplication.run(GaiaXWizardApplication.class, args);
     }
+
     @Bean
     public SpecificationUtil specificationUtil() {
         return new SpecificationUtil();

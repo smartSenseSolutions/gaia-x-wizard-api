@@ -3,14 +3,14 @@ package eu.gaiax.wizard.controller;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferingLocationResponse;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
+import eu.gaiax.wizard.core.service.service_offer.ServiceOfferViewService;
+import eu.gaiax.wizard.dao.entity.service_offer.ServiceOfferView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -35,7 +35,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ServiceOfferController extends BaseController {
 
     private final ServiceOfferService serviceOfferService;
-    private final ResourceService resourceService;
+    private final ServiceOfferViewService serviceOfferViewService;
 
     @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
@@ -938,15 +938,15 @@ public class ServiceOfferController extends BaseController {
             }),
     })
     @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
-        return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, null));
+    public CommonResponse<PageResponse<ServiceOfferView>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
+        return CommonResponse.of(this.serviceOfferViewService.filterServiceOfferView(filterRequest, null));
     }
 
     @Tag(name = "Service-Offering")
     @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
+    public CommonResponse<PageResponse<ServiceOfferView>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
         this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, participantId));
+        return CommonResponse.of(this.serviceOfferViewService.filterServiceOfferView(filterRequest, participantId));
     }
 
 

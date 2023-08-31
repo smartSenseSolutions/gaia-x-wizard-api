@@ -14,7 +14,10 @@ import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.PublishToQueueRequest;
+import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.api.model.service_offer.*;
@@ -277,14 +280,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         return Collections.emptyList();
-    }
-
-    public PageResponse<ServiceAndResourceListDTO> getServiceOfferingList(FilterRequest filterRequest) {
-        Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
-        List<ServiceAndResourceListDTO> serviceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
-        });
-
-        return PageResponse.of(serviceList, serviceOfferPage, filterRequest.getSort());
     }
 
     @Override
