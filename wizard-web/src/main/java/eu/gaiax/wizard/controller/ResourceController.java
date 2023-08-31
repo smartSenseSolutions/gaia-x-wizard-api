@@ -130,7 +130,7 @@ public class ResourceController extends BaseController {
     })
     public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
         this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()));
+        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), "resource.created");
     }
 
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -227,7 +227,7 @@ public class ResourceController extends BaseController {
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
-        return CommonResponse.of(this.resourceService.createResource(request, null));
+        return CommonResponse.of(this.resourceService.createResource(request, null), "resource.created");
     }
 
     @Tag(name = "Resources")
@@ -319,7 +319,7 @@ public class ResourceController extends BaseController {
             }),
     })
     @PostMapping(path = RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ResourceFilterResponse>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
+    public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@Valid @RequestBody FilterRequest filterRequest) {
         return CommonResponse.of(this.resourceService.filterResource(filterRequest, null));
     }
 

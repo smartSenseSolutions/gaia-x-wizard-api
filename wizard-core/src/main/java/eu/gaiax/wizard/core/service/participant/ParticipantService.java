@@ -214,11 +214,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
                     .did(issuer)
                     .keyStored(request.store())
                     .build();
-        }
-        participant = this.participantRepository.save(participant);
-        Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
-        if (Objects.isNull(credential)) {
-            credential = this.credentialService.createCredential(participantJson, request.participantJsonUrl(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
+            participant = this.participantRepository.save(participant);
+            Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
+            if (Objects.isNull(credential)) {
+                this.credentialService.createCredential(participantJson, request.participantJsonUrl(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
+            }
         }
 
         if (request.store()) {
