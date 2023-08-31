@@ -229,6 +229,9 @@ public class ResourceService extends BaseService<Resource, UUID> {
             if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("type").toString());
             } else {
+                if (!StringUtils.hasText(request.getCredentialSubject().get("subType").toString())) {
+                    throw new BadDataException("sub.type.required");
+                }
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
                 credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
