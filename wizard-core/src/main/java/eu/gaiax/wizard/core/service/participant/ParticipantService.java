@@ -229,17 +229,38 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
 
     public String getWellKnownFiles(String host, String fileName) throws IOException {
-        log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
-        Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
-        Participant participant = this.participantRepository.getByDomain(host);
-        Validate.isNull(participant).launch(new EntityNotFoundException("subdomain.not.found"));
-        if (fileName.equals("did.json")) {
-            return this.getLegalParticipantJson(participant.getId().toString(), fileName);
+        try {
+            log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
+            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
+            Participant participant = this.participantRepository.getByDomain(host);
+            Validate.isNull(participant).launch(new EntityNotFoundException("subdomain.not.found"));
+            if (fileName.equals("did.json")) {
+                return this.getLegalParticipantJson(participant.getId().toString(), fileName);
+            }
+            Map<String, Object> certificates = this.vault.get(participant.getId().toString());
+            Object certificate = certificates.get(fileName);
+            Validate.isNull(certificate).launch(new EntityNotFoundException("certificate.not.found"));
+            return (String) certificate;
+        } catch (Exception ex) {
+            //TODO need to remove
+            log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
+            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
+            if (fileName.equals("did.json")) {
+                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension("did.json");
+                File file = new File(fetchedFileName);
+                try {
+                    log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, "did.json");
+                    file = this.s3Utils.getObject(host + "/did.json", fetchedFileName);
+                    return FileUtils.readFileToString(file, Charset.defaultCharset());
+                } finally {
+                    CommonUtils.deleteFile(file);
+                }
+            }
+            Map<String, Object> certificates = this.vault.get(host + "_test_delete");
+            Object certificate = certificates.get(fileName);
+            Validate.isNull(certificate).launch(new EntityNotFoundException("certificate.not.found"));
+            return (String) certificate;
         }
-        Map<String, Object> certificates = this.vault.get(participant.getId().toString());
-        Object certificate = certificates.get(fileName);
-        Validate.isNull(certificate).launch(new EntityNotFoundException("certificate.not.found"));
-        return (String) certificate;
     }
 
     public String getLegalParticipantJson(String participantId, String filename) throws IOException {
