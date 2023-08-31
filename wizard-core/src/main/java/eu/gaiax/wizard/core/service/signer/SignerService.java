@@ -88,6 +88,7 @@ public class SignerService {
 
         if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
             log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
+            return;
         }
 
         this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
