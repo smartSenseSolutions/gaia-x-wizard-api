@@ -116,7 +116,7 @@ public class KeycloakService {
 
         RealmResource realmResource = this.getRealmResource();
         UsersResource usersResource = realmResource.users();
-        List<UserRepresentation> users = usersResource.search(email);
+        List<UserRepresentation> users = usersResource.searchByEmail(email, true);
         if (CollectionUtils.isEmpty(users)) {
             return null;
         } else {
