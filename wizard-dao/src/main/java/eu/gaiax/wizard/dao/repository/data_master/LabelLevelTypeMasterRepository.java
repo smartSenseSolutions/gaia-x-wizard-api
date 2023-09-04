@@ -19,5 +19,4 @@ public interface LabelLevelTypeMasterRepository extends BaseRepository<LabelLeve
 
     List<LabelLevelTypeInterface> findAllByActiveIsTrueAndLabelLevelQuestionMasterListIsNotNull();
 
-    List<LabelLevelTypeInterface> findAllByActiveIsTrueAndLabelLevelQuestionMasterListIsNotNullAndLabelLevelQuestionMasterList_HighestLabelLevel(String highestLabelLevel);
 }
