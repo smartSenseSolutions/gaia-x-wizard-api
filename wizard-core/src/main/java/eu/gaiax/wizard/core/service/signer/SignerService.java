@@ -86,10 +86,10 @@ public class SignerService {
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
-        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
-            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
-            return;
-        }
+//        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
+//            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
+//            return;
+//        }
 
         this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
     }
@@ -175,7 +175,19 @@ public class SignerService {
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
+
             String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
+            JSONObject participantSd = new JSONObject(participantString);
+            JSONArray vcs = participantSd.getJSONObject("selfDescriptionCredential").getJSONArray("verifiableCredential");
+            for (Object vc : vcs) {
+                JSONObject legalParticipantVc = (JSONObject) vc;
+                JSONObject credentialSubject = legalParticipantVc.getJSONObject("credentialSubject");
+                String type = credentialSubject.getString("type");
+                if (Objects.equals(type, "gx:LegalParticipant")) {
+                    participantJsonUrl = credentialSubject.getString("id");
+                }
+            }
+
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             if (!ownDid) {
                 this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
