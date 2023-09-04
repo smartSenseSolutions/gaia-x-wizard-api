@@ -11,4 +11,6 @@ public interface LabelLevelQuestionInterface {
 
     String getQuestion();
 
+    String getHighestLabelLevel();
+
 }

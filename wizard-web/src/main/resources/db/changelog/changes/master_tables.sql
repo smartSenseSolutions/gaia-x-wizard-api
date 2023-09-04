@@ -196,3 +196,10 @@ INSERT INTO label_level_question_master(criterion_number, question, active, basi
 ('Criterion P4.1.2', 'The Provider shall ensure pre-contractual information exists, with sufficiently detailed, clear and transparent information regarding the processes of Customer Data portability, technical requirements, timeframes and charges that apply in case a professional user wants to switch to another Provider or port Customer Data back to its own IT systems.', true, 'MANDATORY_DECLARATION', 'MANDATORY_DECLARATION', (SELECT id FROM label_level_type_master where name = 'Portability - Switching and porting of Customer Data')),
 
 ('Criterion P5.2.1', 'The Provider shall not access Customer Data unless authorized by the Customer or when the access is in accordance with EU/EEA/Member State law.', true, 'MANDATORY_DECLARATION', 'MANDATORY_DECLARATION', (SELECT id FROM label_level_type_master where name = 'European Control - Access to Customer Data'));
+
+
+--changeset Neha:8
+UPDATE label_level_question_master SET basic_conformity='MANDATORY_DECLARATION' WHERE criterion_number='Criterion P1.1.3';
+ALTER TABLE label_level_question_master ADD COLUMN highest_label_level VARCHAR(20) NULL;
+UPDATE label_level_question_master SET highest_label_level='L1' WHERE criterion_number IN ('Criterion P1.1.2', 'Criterion P2.1.1', 'Criterion P2.2.4', 'Criterion P2.3.1');
+UPDATE label_level_question_master SET highest_label_level='BC' WHERE criterion_number NOT IN ('Criterion P1.1.2', 'Criterion P2.1.1', 'Criterion P2.2.4', 'Criterion P2.3.1');
