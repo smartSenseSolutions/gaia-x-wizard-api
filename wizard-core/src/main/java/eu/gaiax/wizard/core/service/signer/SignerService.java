@@ -86,10 +86,10 @@ public class SignerService {
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
-//        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
-//            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
-//            return;
-//        }
+        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
+            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
+            return;
+        }
 
         this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
     }
