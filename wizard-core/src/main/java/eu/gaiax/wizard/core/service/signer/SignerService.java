@@ -378,4 +378,23 @@ public class SignerService {
             return false;
         }
     }
+
+    public boolean validateRegistrationNumber(Map<String, Object> credential) {
+        try {
+            Map<String, Object> request = new HashMap<>();
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get("legalRegistrationNumber"), typeReference);
+            legalRegistrationNumber.put("@context", this.contextConfig.registrationNumber());
+            legalRegistrationNumber.put("type", "gx:legalRegistrationNumber");
+            legalRegistrationNumber.put("id", "did:web:gaia-x.eu:legalRegistrationNumber.json");
+            request.put("legalRegistrationNumber", legalRegistrationNumber);
+            ResponseEntity<Map<String, Object>> response = this.signerClient.validateRegistrationNumber(request);
+            boolean valid = (boolean) ((Map<String, Object>) Objects.requireNonNull(response.getBody()).get("data")).get("isValid");
+            return valid;
+        } catch (Exception ex) {
+            log.error("Issue occurred while validating the registration number.", ex);
+            return false;
+        }
+    }
 }

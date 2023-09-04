@@ -114,6 +114,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         };
         Object credentialSubject = this.mapper.convertValue(legalParticipant, typeReference).get("credentialSubject");
         this.validateOnboardedCredentialSubject(credentialSubject);
+        Validate.isFalse(this.signerService.validateRegistrationNumber(credential)).launch("invalid.registration.number.details");
     }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
