@@ -48,20 +48,156 @@
         <sql>
             CREATE TABLE format_type_master(
             id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            name VARCHAR(255) NOT NULL,
             type VARCHAR(255) NOT NULL,
+            reference VARCHAR(255) NOT NULL,
             active Boolean NOT NULL DEFAULT true,
             created_at timestamp(6) NOT NULL DEFAULT NOW(),
             updated_at timestamp(6) NOT NULL DEFAULT NOW()
             );
         </sql>
 
-        <loadData catalogName="iso-3166-2"
-                  file="masterData/iana_media_type.csv"
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/application.csv"
                   quotchar='"'
                   schemaName="public"
                   tableName="format_type_master">
-            <column header="type"
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
                     name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/audio.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/font.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/image.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/message.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/model.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/multipart.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/text.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/video.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
                     type="VARCHAR(255)"/>
         </loadData>
     </changeSet>
