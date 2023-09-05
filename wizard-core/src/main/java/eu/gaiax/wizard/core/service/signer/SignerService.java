@@ -242,9 +242,9 @@ public class SignerService {
     private void createParticipantCreationJob(Participant participant) {
         try {
             this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
-            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.info("SignerService(createParticipantCreationJob) -> Create legal participant corn has been scheduled.");
         } catch (Exception e) {
+            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.error("SignerService(createParticipantCreationJob) -> Not able to create legal participant corn for participant {}", participant.getId(), e);
         }
     }
@@ -368,7 +368,14 @@ public class SignerService {
                 jsonObject.put("service", new ArrayList<>());
                 services = jsonObject.getJSONArray("service");
             }
-            services.put(map);
+            List<String> serviceIds = new ArrayList<>();
+            for (Object service : services) {
+                JSONObject s = (JSONObject) service;
+                serviceIds.add(s.getString("id"));
+            }
+            if (!serviceIds.contains(id)) {
+                services.put(map);
+            }
             FileUtils.writeStringToFile(updatedFile, jsonObject.toString(), Charset.defaultCharset());
             this.s3Utils.uploadFile(participantId + "/did.json", updatedFile);
         } catch (Exception ex) {
