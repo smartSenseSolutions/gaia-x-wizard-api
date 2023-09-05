@@ -252,7 +252,7 @@ public class SignerService {
     public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
+        providedBy.put("id", request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         request.getCredentialSubject().put("gx:name", request.getName());
