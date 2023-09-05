@@ -190,57 +190,7 @@
                   quotchar='"'
                   schemaName="public"
                   tableName="format_type_master">
-            <column header="Name"
-                    name="name"
-                    type="VARCHAR(255)"/>
-            <column header="Template"
-                    name="type"
-                    type="VARCHAR(255)"/>
-            <column header="Reference"
-                    name="reference"
-                    type="VARCHAR(255)"/>
-            <column header="Reference"
-                    name="reference"
-                    type="VARCHAR(255)"/>
-        </loadData>
 
-        <loadData catalogName="iana_type"
-                  file="masterData/iana_type/multipart.csv"
-                  quotchar='"'
-                  schemaName="public"
-                  tableName="format_type_master">
-            <column header="Name"
-                    name="name"
-                    type="VARCHAR(255)"/>
-            <column header="Template"
-                    name="type"
-                    type="VARCHAR(255)"/>
-            <column header="Reference"
-                    name="reference"
-                    type="VARCHAR(255)"/>
-        </loadData>
-
-        <loadData catalogName="iana_type"
-                  file="masterData/iana_type/text.csv"
-                  quotchar='"'
-                  schemaName="public"
-                  tableName="format_type_master">
-            <column header="Name"
-                    name="name"
-                    type="VARCHAR(255)"/>
-            <column header="Template"
-                    name="type"
-                    type="VARCHAR(255)"/>
-            <column header="Reference"
-                    name="reference"
-                    type="VARCHAR(255)"/>
-        </loadData>
-
-        <loadData catalogName="iana_type"
-                  file="masterData/iana_type/video.csv"
-                  quotchar='"'
-                  schemaName="public"
-                  tableName="format_type_master">
             <column header="Name"
                     name="name"
                     type="VARCHAR(255)"/>
