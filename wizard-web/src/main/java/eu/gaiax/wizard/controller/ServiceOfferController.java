@@ -32,12 +32,12 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Service-Offering")
 public class ServiceOfferController extends BaseController {
 
     private final ServiceOfferService serviceOfferService;
     private final ServiceOfferViewService serviceOfferViewService;
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -378,7 +378,6 @@ public class ServiceOfferController extends BaseController {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString()));
     }
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Validate Service offering for enterprise, role = enterprise")
     @PostMapping(path = VALIDATE_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -789,14 +788,12 @@ public class ServiceOfferController extends BaseController {
                             })
                     }),
     })
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = PUBLIC_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null));
     }
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Get service locations from policy")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
@@ -849,8 +846,7 @@ public class ServiceOfferController extends BaseController {
         return CommonResponse.of(serviceOfferingLocationResponse);
     }
 
-    @Tag(name = "Service-Offering")
-    @Operation(summary = "Get service list for dropdown")
+    @Operation(summary = "Public service list")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Filter request with sort",
@@ -938,11 +934,97 @@ public class ServiceOfferController extends BaseController {
             }),
     })
     @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ServiceOfferView>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
+    public CommonResponse<PageResponse<ServiceOfferView>> getServiceOfferingFilter(@Valid @RequestBody FilterRequest filterRequest) {
         return CommonResponse.of(this.serviceOfferViewService.filterServiceOfferView(filterRequest, null));
     }
 
-    @Tag(name = "Service-Offering")
+    @Operation(summary = "Get service list for logged in participant")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
+            @Content(examples = {
+                    @ExampleObject(name = "Filter request with sort",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      }
+                                    }"""
+                    ),
+                    @ExampleObject(name = "Filter request with sort and search",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      },
+                                      "criteriaOperator": "AND",
+                                      "criteria": [
+                                        {
+                                          "column": "name",
+                                          "operator": "CONTAIN",
+                                          "values": [
+                                            "xyz"
+                                          ]
+                                        }
+                                      ]
+                                    }"""
+                    ),
+            })
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Service list fetched successfully.", content = {
+                    @Content(examples = {
+                            @ExampleObject(name = "Successful request", value = """
+                                    {
+                                       "status": 200,
+                                       "payload": {
+                                         "content": [
+                                           {
+                                             "id": "0fa1180c-a8bf-4994-8798-66744886acea",
+                                             "name": "Storage service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Storage service.json"
+                                           },
+                                           {
+                                             "id": "ab06e01c-978a-459c-9104-1018cb5e1ec9",
+                                             "name": "Clould service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Clould_service.json"
+                                           },
+                                           {
+                                             "id": "0749b43f-b187-4a57-8119-8d72ea7dd01f",
+                                             "name": "Database service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Database_service.json"
+                                           },
+                                           {
+                                             "id": "c6a04238-fa3a-45b9-af1d-1d92872bcaf3",
+                                             "name": "Sertvice_offer_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_QTJG.json"
+                                           },
+                                           {
+                                             "id": "bcb1e1e1-347e-4aa8-ba38-ac35d331e2c6",
+                                             "name": "Sertvice_of_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_6vSP.json"
+                                           }
+                                         ],
+                                         "pageable": {
+                                           "pageSize": 5,
+                                           "totalPages": 4,
+                                           "pageNumber": 0,
+                                           "numberOfElements": 5,
+                                           "totalElements": 18
+                                         }
+                                       }
+                                    }"""
+                            )
+                    })
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(examples = {})
+            }),
+    })
     @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceOfferView>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
         this.validateParticipantId(participantId, principal);
