@@ -97,7 +97,8 @@ public class StringPool {
     public static final String GX_COUNTRY_SUBDIVISION = "gx:countrySubdivisionCode";
     public static final String GX_POLICY = "gx:policy";
     public static final String GX_DATA_PROTECTION_REGIME = "gx:dataProtectionRegime";
-    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
+    //    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
+    public static final String POLICY_LOCATION_LEFT_OPERAND = "spatial";
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
 
