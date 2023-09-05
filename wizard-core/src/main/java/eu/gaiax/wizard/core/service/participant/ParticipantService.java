@@ -39,6 +39,8 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -88,7 +90,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         participant = this.create(Participant.builder()
                 .email(request.email())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName())
+                .shortName(onboardRequest.shortName() != null ? onboardRequest.shortName().toLowerCase() : null)
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName().toLowerCase() + "." + this.domain)
                 .participantType("REGISTERED")
@@ -112,8 +114,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         };
         Object credentialSubject = this.mapper.convertValue(legalParticipant, typeReference).get("credentialSubject");
         this.validateOnboardedCredentialSubject(credentialSubject);
+        Validate.isFalse(this.signerService.validateRegistrationNumber(credential)).launch("invalid.registration.number.details");
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Participant initiateOnboardParticipantProcess(String participantId, ParticipantCreationRequest request) {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
@@ -198,7 +202,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.not.found", null);
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.url.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;
@@ -302,6 +306,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return this.specificationUtil;
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED, readOnly = true)
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
         Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
         ParticipantConfigDTO participantConfigDTO;

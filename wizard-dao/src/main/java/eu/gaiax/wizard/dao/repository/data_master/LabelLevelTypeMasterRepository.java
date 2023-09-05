@@ -18,4 +18,5 @@ import java.util.List;
 public interface LabelLevelTypeMasterRepository extends BaseRepository<LabelLevelTypeMaster, String> {
 
     List<LabelLevelTypeInterface> findAllByActiveIsTrueAndLabelLevelQuestionMasterListIsNotNull();
+
 }

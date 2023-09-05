@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
@@ -26,7 +25,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,8 +101,10 @@ public class PolicyService {
         return new String[]{};
     }
 
+
     public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
-        JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
+        //    todo: implement evaluation after catalogue is finalized
+        /*JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         String countryCode;
 
         try {
@@ -115,10 +115,10 @@ public class PolicyService {
 
         if (!StringUtils.hasText(countryCode)) {
             throw new BadDataException("Legal Address does not have country parameter");
-        }
+        }*/
 
         JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
+        /*JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
         if (policyArray != null && policyArray.has(0)) {
             policyArray.forEach(policyUrl -> {
@@ -128,7 +128,7 @@ public class PolicyService {
                     throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
                 }
             });
-        }
+        }*/
 
         return serviceOffer;
     }
@@ -240,4 +240,5 @@ public class PolicyService {
         JsonNode legalAddress = catalogSelfDescription.get(StringPool.GX_LEGAL_ADDRESS);
         return legalAddress.get(StringPool.GX_COUNTRY_SUBDIVISION).asText();
     }
+
 }
