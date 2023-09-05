@@ -112,7 +112,7 @@ public class SignerService {
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
         String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
-        participantCredentialSubject.put("id", participantJsonUrl + "#0");
+        participantCredentialSubject.put("id", participantJsonUrl);
         participantCredentialSubject.put("type", "gx:LegalParticipant");
         String registrationId = participantJsonUrl + "#1";
         participantCredentialSubject.put("gx:legalRegistrationNumber", Map.of("id", registrationId));
