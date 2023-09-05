@@ -176,18 +176,7 @@ public class SignerService {
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
 
-            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
-            JSONObject participantSd = new JSONObject(participantString);
-            JSONArray vcs = participantSd.getJSONObject("selfDescriptionCredential").getJSONArray("verifiableCredential");
-            for (Object vc : vcs) {
-                JSONObject legalParticipantVc = (JSONObject) vc;
-                JSONObject credentialSubject = legalParticipantVc.getJSONObject("credentialSubject");
-                String type = credentialSubject.getString("type");
-                if (Objects.equals(type, "gx:LegalParticipant")) {
-                    participantJsonUrl = credentialSubject.getString("id");
-                }
-            }
-
+            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId()) + "#0";
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             if (!ownDid) {
                 this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
