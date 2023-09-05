@@ -176,18 +176,7 @@ public class SignerService {
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
 
-            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
-            JSONObject participantSd = new JSONObject(participantString);
-            JSONArray vcs = participantSd.getJSONObject("selfDescriptionCredential").getJSONArray("verifiableCredential");
-            for (Object vc : vcs) {
-                JSONObject legalParticipantVc = (JSONObject) vc;
-                JSONObject credentialSubject = legalParticipantVc.getJSONObject("credentialSubject");
-                String type = credentialSubject.getString("type");
-                if (Objects.equals(type, "gx:LegalParticipant")) {
-                    participantJsonUrl = credentialSubject.getString("id");
-                }
-            }
-
+            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId()) + "#0";
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             if (!ownDid) {
                 this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
@@ -242,9 +231,9 @@ public class SignerService {
     private void createParticipantCreationJob(Participant participant) {
         try {
             this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
-            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.info("SignerService(createParticipantCreationJob) -> Create legal participant corn has been scheduled.");
         } catch (Exception e) {
+            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.error("SignerService(createParticipantCreationJob) -> Not able to create legal participant corn for participant {}", participant.getId(), e);
         }
     }
@@ -252,7 +241,7 @@ public class SignerService {
     public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
+        providedBy.put("id", request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         request.getCredentialSubject().put("gx:name", request.getName());
@@ -368,7 +357,14 @@ public class SignerService {
                 jsonObject.put("service", new ArrayList<>());
                 services = jsonObject.getJSONArray("service");
             }
-            services.put(map);
+            List<String> serviceIds = new ArrayList<>();
+            for (Object service : services) {
+                JSONObject s = (JSONObject) service;
+                serviceIds.add(s.getString("id"));
+            }
+            if (!serviceIds.contains(id)) {
+                services.put(map);
+            }
             FileUtils.writeStringToFile(updatedFile, jsonObject.toString(), Charset.defaultCharset());
             this.s3Utils.uploadFile(participantId + "/did.json", updatedFile);
         } catch (Exception ex) {
