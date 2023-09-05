@@ -112,7 +112,7 @@ public class SignerService {
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get("credentialSubject"), typeReference);
         String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
-        participantCredentialSubject.put("id", participantJsonUrl);
+        participantCredentialSubject.put("id", participantJsonUrl + "#0");
         participantCredentialSubject.put("type", "gx:LegalParticipant");
         String registrationId = participantJsonUrl + "#1";
         participantCredentialSubject.put("gx:legalRegistrationNumber", Map.of("id", registrationId));
@@ -252,7 +252,7 @@ public class SignerService {
     public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
+        providedBy.put("id", request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         request.getCredentialSubject().put("gx:name", request.getName());
