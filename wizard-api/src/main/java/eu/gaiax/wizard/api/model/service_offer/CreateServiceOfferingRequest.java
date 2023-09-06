@@ -5,6 +5,7 @@
 package eu.gaiax.wizard.api.model.service_offer;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,6 +24,7 @@ public class CreateServiceOfferingRequest {
     private String email;
     private UUID id;
     private String issuer;
+    @Size(max = 500, message = "Description exceeds maximum character limit")
     private String description;
     private String privateKey;
     private String participantJsonUrl;
