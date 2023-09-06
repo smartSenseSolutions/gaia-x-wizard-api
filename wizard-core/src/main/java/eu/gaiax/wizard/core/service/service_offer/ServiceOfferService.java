@@ -143,12 +143,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             }
         }
         request.setCredentialSubject(credentialSubject);
-        String complianceCredential = this.signerService.signService(participant, request, serviceName);
+        Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
         //
         this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
 
-        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
-        List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential);
+        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get("serviceVc"), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+        List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential.get("serviceVc"));
 
         ServiceOffer serviceOffer = ServiceOffer.builder()
                 .name(request.getName())
@@ -158,8 +158,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
 
-        if (response.containsKey("trustIndex")) {
-            serviceOffer.setVeracityData(response.get("trustIndex").toString());
+        if (complianceCredential.containsKey("trustIndex")) {
+            serviceOffer.setVeracityData(complianceCredential.get("trustIndex"));
         }
         if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
             JsonNode descriptionCredential = this.objectMapper.readTree(InvokeService.executeRequest(labelLevelVc.get("vcUrl"), HttpMethod.GET)).path("credentialSubject");
@@ -169,7 +169,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         try {
-            String messageReferenceId = this.publishServiceComplianceToMessagingQueue(complianceCredential);
+            String messageReferenceId = this.publishServiceComplianceToMessagingQueue(complianceCredential.get("serviceVc"));
             log.info("service: {}, messageReferenceId: {}", request.getName(), messageReferenceId);
             serviceOffer.setMessageReferenceId(messageReferenceId);
         } catch (Exception e) {

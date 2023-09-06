@@ -238,7 +238,8 @@ public class SignerService {
         }
     }
 
-    public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+    public Map<String, String> signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+        Map<String, String> response = new HashMap<>();
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put("id", request.getParticipantJsonUrl());
@@ -268,12 +269,17 @@ public class SignerService {
                 .build();
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
-            String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
-            if (serviceOfferingString != null) {
-                this.hostJsonFile(serviceOfferingString, participant.getId(), name);
+            String serviceVc = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            String trustIndex = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("trustIndex"));
+            response.put("serviceVc", serviceVc);
+            if (trustIndex != null) {
+                response.put("trustIndex", trustIndex);
+            }
+            if (serviceVc != null) {
+                this.hostJsonFile(serviceVc, participant.getId(), name);
             }
             log.debug("Send request to signer for service create vc");
-            return serviceOfferingString;
+            return response;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
             throw new SignerException(e);
