@@ -375,7 +375,7 @@ public class ServiceOfferController extends BaseController {
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString()));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString(), false));
     }
 
     @Operation(summary = "Validate Service offering for enterprise, role = enterprise")
@@ -791,7 +791,7 @@ public class ServiceOfferController extends BaseController {
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = PUBLIC_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null, true));
     }
 
     @Operation(summary = "Get service locations from policy")
