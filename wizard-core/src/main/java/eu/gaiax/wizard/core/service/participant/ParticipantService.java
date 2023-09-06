@@ -308,14 +308,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED, readOnly = true)
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant = this.participantRepository.getReferenceById(UUID.fromString(uuid));
-        ParticipantConfigDTO participantConfigDTO;
-        try {
-            participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
-        } catch (Exception e) {
-            throw new EntityNotFoundException("participant.not.found");
-        }
+        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
+        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
+        ParticipantConfigDTO participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         if (participant.isOwnDidSolution()) {
             participantConfigDTO.setPrivateKeyRequired(!StringUtils.hasText(participant.getPrivateKeyId()));
         }
