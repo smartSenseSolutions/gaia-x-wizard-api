@@ -14,13 +14,18 @@ import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.PublishToQueueRequest;
+import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
+import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
+import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
@@ -71,6 +76,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final Vault vault;
     private final CertificateService certificateService;
     private final MessagingQueueClient messagingQueueClient;
+    private final SubdivisionCodeMasterService subdivisionCodeMasterService;
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -78,7 +84,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id) throws IOException {
         Map<String, Object> response = new HashMap<>();
-        this.validateServiceOfferRequest(request);
+        this.validateServiceOfferMainRequest(request);
         Participant participant;
         if (id != null) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
@@ -87,7 +93,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), request.isStoreVault());
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         }
@@ -99,10 +105,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
             request.setVerificationMethod(participant.getDid());
         }
-        if (request.isStoreVault()) {
+        if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
         }
         String serviceName = "service_" + this.getRandomString();
+        String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
@@ -110,7 +117,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             String policyUrl = this.wizardHost + policyId + ".json";
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createPolicy(odrlPolicyRequest, policyUrl));
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
@@ -123,14 +130,13 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         this.createTermsConditionHash(credentialSubject);
-        String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         // todo sign label level vc
         Map<String, String> labelLevelVc = new HashMap<>();
 
         if (request.getCredentialSubject().containsKey("gx:criteria")) {
             LabelLevelRequest labelLevelRequest = new LabelLevelRequest(this.objectMapper.convertValue(request.getCredentialSubject().get("gx:criteria"), Map.class), request.getPrivateKey(), request.getParticipantJsonUrl(), request.getVerificationMethod(), request.isStoreVault());
-            labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, hostUrl);
+            labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, serviceHostUrl);
             request.getCredentialSubject().remove("gx:criteria");
             if (labelLevelVc != null) {
                 request.getCredentialSubject().put("gx:labelLevel", labelLevelVc.get("vcUrl"));
@@ -139,18 +145,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         request.setCredentialSubject(credentialSubject);
         String complianceCredential = this.signerService.signService(participant, request, serviceName);
         //
-        this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
+        this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
 
-        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential);
-        final Integer labelLevel = -1;
 
         ServiceOffer serviceOffer = ServiceOffer.builder()
                 .name(request.getName())
                 .participant(participant)
                 .credential(serviceOffVc)
                 .serviceOfferStandardType(supportedStandardList)
-                .labelLevel(labelLevel)
                 .description(request.getDescription() == null ? "" : request.getDescription())
                 .build();
 
@@ -160,7 +164,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
             JsonNode descriptionCredential = this.objectMapper.readTree(InvokeService.executeRequest(labelLevelVc.get("vcUrl"), HttpMethod.GET)).path("credentialSubject");
             if (descriptionCredential != null) {
-                serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asInt());
+                serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asText());
             }
         }
 
@@ -208,6 +212,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private List<StandardTypeMaster> getSupportedStandardList(String serviceJsonString) {
         JsonNode serviceOfferingJsonNode = this.getServiceCredentialSubject(serviceJsonString);
         assert serviceOfferingJsonNode != null;
+
+        if (!serviceOfferingJsonNode.has(StringPool.GX_DATA_PROTECTION_REGIME)) {
+            return Collections.emptyList();
+        }
+
         if (serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).isValueNode()) {
             String dataProtectionRegime = serviceOfferingJsonNode.get(StringPool.GX_DATA_PROTECTION_REGIME).asText();
             return this.standardTypeMasterService.findAllByTypeIn(List.of(dataProtectionRegime));
@@ -261,16 +270,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
     }
 
-    public String[] getLocationFromService(ServiceIdRequest serviceIdRequest) {
-        return this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
-    }
+    public List<String> getLocationFromService(ServiceIdRequest serviceIdRequest) {
+        String[] subdivisionCodeArray = this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
+        if (subdivisionCodeArray.length > 0) {
+            List<SubdivisionName> subdivisionNameList = this.subdivisionCodeMasterService.getNameListBySubdivisionCode(subdivisionCodeArray);
+            if (!CollectionUtils.isEmpty(subdivisionNameList)) {
+                return subdivisionNameList.stream().map(SubdivisionName::name).toList();
+            }
+        }
 
-    public PageResponse<ServiceAndResourceListDTO> getServiceOfferingList(FilterRequest filterRequest) {
-        Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
-        List<ServiceAndResourceListDTO> serviceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
-        });
-
-        return PageResponse.of(serviceList, serviceOfferPage, filterRequest.getSort());
+        return Collections.emptyList();
     }
 
     @Override

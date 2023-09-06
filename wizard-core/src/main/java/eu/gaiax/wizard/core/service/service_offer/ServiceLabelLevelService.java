@@ -61,23 +61,23 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
 
     public ServiceLabelLevel saveServiceLabelLevelLink(String json, String path, Participant participant, ServiceOffer serviceOffer) {
         Credential labelLevel = this.credentialService.createCredential(json, path, CredentialTypeEnum.LABEL_LEVEL.getCredentialType(), "", participant);
-        return ServiceLabelLevel.builder()
-                .credential(labelLevel)
-                .serviceOffer(serviceOffer)
-                .participant(participant).build();
+        return this.serviceLabelLevelRepository.save(
+                ServiceLabelLevel.builder()
+                        .credential(labelLevel)
+                        .serviceOffer(serviceOffer)
+                        .participant(participant).build()
+        );
     }
-
 
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
         File file = null;
         try {
-            String uuid = UUID.randomUUID().toString();
-            String fileName = uuid + "/" + labelLevelFileUpload.level() + "/" + labelLevelFileUpload.type() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
+            String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
             file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(labelLevelFileUpload.file().getBytes());
             fos.close();
-            this.s3Utils.uploadFileWithPublicAcl(fileName, file);
+            this.s3Utils.uploadFile(fileName, file);
             return this.s3Utils.getObject(fileName);
         } catch (Exception e) {
             throw new RemoteException("File not Upload " + e.getMessage());
@@ -85,7 +85,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
             file.delete();
         }
     }
-    
+
     private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, String assignerTo) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);

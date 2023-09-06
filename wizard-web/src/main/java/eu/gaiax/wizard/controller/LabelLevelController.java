@@ -1,6 +1,8 @@
 package eu.gaiax.wizard.controller;
 
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.LabelLevelFileTypeEnum;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelFileUpload;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelRequest;
 import eu.gaiax.wizard.core.service.service_offer.ServiceLabelLevelService;
@@ -26,14 +28,14 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 public class LabelLevelController extends BaseController {
     private final ServiceLabelLevelService labelLevelService;
 
-    @Operation(summary = "Create Resource")
+    @Operation(summary = "Create Label-Level VC")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Create label level vc", value = """
                             {
                               "gx:criteria": {
                                 "1.1.1": {
-                                  "evi    dence": {
+                                  "evidence": {
                                     "pdf": {
                                       "buffer": {},
                                       "Modified": "2023-08-17T07:01:54.095Z",
@@ -56,8 +58,7 @@ public class LabelLevelController extends BaseController {
                                   "reason": "1.1.1 Reasoning"
                                 }
                               }
-                            }
-                            """)
+                            }""")
             })
     })
     @PostMapping(path = LABEL_LEVEL, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
@@ -67,6 +68,12 @@ public class LabelLevelController extends BaseController {
 
     @PostMapping(path = LABEL_LEVEL_FILE_UPLOAD, consumes = MULTIPART_FORM_DATA_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Object> uploadLabelLevelFile(@Valid @ModelAttribute LabelLevelFileUpload labelLevelFileUpload) throws IOException {
+        try {
+            LabelLevelFileTypeEnum.valueOf(labelLevelFileUpload.fileType());
+        } catch (Exception e) {
+            throw new BadDataException("Please select a valid file type");
+        }
+
         return CommonResponse.of(this.labelLevelService.uploadLabelLevelFile(labelLevelFileUpload));
     }
 }

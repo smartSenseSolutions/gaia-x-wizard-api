@@ -8,4 +8,6 @@ public interface Vault {
 
     Map<String, Object> get(String secretName);
 
+    boolean patch(String path, Map<String, Object> patch);
+
 }

@@ -26,7 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +57,7 @@ public class PolicyService {
         return policyMap;
     }
 
-    @NotNull
+    /*@NotNull
     private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permission = new ArrayList<>();
         Map<String, Object> perMap = new HashMap<>();
@@ -68,6 +67,24 @@ public class PolicyService {
         List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
         constraintMap.put("leftOperand", leftOperand);
+        constraintMap.put("operator", "isAnyOf");
+        constraintMap.put("rightOperand", rightOperand);
+        constraint.add(constraintMap);
+        perMap.put("constraint", constraint);
+        permission.add(perMap);
+        return permission;
+    }*/
+
+    @NotNull
+    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
+        List<Map<String, Object>> permission = new ArrayList<>();
+        Map<String, Object> perMap = new HashMap<>();
+        perMap.put("target", target);
+        perMap.put("assigner", assigner);
+        perMap.put("action", "use");
+        List<Map<String, Object>> constraint = new ArrayList<>();
+        Map<String, Object> constraintMap = new HashMap<>();
+        constraintMap.put("name", leftOperand);
         constraintMap.put("operator", "isAnyOf");
         constraintMap.put("rightOperand", rightOperand);
         constraint.add(constraintMap);
@@ -103,8 +120,10 @@ public class PolicyService {
         return new String[]{};
     }
 
+
     public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
-        JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
+        //    todo: implement evaluation after catalogue is finalized
+        /*JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         String countryCode;
 
         try {
@@ -115,10 +134,10 @@ public class PolicyService {
 
         if (!StringUtils.hasText(countryCode)) {
             throw new BadDataException("Legal Address does not have country parameter");
-        }
+        }*/
 
         JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
+        /*JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
         if (policyArray != null && policyArray.has(0)) {
             policyArray.forEach(policyUrl -> {
@@ -128,7 +147,7 @@ public class PolicyService {
                     throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
                 }
             });
-        }
+        }*/
 
         return serviceOffer;
     }
@@ -155,10 +174,11 @@ public class PolicyService {
         return null;
     }
 
+    @SneakyThrows
     private JsonNode getCatalogueDescription(String catalogueUrl) {
         String catalogue = InvokeService.executeRequest(catalogueUrl, HttpMethod.GET);
         Validate.isNull(catalogue).launch(new BadDataException("Invalid Catalogue URL"));
-        return this.objectMapper.valueToTree(catalogue);
+        return this.objectMapper.readTree(catalogue);
     }
 
     @SneakyThrows
@@ -186,11 +206,11 @@ public class PolicyService {
             throw new EntityNotFoundException("Policy not found for the specified entity.");
         }
 
-        Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+        Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("use")).findAny();
         Constraint constraint = null;
         if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
             constraint = rule.get().getConstraint().stream()
-                    .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                    .filter(c -> c.getName().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
                     .findAny()
                     .orElse(null);
         }
@@ -236,8 +256,71 @@ public class PolicyService {
         return false;
     }
 
-    private String getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
+    private boolean isCountryInPermittedRegion(List<String> countryCode, Constraint constraint) {
+
+        if (constraint == null) {
+//            no location constraint found, allow access
+            return true;
+        } else if (constraint.getOperator().equals("isAnyOf")) {
+            ArrayList<String> countryCodeNew = new ArrayList<>(countryCode);
+            countryCodeNew.retainAll(Arrays.asList(constraint.getRightOperand()));
+            return !CollectionUtils.isEmpty(countryCodeNew);
+        }
+
+        return false;
+    }
+
+/*    private String getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
         JsonNode legalAddress = catalogSelfDescription.get(StringPool.GX_LEGAL_ADDRESS);
         return legalAddress.get(StringPool.GX_COUNTRY_SUBDIVISION).asText();
+    }*/
+
+    private List<String> getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
+
+        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(catalogSelfDescription);
+
+        if (policyArray != null && policyArray.has(0)) {
+            for (JsonNode policyUrl : policyArray) {
+                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
+
+                if (constraint.getName().equals("spatial")) {
+                    return List.of(constraint.getRightOperand());
+                }
+            }
+        }
+
+        return Collections.emptyList();
     }
+
+    public JsonNode evaluatePolicyV2(PolicyEvaluationRequest policyEvaluationRequest) {
+        JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
+        List<String> countryCode;
+
+        try {
+            countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
+        } catch (Exception e) {
+            throw new BadDataException("Legal Address does not have country parameter");
+        }
+
+        if (CollectionUtils.isEmpty(countryCode)) {
+            throw new BadDataException("Legal Address does not have country parameter");
+        }
+
+        JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
+        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
+
+        if (policyArray != null && policyArray.has(0)) {
+            policyArray.forEach(policyUrl -> {
+                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
+
+                if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                    throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                }
+            });
+        }
+
+        return serviceOffer;
+    }
+
+
 }

@@ -118,13 +118,15 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
                 request.setVerificationMethod(participant.getDid());
             }
-            if (request.isStoreVault()) {
-                this.certificateService.uploadCertificatesToVault(participant.getDomain(), null, null, null, request.getPrivateKey());
+            if (request.isStoreVault() && !participant.isKeyStored()) {
+                this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+                participant.setKeyStored(true);
+                this.participantRepository.save(participant);
             }
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJson(), request.getVerificationMethod(), request.getPrivateKey(), false);
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
         }
 
@@ -157,7 +159,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             return this.repository.save(resource);
         }
 
-        if (StringUtils.hasText(id) && request.isStoreVault()) {
+        if (StringUtils.hasText(id) && request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             participant.setKeyStored(true);
             this.participantRepository.save(participant);
@@ -227,6 +229,9 @@ public class ResourceService extends BaseService<Resource, UUID> {
             if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("type").toString());
             } else {
+                if (!StringUtils.hasText(request.getCredentialSubject().get("subType").toString())) {
+                    throw new BadDataException("sub.type.required");
+                }
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
                 credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));

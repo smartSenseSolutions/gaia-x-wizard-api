@@ -22,6 +22,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Policy")
 public class PolicyController extends BaseController {
 
     private final PolicyService policyService;
@@ -38,5 +39,12 @@ public class PolicyController extends BaseController {
     @PostMapping(path = WizardRestConstant.POLICY_EVALUATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<JsonNode> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
         return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
+    }
+
+
+    @Operation(summary = "Policy evaluator for catalogue")
+    @PostMapping(path = WizardRestConstant.POLICY_EVALUATE_V2, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<JsonNode> evaluatePolicyV2(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
+        return CommonResponse.of(this.policyService.evaluatePolicyV2(policyEvaluationRequest));
     }
 }

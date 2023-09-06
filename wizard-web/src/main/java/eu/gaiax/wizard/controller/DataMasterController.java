@@ -142,7 +142,7 @@ public class DataMasterController extends BaseController {
     )
     @PostMapping(MASTER_DATA_FILTER)
     public CommonResponse<PageResponse> filterTypeMaster(
-            @PathVariable(name = "dataType") @Parameter(description = "[access, entity, format, registration, request, standard, subdivision]") String dataType,
+            @PathVariable(name = "dataType") @Parameter(description = "[access, entity, format, registration, request, standard, subdivision, spdxLicense]") String dataType,
             @Valid @RequestBody FilterRequest filterRequest) {
         BaseService service = this.masterDataServiceFactory.getInstance(dataType);
         Page page = service.filter(filterRequest);

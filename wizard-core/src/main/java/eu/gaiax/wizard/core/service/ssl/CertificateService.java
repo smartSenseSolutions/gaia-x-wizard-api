@@ -28,10 +28,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -377,7 +374,11 @@ public class CertificateService {
         if (StringUtils.hasText(pkcs8Key)) {
             data.put("pkcs8.key", pkcs8Key);
         }
-        this.vault.put(participantId, data);
+        if (Objects.isNull(this.vault.get(participantId))) {
+            this.vault.put(participantId, data);
+        } else {
+            this.vault.patch(participantId, data);
+        }
         log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
     }
 

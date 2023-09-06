@@ -9,18 +9,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "format_type_master")
+@Table(name = "spdx_license_master")
 @Getter
 @Setter
-public class FormatTypeMaster extends SuperEntity {
+public class SpdxLicenseMaster extends SuperEntity {
+
+    @Column(name = "license_id")
+    private String licenseId;
 
     @Column(name = "name")
     private String name;
 
-    @Column(name = "type")
-    private String type;
+    @Column(name = "reference")
+    private String reference;
 
     @Column(name = "active")
     private Boolean active;
-
 }

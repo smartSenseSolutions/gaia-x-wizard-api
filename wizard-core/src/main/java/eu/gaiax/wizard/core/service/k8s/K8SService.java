@@ -133,7 +133,7 @@ public class K8SService {
             log.debug("K8sService(createIngress) -> Ingress has been created for participant -> {} and domain ->{}", participant.getId(), participant.getDomain());
             this.createDidCreationJob(participant);
         } catch (Exception e) {
-            log.error("K8sService(createIngress) -> Not able to create ingress for participant {}", participant.getId(), e);
+            log.error("K8sService(createIngress) -> Not able to create ingress for participant {}, with exception: {}", participant.getId(), ((ApiException) e).getResponseBody(), e);
             participant.setStatus(RegistrationStatus.INGRESS_CREATION_FAILED.getStatus());
         } finally {
             this.participantRepository.save(participant);
