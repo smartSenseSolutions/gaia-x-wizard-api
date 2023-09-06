@@ -8,6 +8,8 @@ import lombok.Setter;
 public class Constraint {
     private String leftOperand;
 
+    private String name;
+
     private String operator;
 
     private String[] rightOperand;

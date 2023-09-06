@@ -109,6 +109,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
         }
         String serviceName = "service_" + this.getRandomString();
+        String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         Map<String, Object> credentialSubject = request.getCredentialSubject();
         if (request.getCredentialSubject().containsKey("gx:policy")) {
@@ -116,7 +117,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             String policyUrl = this.wizardHost + policyId + ".json";
             Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
             List<String> country = policy.get("gx:location");
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, "verifiableCredential.credentialSubject.legalAddress.country", participant.getDid(), participant.getDid(), this.wizardHost, serviceName);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createPolicy(odrlPolicyRequest, policyUrl));
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
@@ -129,14 +130,13 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         this.createTermsConditionHash(credentialSubject);
-        String hostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
         // todo sign label level vc
         Map<String, String> labelLevelVc = new HashMap<>();
 
         if (request.getCredentialSubject().containsKey("gx:criteria")) {
             LabelLevelRequest labelLevelRequest = new LabelLevelRequest(this.objectMapper.convertValue(request.getCredentialSubject().get("gx:criteria"), Map.class), request.getPrivateKey(), request.getParticipantJsonUrl(), request.getVerificationMethod(), request.isStoreVault());
-            labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, hostUrl);
+            labelLevelVc = this.labelLevelService.createLabelLevelVc(labelLevelRequest, participant, serviceHostUrl);
             request.getCredentialSubject().remove("gx:criteria");
             if (labelLevelVc != null) {
                 request.getCredentialSubject().put("gx:labelLevel", labelLevelVc.get("vcUrl"));
@@ -145,9 +145,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         request.setCredentialSubject(credentialSubject);
         String complianceCredential = this.signerService.signService(participant, request, serviceName);
         //
-        this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
+        this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
 
-        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, hostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential, serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential);
 
         ServiceOffer serviceOffer = ServiceOffer.builder()
