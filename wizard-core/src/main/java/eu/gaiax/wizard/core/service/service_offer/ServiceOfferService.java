@@ -386,7 +386,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     public PageResponse<ServiceFilterResponse> filterServiceOffering(FilterRequest filterRequest, String participantId) {
 
         if (StringUtils.hasText(participantId)) {
-            FilterCriteria participantCriteria = new FilterCriteria(StringPool.PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
+            FilterCriteria participantCriteria = new FilterCriteria(StringPool.FILTER_PARTICIPANT_ID, Operator.CONTAIN, Collections.singletonList(participantId));
             List<FilterCriteria> filterCriteriaList = filterRequest.getCriteria() != null ? filterRequest.getCriteria() : new ArrayList<>();
             filterCriteriaList.add(participantCriteria);
             filterRequest.setCriteria(filterCriteriaList);
