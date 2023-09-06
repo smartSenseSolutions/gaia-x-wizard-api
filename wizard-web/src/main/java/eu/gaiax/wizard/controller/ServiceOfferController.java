@@ -1029,7 +1029,7 @@ public class ServiceOfferController extends BaseController {
 
     @GetMapping(path = PARTICIPANT_SERVICE_OFFER_DETAILS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceDetailResponse> getServiceOfferingDetails(@PathVariable(value = "participantId") String participantId, @PathVariable(value = "serviceOfferId") UUID serviceOfferId, Principal principal) {
-//        this.validateParticipantId(participantId, principal);
+        this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.serviceOfferService.getServiceOfferingById(serviceOfferId));
     }
 
