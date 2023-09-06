@@ -292,7 +292,7 @@ public class PolicyService {
         return Collections.emptyList();
     }
 
-    public JsonNode evaluatePolicyTest(PolicyEvaluationRequest policyEvaluationRequest) {
+    public JsonNode evaluatePolicyV2(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         List<String> countryCode;
 

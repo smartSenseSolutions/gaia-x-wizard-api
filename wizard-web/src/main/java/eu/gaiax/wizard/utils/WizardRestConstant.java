@@ -32,6 +32,8 @@ public class WizardRestConstant {
 
     public static final String POLICY_EVALUATE = "/public/policy/evaluate";
 
+    public static final String POLICY_EVALUATE_V2 = "/public/policy/evaluate/v2";
+
     public static final String PARTICIPANT_CONFIG = "/participant/config";
 
     public static final String PARTICIPANT_EXPORT = "/participant/{participantId}/export";
