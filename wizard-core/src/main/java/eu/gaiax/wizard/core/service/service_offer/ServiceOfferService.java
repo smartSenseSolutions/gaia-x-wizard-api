@@ -471,7 +471,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             aggregateAndDependantDto.setCredentialSubjectId(node.get("id").asText());
 
             String serviceOrResourceJsonString = InvokeService.executeRequest(node.get("id").asText(), HttpMethod.GET);
-            JsonNode serviceOrResourceJson = null;
+            JsonNode serviceOrResourceJson;
             try {
                 serviceOrResourceJson = new ObjectMapper().readTree(serviceOrResourceJsonString);
                 ArrayNode verifiableCredentialList = (ArrayNode) serviceOrResourceJson.get("selfDescriptionCredential").get("verifiableCredential");
