@@ -4,10 +4,7 @@ import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceFilterResponse;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferingLocationResponse;
+import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferViewService;
@@ -19,13 +16,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.UUID;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -1032,5 +1027,10 @@ public class ServiceOfferController extends BaseController {
         return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, participantId));
     }
 
+    @GetMapping(path = PARTICIPANT_SERVICE_OFFER_DETAILS, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<ServiceDetailResponse> getServiceOfferingDetails(@PathVariable(value = "participantId") String participantId, @PathVariable(value = "serviceOfferId") UUID serviceOfferId, Principal principal) {
+        this.validateParticipantId(participantId, principal);
+        return CommonResponse.of(this.serviceOfferService.getServiceOfferingById(serviceOfferId));
+    }
 
 }

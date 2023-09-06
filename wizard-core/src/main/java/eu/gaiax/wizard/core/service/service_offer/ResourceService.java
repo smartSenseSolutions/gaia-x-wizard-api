@@ -192,6 +192,9 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
         Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
+        if (Objects.nonNull(request.getCredentialSubject().get("gx:description")) && (String.valueOf(request.getCredentialSubject().get("gx:description")).length() > 500)) {
+            throw new BadDataException("Description exceeds maximum character limit");
+        }
         this.validateAggregationOf(request);
     }
 
