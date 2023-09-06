@@ -144,9 +144,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
         request.setCredentialSubject(credentialSubject);
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        //
-        this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
-
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
+        }
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get("serviceVc"), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential.get("serviceVc"));
 
