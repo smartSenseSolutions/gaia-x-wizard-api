@@ -27,7 +27,6 @@ import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
@@ -44,7 +43,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -163,7 +161,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             serviceOffer.setVeracityData(complianceCredential.get("trustIndex"));
         }
         if (Objects.requireNonNull(labelLevelVc).containsKey("labelLevelVc")) {
-            JsonNode descriptionCredential = this.objectMapper.readTree(InvokeService.executeRequest(labelLevelVc.get("vcUrl"), HttpMethod.GET)).path("credentialSubject");
+            JsonNode descriptionCredential = this.objectMapper.readTree(labelLevelVc.get("labelLevelVc")).path("credentialSubject");
             if (descriptionCredential != null) {
                 serviceOffer.setLabelLevel(descriptionCredential.path("gx:labelLevel").asText());
             }

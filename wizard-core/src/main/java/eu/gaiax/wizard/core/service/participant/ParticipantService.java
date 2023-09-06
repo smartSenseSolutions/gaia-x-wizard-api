@@ -222,6 +222,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         if (Objects.isNull(participant)) {
             participant = Participant.builder()
                     .did(issuer)
+                    .email(issuer)
                     .keyStored(request.store())
                     .build();
             participant = this.participantRepository.save(participant);
