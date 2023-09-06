@@ -1,5 +1,6 @@
 package eu.gaiax.wizard.api.model;
 
+import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,27 +17,10 @@ public class ServiceFilterResponse {
     private String name;
 
     private String labelLevel;
-    
+
     private CredentialDto credential;
 
     private List<StandardTypeDto> serviceOfferStandardType;
 
     private Date createdAt;
-
-    @Getter
-    @Setter
-    public static class StandardTypeDto {
-
-        private UUID id;
-        private String type;
-    }
-
-    @Getter
-    @Setter
-    public static class CredentialDto {
-
-        private UUID id;
-        private String vcUrl;
-    }
-
 }

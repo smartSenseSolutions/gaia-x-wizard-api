@@ -228,11 +228,11 @@ public class PolicyService {
         for (String policyUrl : policyUrlList) {
             accessPolicy = this.getPolicyForServiceOffer(policyUrl);
 
-            if (accessPolicy != null && accessPolicy.getPermission().stream().anyMatch(rule -> rule.getAction().equalsIgnoreCase("view"))) {
-                Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("view")).findAny();
+            if (accessPolicy != null && accessPolicy.getPermission().stream().anyMatch(rule -> rule.getAction().equalsIgnoreCase("use"))) {
+                Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("use")).findAny();
                 if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
                     constraint = rule.get().getConstraint().stream()
-                            .filter(c -> c.getLeftOperand().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                            .filter(c -> c.getName().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
                             .findAny()
                             .orElse(null);
                 }

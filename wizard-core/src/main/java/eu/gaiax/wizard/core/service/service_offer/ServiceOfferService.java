@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
@@ -14,10 +15,8 @@ import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.PageResponse;
-import eu.gaiax.wizard.api.model.PublishToQueueRequest;
-import eu.gaiax.wizard.api.model.ServiceFilterResponse;
+import eu.gaiax.wizard.api.exception.EntityNotFoundException;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.api.model.service_offer.*;
@@ -56,6 +55,7 @@ import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.StreamSupport;
 
 @Service
 @RequiredArgsConstructor
@@ -399,4 +399,99 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         return PageResponse.of(resourceList, serviceOfferPage, filterRequest.getSort());
     }
 
+    @SneakyThrows
+    public ServiceDetailResponse getServiceOfferingById(UUID serviceOfferId) {
+        ServiceOffer serviceOffer = this.serviceOfferRepository.findById(serviceOfferId).orElse(null);
+        Validate.isNull(serviceOffer).launch(new EntityNotFoundException("service.offer.not.found"));
+
+        ServiceDetailResponse serviceDetailResponse = this.objectMapper.convertValue(serviceOffer, ServiceDetailResponse.class);
+
+        String serviceOfferJsonString = InvokeService.executeRequest(serviceOffer.getVcUrl(), HttpMethod.GET);
+        JsonNode serviceOfferJson = new ObjectMapper().readTree(serviceOfferJsonString);
+        ArrayNode verifiableCredentialList = (ArrayNode) serviceOfferJson.get("selfDescriptionCredential").get("verifiableCredential");
+        JsonNode serviceOfferCredentialSubject = this.getServiceOfferCredentialSubject(verifiableCredentialList);
+
+        serviceDetailResponse.setDataAccountExport(this.getDataAccountExportDto(serviceOfferCredentialSubject));
+        serviceDetailResponse.setTnCUrl(serviceOfferCredentialSubject.get("gx:termsAndConditions").get("gx:URL").asText());
+        serviceDetailResponse.setProtectionRegime(this.objectMapper.convertValue(serviceOfferCredentialSubject.get("gx:dataProtectionRegime"), new TypeReference<>() {
+        }));
+
+        serviceDetailResponse.setLocations(Set.of(this.policyService.getLocationByServiceOfferingId(serviceDetailResponse.getCredential().getVcUrl())));
+
+        if (serviceOfferCredentialSubject.has("gx:aggregationOf")) {
+            serviceDetailResponse.setResources(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get("gx:aggregationOf"), false));
+        }
+        if (serviceOfferCredentialSubject.has("gx:dependsOn")) {
+            serviceDetailResponse.setDependedServices(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get("gx:dependsOn"), true));
+        }
+
+        return serviceDetailResponse;
+    }
+
+    private DataAccountExportDto getDataAccountExportDto(JsonNode credentialSubject) {
+
+        return DataAccountExportDto.builder()
+                .requestType(credentialSubject.get("gx:dataAccountExport").get("gx:requestType").asText())
+                .accessType(credentialSubject.get("gx:dataAccountExport").get("gx:accessType").asText())
+                .formatType(this.getFormatSet(credentialSubject.get("gx:dataAccountExport").get("gx:formatType")))
+                .build();
+    }
+
+    private Set<String> getFormatSet(JsonNode formatTypeNode) {
+        return formatTypeNode.isArray() ? this.objectMapper.convertValue(formatTypeNode, new TypeReference<>() {
+        }) : Collections.singleton(formatTypeNode.asText());
+    }
+
+    private JsonNode getServiceOfferCredentialSubject(JsonNode credentialSubjectList) {
+        for (JsonNode credential : credentialSubjectList) {
+            if (credential.get(StringPool.CREDENTIAL_SUBJECT).get("type").asText().equals("gx:ServiceOffering")) {
+                return credential.get(StringPool.CREDENTIAL_SUBJECT);
+            }
+        }
+
+        return null;
+    }
+
+    private JsonNode getResourceCredentialSubject(JsonNode credentialSubjectList) {
+        for (JsonNode credential : credentialSubjectList) {
+            if (ResourceType.getValueSet().contains(credential.get(StringPool.CREDENTIAL_SUBJECT).get("type").asText())) {
+                return credential.get(StringPool.CREDENTIAL_SUBJECT);
+            }
+        }
+
+        return null;
+    }
+
+
+    private Set<AggregateAndDependantDto> getAggregationOrDependentDtoSet(ArrayNode aggregationOrDependentArrayNode, boolean isService) {
+        Set<AggregateAndDependantDto> aggregateAndDependantDtoSet = new HashSet<>();
+
+        StreamSupport.stream(aggregationOrDependentArrayNode.spliterator(), true).forEach(node -> {
+            AggregateAndDependantDto aggregateAndDependantDto = new AggregateAndDependantDto();
+            aggregateAndDependantDto.setCredentialSubjectId(node.get("id").asText());
+
+            String serviceOrResourceJsonString = InvokeService.executeRequest(node.get("id").asText(), HttpMethod.GET);
+            JsonNode serviceOrResourceJson = null;
+            try {
+                serviceOrResourceJson = new ObjectMapper().readTree(serviceOrResourceJsonString);
+                ArrayNode verifiableCredentialList = (ArrayNode) serviceOrResourceJson.get("selfDescriptionCredential").get("verifiableCredential");
+
+                JsonNode serviceOfferOrResourceCredentialSubject;
+                if (isService) {
+                    serviceOfferOrResourceCredentialSubject = this.getServiceOfferCredentialSubject(verifiableCredentialList);
+                } else {
+                    serviceOfferOrResourceCredentialSubject = this.getResourceCredentialSubject(verifiableCredentialList);
+                }
+                aggregateAndDependantDto.setName(serviceOfferOrResourceCredentialSubject.get("gx:name").asText());
+
+            } catch (JsonProcessingException e) {
+                log.error("Error while parsing JSON. url: " + node.get("id").asText());
+            }
+
+            aggregateAndDependantDtoSet.add(aggregateAndDependantDto);
+
+        });
+
+        return aggregateAndDependantDtoSet;
+    }
 }
