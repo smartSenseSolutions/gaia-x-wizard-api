@@ -82,7 +82,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private String wizardHost;
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
-    public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id) throws IOException {
+    public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id, boolean isOwnDid) throws IOException {
         Map<String, Object> response = new HashMap<>();
         this.validateServiceOfferMainRequest(request);
         Participant participant;
@@ -96,6 +96,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+            isOwnDid = true;
         }
 
         if (participant.isKeyStored()) {
@@ -144,7 +145,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
         request.setCredentialSubject(credentialSubject);
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        if (!participant.isOwnDidSolution()) {
+        if (!isOwnDid) {
             this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
         }
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get("serviceVc"), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
