@@ -49,6 +49,7 @@ public class StringPool {
      * The constant PARTICIPANT_ID.
      */
     public static final String PARTICIPANT_ID = "participantId";
+    public static final String FILTER_PARTICIPANT_ID = "participant.id";
     /**
      * The constant JOB_TYPE.
      */

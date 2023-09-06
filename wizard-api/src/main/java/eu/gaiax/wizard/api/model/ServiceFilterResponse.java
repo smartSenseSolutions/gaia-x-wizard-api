@@ -1,6 +1,5 @@
 package eu.gaiax.wizard.api.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,9 +16,8 @@ public class ServiceFilterResponse {
     private String name;
 
     private String labelLevel;
-
-    @JsonAlias("vcUrl")
-    private String selfDescription;
+    
+    private CredentialDto credential;
 
     private List<StandardTypeDto> serviceOfferStandardType;
 
@@ -31,6 +29,14 @@ public class ServiceFilterResponse {
 
         private UUID id;
         private String type;
+    }
+
+    @Getter
+    @Setter
+    public static class CredentialDto {
+
+        private UUID id;
+        private String vcUrl;
     }
 
 }
