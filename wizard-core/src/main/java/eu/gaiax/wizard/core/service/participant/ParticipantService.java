@@ -137,6 +137,12 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
         }
 
+        if (Objects.nonNull(request.ownDid()) && request.ownDid()) {
+            participant.setDid(request.issuer());
+            participant.setOwnDidSolution(request.ownDid());
+            participant = this.participantRepository.save(participant);
+        }
+
         Credential credentials = this.credentialService.getLegalParticipantCredential(participant.getId());
         Validate.isNotNull(credentials).launch("already.legal.participant");
         this.createLegalParticipantJson(participant, request);
