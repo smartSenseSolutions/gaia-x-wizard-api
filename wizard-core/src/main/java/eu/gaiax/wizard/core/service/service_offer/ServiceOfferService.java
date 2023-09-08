@@ -93,10 +93,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
-            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false);
+            ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
-            isOwnDid = true;
         }
 
         if (participant.isKeyStored()) {
@@ -145,7 +144,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
         request.setCredentialSubject(credentialSubject);
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        if (!isOwnDid) {
+        if (!participant.isOwnDidSolution()) {
             this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
         }
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get("serviceVc"), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
