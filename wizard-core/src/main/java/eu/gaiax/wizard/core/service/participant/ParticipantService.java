@@ -225,7 +225,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
                     .email(issuer)
                     .legalName(issuer)
                     .shortName(issuer)
-                    .ownDidSolution(true)
+                    .ownDidSolution(request.ownDid())
                     .keyStored(request.store())
                     .build();
             participant = this.participantRepository.save(participant);
