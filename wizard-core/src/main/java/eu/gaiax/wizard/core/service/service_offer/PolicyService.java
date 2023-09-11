@@ -44,7 +44,7 @@ public class PolicyService {
     private final ContextConfig contextConfig;
 
 
-    public Map<String, Object> createPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) throws IOException {
+    public Map<String, Object> createServiceOfferPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) {
         Map<String, Object> policyMap = new HashMap<>();
         policyMap.put("@context", this.contextConfig.ODRLPolicy());
         policyMap.put("type", "policy");
@@ -52,7 +52,7 @@ public class PolicyService {
             hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
         }
         policyMap.put("id", hostUrl);
-        List<Map<String, Object>> permission = getMaps(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
+        List<Map<String, Object>> permission = getServiceOfferPermissionList(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand(), odrlPolicyRequest.customAttribute());
         policyMap.put("permission", permission);
         return policyMap;
     }
@@ -76,21 +76,31 @@ public class PolicyService {
     }*/
 
     @NotNull
-    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
-        List<Map<String, Object>> permission = new ArrayList<>();
-        Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", target);
-        perMap.put("assigner", assigner);
-        perMap.put("action", "use");
+    private static List<Map<String, Object>> getServiceOfferPermissionList(List<String> rightOperand, String target, String assigner, String leftOperand, List<String> customAttribute) {
+        List<Map<String, Object>> permissionList = new ArrayList<>();
+        Map<String, Object> permissionMap = new HashMap<>();
+        permissionMap.put("target", target);
+        permissionMap.put("assigner", assigner);
+        permissionMap.put("action", "use");
         List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
         constraintMap.put("name", leftOperand);
         constraintMap.put("operator", "isAnyOf");
         constraintMap.put("rightOperand", rightOperand);
         constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
-        permission.add(perMap);
-        return permission;
+
+        if (!CollectionUtils.isEmpty(customAttribute)) {
+            Map<String, Object> customConstraintMap = new HashMap<>();
+            customConstraintMap.put("name", "customAttribute");
+            customConstraintMap.put("operator", "isAnyOf");
+            customConstraintMap.put("rightOperand", customAttribute);
+            constraint.add(customConstraintMap);
+        }
+
+        permissionMap.put("constraint", constraint);
+        permissionList.add(permissionMap);
+
+        return permissionList;
     }
 
     public void hostODRLPolicy(String hostPolicyJson, String hostedPath) {

@@ -51,6 +51,9 @@ public class ServiceOfferController extends BaseController {
                                 "gx:policy": {
                                   "gx:location": [
                                     "BE-BRU"
+                                  ],
+                                  "gx:customAttribute": [
+                                    "BE-BRU", "IN-GJ"
                                   ]
                                 },
                                 "gx:dataAccountExport": {
@@ -255,6 +258,9 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
+                                                                    "gx:customAttribute": [
+                                                                        "BE-BRU", "IN-GJ"
+                                                                    ]
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",
@@ -388,6 +394,9 @@ public class ServiceOfferController extends BaseController {
                                 "gx:policy": {
                                   "gx:location": [
                                     "BE-BRU"
+                                  ],
+                                  "gx:customAttribute": [
+                                     "BE-BRU", "IN-GJ"
                                   ]
                                 },
                                 "gx:dataAccountExport": {
@@ -466,6 +475,9 @@ public class ServiceOfferController extends BaseController {
                                 "gx:policy": {
                                   "gx:location": [
                                     "BE-BRU"
+                                  ],
+                                  "gx:customAttribute": [
+                                     "BE-BRU", "IN-GJ"
                                   ]
                                 },
                                 "gx:dataAccountExport": {
@@ -670,6 +682,9 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
+                                                                    "gx:customAttribute": [
+                                                                        "BE-BRU", "IN-GJ"
+                                                                    ]
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",
