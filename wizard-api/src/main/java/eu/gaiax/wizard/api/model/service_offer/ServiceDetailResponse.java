@@ -1,6 +1,5 @@
 package eu.gaiax.wizard.api.model.service_offer;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,14 +29,11 @@ public class ServiceDetailResponse {
 
     private Set<AggregateAndDependantDto> resources = new HashSet<>();
 
-    @JsonAlias("trustScore")
-    private String veracityData;
-
     private DataAccountExportDto dataAccountExport;
 
     private String tnCUrl;
 
     private ServiceProviderDto participant;
 
-    private Double trustScore;
+    private Double trustIndex;
 }

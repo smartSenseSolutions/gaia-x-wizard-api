@@ -405,6 +405,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         Validate.isNull(serviceOffer).launch(new EntityNotFoundException("service.offer.not.found"));
 
         ServiceDetailResponse serviceDetailResponse = this.objectMapper.convertValue(serviceOffer, ServiceDetailResponse.class);
+        JsonNode veracityData = this.objectMapper.readTree(serviceOffer.getVeracityData());
+        serviceDetailResponse.setTrustIndex(veracityData.get("trustIndex").asDouble());
 
         String serviceOfferJsonString = InvokeService.executeRequest(serviceOffer.getVcUrl(), HttpMethod.GET);
         JsonNode serviceOfferJson = new ObjectMapper().readTree(serviceOfferJsonString);
