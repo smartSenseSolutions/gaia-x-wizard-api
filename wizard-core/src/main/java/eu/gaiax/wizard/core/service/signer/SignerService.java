@@ -261,11 +261,14 @@ public class SignerService {
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
         verifiableCredentialList.add(verifiableCredential);
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
+                .isVault(participant.isKeyStored())
                 .build();
+        if (!participant.isKeyStored()) {
+            signerServiceRequest.setPrivateKey(HashingService.encodeToBase64(request.getPrivateKey()));
+        }
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
             String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
