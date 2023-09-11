@@ -29,6 +29,7 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
+import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.vault.Vault;
@@ -38,7 +39,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -203,6 +206,11 @@ public class SignerService {
             return;
         }
 
+        if (!this.fetchX509Certificate(participant.getDomain())) {
+            this.createDidCreationJob(participant);
+            return;
+        }
+
         File file = new File("/tmp/did.json");
         try {
             String domain = participant.getDomain();
@@ -225,6 +233,17 @@ public class SignerService {
             this.participantRepository.save(participant);
             CommonUtils.deleteFile(file);
             log.info("SignerService(createDid) -> Participant details has been updated.");
+        }
+    }
+
+    private boolean fetchX509Certificate(String domain) {
+        try {
+            String x509Certificate = InvokeService.executeRequest("https://" + domain + "/.well-known/x509CertificateChain.pem", HttpMethod.GET);
+            Validate.isFalse(StringUtils.hasText(x509Certificate)).launch("x509certificate.not.resolved");
+            return true;
+        } catch (Exception ex) {
+            log.error("Not able to fetch x509 certificate for domain {}", domain, ex);
+            return false;
         }
     }
 
@@ -409,6 +428,16 @@ public class SignerService {
         } catch (Exception ex) {
             log.error("Issue occurred while validating the registration number.", ex);
             return false;
+        }
+    }
+
+    private void createDidCreationJob(Participant participant) {
+        try {
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_DID, 0);
+            log.info("K8sService(createDidCreationJob) -> DID creation corn has been scheduled.");
+        } catch (SchedulerException e) {
+            log.info("K8sService(createDidCreationJob) -> DID creation failed for participant {}", participant.getId());
+            participant.setStatus(RegistrationStatus.DID_JSON_CREATION_FAILED.getStatus());
         }
     }
 }
