@@ -163,14 +163,16 @@ public class SignerService {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}, ownDid {}", participant.getId(), ownDid);
         File file = new File("/tmp/participant.json");
         try {
+            boolean isVault = false;
             String privateKey = key;
             if (!ownDid || participant.isKeyStored()) {
-                privateKey = (String) this.vault.get(key).get("pkcs8.key");
-                Validate.isFalse(StringUtils.hasText(privateKey)).launch(new EntityNotFoundException("keys.not.found"));
+                isVault = true;
                 log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from store with key {}", key);
+            } else {
+                privateKey = HashingService.encodeToBase64(privateKey);
             }
             Map<String, Object> credentials = this.prepareCredentialSubjectForLegalParticipant(participant);
-            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), issuer, verificationMethod, credentials);
+            CreateVCRequest request = new CreateVCRequest(privateKey, issuer, verificationMethod, credentials, isVault);
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
@@ -281,11 +283,14 @@ public class SignerService {
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
         verifiableCredentialList.add(verifiableCredential);
         SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
                 .issuer(participant.getDid())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
+                .isVault(participant.isKeyStored())
                 .build();
+        if (!participant.isKeyStored()) {
+            signerServiceRequest.setPrivateKey(HashingService.encodeToBase64(request.getPrivateKey()));
+        }
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
             String serviceVc = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));

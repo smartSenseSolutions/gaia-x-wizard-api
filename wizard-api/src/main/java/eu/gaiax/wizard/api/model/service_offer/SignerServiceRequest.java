@@ -13,4 +13,5 @@ public class SignerServiceRequest {
     private String verificationMethod;
     private String privateKey;
     private VerifiableCredential vcs;
+    private boolean isVault;
 }

@@ -243,10 +243,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceRequest.put("credentialSubject", credentialSub);
         map.put("resource", resourceRequest);
         Map<String, Object> resourceMap = new HashMap<>();
-        resourceMap.put("privateKey", HashingService.encodeToBase64(request.getPrivateKey()));
         resourceMap.put("issuer", participant.getDid());
         resourceMap.put("verificationMethod", request.getVerificationMethod());
         resourceMap.put("vcs", map);
+        resourceMap.put("isVault", participant.isKeyStored());
+        if (!participant.isKeyStored()) {
+            resourceMap.put("privateKey", HashingService.encodeToBase64(request.getPrivateKey()));
+        }
         return this.signerService.signResource(resourceMap, participant.getId(), name);
     }
 

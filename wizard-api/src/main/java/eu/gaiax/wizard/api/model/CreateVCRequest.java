@@ -9,5 +9,6 @@ import java.util.Map;
 /**
  * The type Create participant request.
  */
-public record CreateVCRequest(String privateKey, String issuer, String verificationMethod, Map<String, Object> vcs) {
+public record CreateVCRequest(String privateKey, String issuer, String verificationMethod, Map<String, Object> vcs,
+                              boolean isVault) {
 }
