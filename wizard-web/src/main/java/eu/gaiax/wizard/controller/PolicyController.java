@@ -40,11 +40,4 @@ public class PolicyController extends BaseController {
     public CommonResponse<JsonNode> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
         return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
     }
-
-
-    @Operation(summary = "Policy evaluator for catalogue")
-    @PostMapping(path = WizardRestConstant.POLICY_EVALUATE_V2, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<JsonNode> evaluatePolicyV2(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
-        return CommonResponse.of(this.policyService.evaluatePolicyV2(policyEvaluationRequest));
-    }
 }
