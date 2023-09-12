@@ -284,7 +284,7 @@ public class SignerService {
         verifiableCredentialList.add(verifiableCredential);
         String privateKey = participant.getId().toString();
         if (!participant.isKeyStored()) {
-            privateKey = HashingService.encodeToBase64(privateKey);
+            privateKey = HashingService.encodeToBase64(request.getPrivateKey());
         }
         try {
             SignerServiceRequest signerServiceRequest = new SignerServiceRequest(participant.getDid(), request.getVerificationMethod(), privateKey, verifiableCredential, participant.isKeyStored());
