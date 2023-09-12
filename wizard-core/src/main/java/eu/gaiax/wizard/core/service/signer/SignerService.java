@@ -286,7 +286,7 @@ public class SignerService {
                 .issuer(participant.getDid())
                 .verificationMethod(request.getVerificationMethod())
                 .vcs(verifiableCredential)
-                .isVault(participant.isKeyStored())
+                .vault(participant.isKeyStored())
                 .build();
         if (!participant.isKeyStored()) {
             signerServiceRequest.setPrivateKey(HashingService.encodeToBase64(request.getPrivateKey()));
