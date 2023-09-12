@@ -302,6 +302,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.validateAggregationOf(request);
         this.validateDependsOn(request);
         this.validateDataAccountExport(request);
+        if (!request.getCredentialSubject().containsKey("gx:policy")) {
+            throw new BadDataException("policy.not.null");
+        }
     }
 
     private void validateCredentialSubject(CreateServiceOfferingRequest request) {
