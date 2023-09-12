@@ -107,7 +107,10 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
         if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+            participant.setKeyStored(true);
+            participantRepository.save(participant);
         }
+        
         String serviceName = "service_" + this.getRandomString();
         String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
