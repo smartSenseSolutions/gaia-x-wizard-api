@@ -333,6 +333,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
                     List<String> customAttribute = policy.get("gx:customAttribute");
                     credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant, customAttribute)));
+                } else {
+                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant, null)));
                 }
             }
         }
