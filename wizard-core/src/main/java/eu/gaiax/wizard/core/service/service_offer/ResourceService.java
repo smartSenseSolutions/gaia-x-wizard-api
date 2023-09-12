@@ -263,17 +263,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 this.signerService.validateRequestUrl(ids, "manufacturedBy.of.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:producedBy")) {
-                JsonArray aggregationArray = jsonObject
+                JsonObject produceBy = jsonObject
                         .getAsJsonObject("credentialSubject")
-                        .getAsJsonArray("gx:producedBy");
-                List<String> ids = new ArrayList<>();
+                        .getAsJsonObject("gx:producedBy");
 
-                for (int i = 0; i < aggregationArray.size(); i++) {
-                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get("id").getAsString();
-                    ids.add(idValue);
-                }
-                this.signerService.validateRequestUrl(ids, "producedBy.of.not.found", null);
+                String idValue = produceBy.get("id").getAsString();
+
+                this.signerService.validateRequestUrl(List.of(idValue), "producedBy.of.not.found", null);
             }
         }
         if (request.getCredentialSubject().containsKey("gx:containsPII")) {
