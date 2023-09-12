@@ -67,4 +67,7 @@ CREATE TABLE service_label_level(
 ALTER TABLE service_offer ADD message_reference_id varchar(50) NULL;
 
 --changeset Neha:6
-ALTER TABLE public.service_offer ALTER COLUMN label_level TYPE varchar(20) USING label_level::varchar;
+ALTER TABLE service_offer ALTER COLUMN label_level TYPE varchar(20) USING label_level::varchar;
+
+--changeset Neha:7
+ALTER TABLE service_offer ALTER COLUMN name TYPE varchar(255) USING name::varchar;
