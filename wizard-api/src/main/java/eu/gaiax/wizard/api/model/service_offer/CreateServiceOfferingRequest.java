@@ -20,6 +20,7 @@ import java.util.UUID;
 @Setter
 public class CreateServiceOfferingRequest {
     @NotNull(message = "service name required")
+    @Size(max = 255, message = "Name exceeds maximum character limit")
     private String name;
     private String email;
     private UUID id;
