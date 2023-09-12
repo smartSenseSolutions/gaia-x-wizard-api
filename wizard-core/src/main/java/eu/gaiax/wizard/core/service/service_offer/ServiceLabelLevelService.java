@@ -113,6 +113,8 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         labelLevelMap.put("isVault", participant.isKeyStored());
         if (!participant.isKeyStored()) {
             labelLevelMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
+        } else {
+            labelLevelMap.put("privateKey", participant.getId().toString());
         }
         return this.signerService.signLabelLevel(labelLevelMap, participant.getId(), name);
     }
