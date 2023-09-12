@@ -46,6 +46,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -87,7 +88,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
     private String wizardHost;
 
     @NotNull
-    private static List<Map<String, Object>> getMaps(Participant participant) {
+    private static List<Map<String, Object>> getMaps(Participant participant, List<String> customAttribute) {
         List<Map<String, Object>> permission = new ArrayList<>();
         Map<String, Object> perMap = new HashMap<>();
         perMap.put("target", participant.getDid());
@@ -95,7 +96,15 @@ public class ResourceService extends BaseService<Resource, UUID> {
         perMap.put("action", "view");
         List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("default", "allow");
+        if (!CollectionUtils.isEmpty(customAttribute)) {
+            Map<String, Object> customConstraintMap = new HashMap<>();
+            customConstraintMap.put("name", "customAttribute");
+            customConstraintMap.put("operator", "isAnyOf");
+            customConstraintMap.put("rightOperand", customAttribute);
+            constraint.add(customConstraintMap);
+        } else {
+            constraintMap.put("default", "allow");
+        }
         constraint.add(constraintMap);
         perMap.put("constraint", constraint);
         permission.add(perMap);
@@ -167,14 +176,14 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return null;
     }
 
-    private String hostOdrlPolicy(Participant participant) throws JsonProcessingException {
+    private String hostOdrlPolicy(Participant participant, List<String> customAttribute) throws JsonProcessingException {
         Map<String, Object> policyMap = new HashMap<>();
 
         String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + ".json";
         policyMap.put("@context", this.contextConfig.ODRLPolicy());
         policyMap.put("type", "Offer");
         policyMap.put("id", this.wizardHost + hostUrl);
-        List<Map<String, Object>> permission = getMaps(participant);
+        List<Map<String, Object>> permission = getMaps(participant, customAttribute);
         policyMap.put("permission", permission);
         String policyJson = this.objectMapper.writeValueAsString(policyMap);
         File file = new File("/tmp/" + hostUrl);
@@ -190,13 +199,95 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    private void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
+    public void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
         Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
         if (Objects.nonNull(request.getCredentialSubject().get("gx:description")) && (String.valueOf(request.getCredentialSubject().get("gx:description")).length() > 500)) {
             throw new BadDataException("Description exceeds maximum character limit");
         }
         this.validateAggregationOf(request);
+        JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
+
+        if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
+
+            if (request.getCredentialSubject().containsKey("gx:maintainedBy")) {
+                JsonArray aggregationArray = jsonObject
+                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonArray("gx:maintainedBy");
+                List<String> ids = new ArrayList<>();
+
+                for (int i = 0; i < aggregationArray.size(); i++) {
+                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                    String idValue = aggregationObject.get("id").getAsString();
+                    ids.add(idValue);
+                }
+                this.signerService.validateRequestUrl(ids, "maintainedBy.of.not.found", null);
+            }
+            if (request.getCredentialSubject().containsKey("gx:ownedBy")) {
+                JsonArray aggregationArray = jsonObject
+                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonArray("gx:ownedBy");
+                List<String> ids = new ArrayList<>();
+
+                for (int i = 0; i < aggregationArray.size(); i++) {
+                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                    String idValue = aggregationObject.get("id").getAsString();
+                    ids.add(idValue);
+                }
+                this.signerService.validateRequestUrl(ids, "ownedBy.of.not.found", null);
+            }
+            if (request.getCredentialSubject().containsKey("gx:manufacturedBy")) {
+                JsonArray aggregationArray = jsonObject
+                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonArray("gx:manufacturedBy");
+                List<String> ids = new ArrayList<>();
+
+                for (int i = 0; i < aggregationArray.size(); i++) {
+                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                    String idValue = aggregationObject.get("id").getAsString();
+                    ids.add(idValue);
+                }
+                this.signerService.validateRequestUrl(ids, "manufacturedBy.of.not.found", null);
+            }
+        } else {
+            if (request.getCredentialSubject().containsKey("gx:copyrightOwnedBy")) {
+                JsonArray aggregationArray = jsonObject
+                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonArray("gx:copyrightOwnedBy");
+                List<String> ids = new ArrayList<>();
+
+                for (int i = 0; i < aggregationArray.size(); i++) {
+                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                    String idValue = aggregationObject.get("id").getAsString();
+                    ids.add(idValue);
+                }
+                this.signerService.validateRequestUrl(ids, "manufacturedBy.of.not.found", null);
+            }
+            if (request.getCredentialSubject().containsKey("gx:producedBy")) {
+                JsonArray aggregationArray = jsonObject
+                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonArray("gx:producedBy");
+                List<String> ids = new ArrayList<>();
+
+                for (int i = 0; i < aggregationArray.size(); i++) {
+                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                    String idValue = aggregationObject.get("id").getAsString();
+                    ids.add(idValue);
+                }
+                this.signerService.validateRequestUrl(ids, "producedBy.of.not.found", null);
+            }
+        }
+        if (request.getCredentialSubject().containsKey("gx:containsPII")) {
+            if (Boolean.parseBoolean(request.getCredentialSubject().get("gx:containsPII").toString()) == true) {
+                if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
+                    throw new BadDataException("legal.basic.not.null");
+                }
+                if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
+                    throw new BadDataException("data.protection.contact.required");
+                }
+            }
+        }
     }
+
 
     private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
         if (request.getCredentialSubject().containsKey("gx:aggregationOf")) {
@@ -215,7 +306,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws JsonProcessingException {
+    public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws
+            JsonProcessingException {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
@@ -237,7 +329,11 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 }
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
-                credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
+                if (request.getCredentialSubject().containsKey("gx:policy")) {
+                    Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
+                    List<String> customAttribute = policy.get("gx:customAttribute");
+                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant, customAttribute)));
+                }
             }
         }
         resourceRequest.put("credentialSubject", credentialSub);

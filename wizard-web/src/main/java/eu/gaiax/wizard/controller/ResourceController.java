@@ -230,6 +230,11 @@ public class ResourceController extends BaseController {
         return CommonResponse.of(this.resourceService.createResource(request, null), "resource.created");
     }
 
+    @PostMapping(path = "public/resource/validation", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public void validateResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
+        this.resourceService.validateResourceRequest(request);
+    }
+
     @Tag(name = "Resources")
     @Operation(summary = "Public API to filter resources")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
