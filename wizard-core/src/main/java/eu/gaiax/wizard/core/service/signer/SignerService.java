@@ -165,9 +165,11 @@ public class SignerService {
             if (!ownDid || participant.isKeyStored()) {
                 isVault = true;
                 log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from store with key {}", key);
+            } else {
+                privateKey = HashingService.encodeToBase64(privateKey);
             }
             Map<String, Object> credentials = this.prepareCredentialSubjectForLegalParticipant(participant);
-            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), issuer, verificationMethod, credentials, isVault);
+            CreateVCRequest request = new CreateVCRequest(privateKey, issuer, verificationMethod, credentials, isVault);
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
