@@ -130,38 +130,6 @@ public class PolicyService {
         return new String[]{};
     }
 
-
-    public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
-        //    todo: implement evaluation after catalogue is finalized
-        /*JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
-        String countryCode;
-
-        try {
-            countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
-        } catch (Exception e) {
-            throw new BadDataException("Legal Address does not have country parameter");
-        }
-
-        if (!StringUtils.hasText(countryCode)) {
-            throw new BadDataException("Legal Address does not have country parameter");
-        }*/
-
-        JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        /*JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
-
-        if (policyArray != null && policyArray.has(0)) {
-            policyArray.forEach(policyUrl -> {
-                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
-
-                if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                    throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
-                }
-            });
-        }*/
-
-        return serviceOffer;
-    }
-
     private JsonNode getPolicyArrayFromServiceOffer(JsonNode serviceOffer) {
         JsonNode selfDescriptionCredential = serviceOffer.get("selfDescriptionCredential");
         ObjectReader reader = this.objectMapper.readerFor(new TypeReference<List<JsonNode>>() {
@@ -254,18 +222,6 @@ public class PolicyService {
         return constraint;
     }
 
-    private boolean isCountryInPermittedRegion(String countryCode, Constraint constraint) {
-
-        if (constraint == null) {
-//            no location constraint found, allow access
-            return true;
-        } else if (constraint.getOperator().equals("isAnyOf")) {
-            return Arrays.stream(constraint.getRightOperand()).anyMatch(policyCountry -> policyCountry.equalsIgnoreCase(countryCode));
-        }
-
-        return false;
-    }
-
     private boolean isCountryInPermittedRegion(List<String> countryCode, Constraint constraint) {
 
         if (constraint == null) {
@@ -279,11 +235,6 @@ public class PolicyService {
 
         return false;
     }
-
-/*    private String getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
-        JsonNode legalAddress = catalogSelfDescription.get(StringPool.GX_LEGAL_ADDRESS);
-        return legalAddress.get(StringPool.GX_COUNTRY_SUBDIVISION).asText();
-    }*/
 
     private List<String> getCountryCodeFromSelfDescription(JsonNode catalogSelfDescription) {
 
@@ -302,7 +253,7 @@ public class PolicyService {
         return Collections.emptyList();
     }
 
-    public JsonNode evaluatePolicyV2(PolicyEvaluationRequest policyEvaluationRequest) {
+    public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         List<String> countryCode;
 
@@ -321,16 +272,19 @@ public class PolicyService {
 
         if (policyArray != null && policyArray.has(0)) {
             policyArray.forEach(policyUrl -> {
-                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
+                try {
+                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
 
-                if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                    throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                        throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                    }
+                } catch (Exception e) {
+                    log.error("Error while fetching location constraint from policy with URL: {}", policyUrl, e);
                 }
             });
         }
 
         return serviceOffer;
     }
-
 
 }

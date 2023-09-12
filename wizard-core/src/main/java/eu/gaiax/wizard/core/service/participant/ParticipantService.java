@@ -71,7 +71,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @Transactional
     @SneakyThrows
     public Participant registerParticipant(ParticipantRegisterRequest request) {
-        log.debug("ParticipantService(registerParticipant) -> Participant registertation with email {}", request.email());
+        log.debug("ParticipantService(registerParticipant) -> Participant registration with email {}", request.email());
         Validate.isFalse(StringUtils.hasText(request.email())).launch("email.required");
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
@@ -149,7 +149,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.createLegalParticipantJson(participant, request);
         if (request.store()) {
             participant.setKeyStored(request.store());
-            this.certificateService.uploadCertificatesToVault(participantId.toString(), null, null, null, request.privateKey());
+            this.certificateService.uploadCertificatesToVault(participantId, null, null, null, request.privateKey());
             this.participantRepository.save(participant);
         }
         return participant;
