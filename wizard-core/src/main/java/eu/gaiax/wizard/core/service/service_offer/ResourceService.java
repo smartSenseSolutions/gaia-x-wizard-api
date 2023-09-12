@@ -249,6 +249,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceMap.put("isVault", participant.isKeyStored());
         if (!participant.isKeyStored()) {
             resourceMap.put("privateKey", HashingService.encodeToBase64(request.getPrivateKey()));
+        } else {
+            resourceMap.put("privateKey", participant.getId().toString());
         }
         return this.signerService.signResource(resourceMap, participant.getId(), name);
     }

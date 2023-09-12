@@ -290,6 +290,8 @@ public class SignerService {
                 .build();
         if (!participant.isKeyStored()) {
             signerServiceRequest.setPrivateKey(HashingService.encodeToBase64(request.getPrivateKey()));
+        } else {
+            signerServiceRequest.setPrivateKey(participant.getId().toString());
         }
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
