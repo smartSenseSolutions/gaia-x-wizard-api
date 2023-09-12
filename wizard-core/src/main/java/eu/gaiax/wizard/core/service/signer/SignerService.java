@@ -282,18 +282,12 @@ public class SignerService {
                         .build()).build();
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
         verifiableCredentialList.add(verifiableCredential);
-        SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .issuer(participant.getDid())
-                .verificationMethod(request.getVerificationMethod())
-                .vcs(verifiableCredential)
-                .vault(participant.isKeyStored())
-                .build();
+        String privateKey = participant.getId().toString();
         if (!participant.isKeyStored()) {
-            signerServiceRequest.setPrivateKey(HashingService.encodeToBase64(request.getPrivateKey()));
-        } else {
-            signerServiceRequest.setPrivateKey(participant.getId().toString());
+            privateKey = HashingService.encodeToBase64(privateKey);
         }
         try {
+            SignerServiceRequest signerServiceRequest = new SignerServiceRequest(participant.getDid(), request.getVerificationMethod(), privateKey, verifiableCredential, participant.isKeyStored());
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
             String serviceVc = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
             String trustIndex = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("trustIndex"));
