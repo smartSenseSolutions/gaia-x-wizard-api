@@ -169,15 +169,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             }
         }
 
+        serviceOffer = this.serviceOfferRepository.save(serviceOffer);
+
         try {
             String messageReferenceId = this.publishServiceComplianceToMessagingQueue(complianceCredential.get("serviceVc"));
             log.info("service: {}, messageReferenceId: {}", request.getName(), messageReferenceId);
             serviceOffer.setMessageReferenceId(messageReferenceId);
+            this.serviceOfferRepository.save(serviceOffer);
         } catch (Exception e) {
             log.error("Error encountered while publishing service to message queue", e);
         }
-
-        serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
         if (!CollectionUtils.isEmpty(labelLevelVc)) {
             this.labelLevelService.saveServiceLabelLevelLink(labelLevelVc.get("labelLevelVc"), labelLevelVc.get("vcUrl"), participant, serviceOffer);
