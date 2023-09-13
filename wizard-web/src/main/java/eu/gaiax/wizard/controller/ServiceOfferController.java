@@ -37,602 +37,600 @@ public class ServiceOfferController extends BaseController {
             @Content(examples = {
                     @ExampleObject(name = "Create Service offer", value = """
                             {
-                               "name": "Data analytics for Tesla cars - Registered in Berlin",
-                               "verificationMethod": null,
-                               "description": "Based on the data resource of data points from Tesla cars, we provide various analytics",
-                               "privateKey": null,
-                               "credentialSubject": {
-                                 "gx:termsAndConditions": {
-                                   "gx:URL": "https://smartsensesolutions.com/privacy-policy"
-                                 },
-                                 "gx:policy": {
-                                   "gx:location": [
-                                     "DE-BE"
-                                   ],
-                                   "gx:customAttribute": "https://www.smartsensesolutions.com/",
-                                 },
-                                 "gx:dataAccountExport": {
-                                   "gx:requestType": "API",
-                                   "gx:accessType": "Digital",
-                                   "gx:formatType": [
-                                     "application/3gppHal+json"
-                                   ]
-                                 },
-                                 "gx:aggregationOf": [
-                                   {
-                                     "id": "https://wizard-api.smart-x.smartsenselabs.com/0c41b5ae-340b-485b-8774-b31ad75355a4/resource_7a46ec44-813a-4b49-ab61-59b47619797f.json"
-                                   }
-                                 ],
-                                 "gx:dataProtectionRegime": [
-                                   "GDPR2016",
-                                   "PDPA2012",
-                                   "CCPA2018",
-                                   "LGPD2019"
-                                 ],
-                                 "gx:criteria": {
-                                   "P1.1.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.1.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.1.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.1.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.5": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.6": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.7": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.8": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.9": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.2.10": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.3.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.3.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.3.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.3.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P1.3.5": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.1.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.1.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.1.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.5": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.6": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.2.7": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.3.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.3.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P2.3.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.5": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.6": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.7": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.8": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.9": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.10": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.11": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.12": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.13": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.14": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.15": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.16": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.17": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.18": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.19": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P3.1.20": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P4.1.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P4.1.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.2": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.3": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.4": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.5": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.6": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.1.7": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   },
-                                   "P5.2.1": {
-                                     "evidence": {
-                                       "website": "",
-                                       "pdf": {},
-                                       "vc": {}
-                                     },
-                                     "response": "Confirm",
-                                     "reason": ""
-                                   }
-                                 },
-                                 "type": "gx:ServiceOffering"
-                               }
-                             }
-                            """)
+                              "name": "name of service",
+                              "description": "test service data",
+                              "credentialSubject": {
+                                "gx:termsAndConditions": {
+                                  "gx:URL": "https://aws.amazon.com/service-terms/"
+                                },
+                                "gx:policy": {
+                                  "gx:location": [
+                                    "BE-BRU"
+                                  ],
+                                  "gx:customAttribute": [
+                                    "BE-BRU",
+                                    "IN-GJ"
+                                  ]
+                                },
+                                "gx:dataAccountExport": {
+                                  "gx:requestType": "API",
+                                  "gx:accessType": "physical",
+                                  "gx:formatType": "pdf"
+                                },
+                                "gx:aggregationOf": [
+                                  {
+                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
+                                  }
+                                ],
+                                "gx:dependsOn": [
+                                  {
+                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/service_S7GZ.json"
+                                  }
+                                ],
+                                "gx:dataProtectionRegime": "GDPR2016",
+                                "type": "gx:ServiceOffering",
+                                "gx:criteria": {
+                                  "P1.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.8": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.9": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.10": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.8": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.9": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.10": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.11": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.12": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.13": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.14": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.15": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.16": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.17": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.18": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.19": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.20": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P4.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P4.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  }
+                                }
+                              }
+                            }""")
             })
     })
     @ApiResponses(value = {
@@ -1022,33 +1020,596 @@ public class ServiceOfferController extends BaseController {
                               "description": "test service data",
                               "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                               "credentialSubject": {
-                                "gx:termsAndConditions": {
-                                  "gx:URL": "https://aws.amazon.com/service-terms/"
-                                },
-                                "gx:policy": {
-                                  "gx:location": [
-                                    "BE-BRU"
-                                  ],
-                                  "gx:customAttribute": "https://www.smartsensesolutions.com/",
-                                },
-                                "gx:dataAccountExport": {
-                                  "gx:requestType": "API",
-                                  "gx:accessType": "physical",
-                                  "gx:formatType": "pdf"
-                                },
-                                "gx:aggregationOf": [
-                                  {
-                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
-                                  }
-                                ],
-                                "gx:dependsOn": [
-                                  {
-                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/service_S7GZ.json"
-                                  }
-                                ],
-                                "gx:dataProtectionRegime": "GDPR2016",
-                                "type": "gx:ServiceOffering"
-                              }
+                                   "gx:termsAndConditions": {
+                                     "gx:URL": "https://aws.amazon.com/service-terms/"
+                                   },
+                                   "gx:policy": {
+                                     "gx:location": [
+                                       "BE-BRU"
+                                     ],
+                                     "gx:customAttribute": [
+                                       "BE-BRU",
+                                       "IN-GJ"
+                                     ]
+                                   },
+                                   "gx:dataAccountExport": {
+                                     "gx:requestType": "API",
+                                     "gx:accessType": "physical",
+                                     "gx:formatType": "pdf"
+                                   },
+                                   "gx:aggregationOf": [
+                                     {
+                                       "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
+                                     }
+                                   ],
+                                   "gx:dependsOn": [
+                                     {
+                                       "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/service_S7GZ.json"
+                                     }
+                                   ],
+                                   "gx:dataProtectionRegime": "GDPR2016",
+                                   "type": "gx:ServiceOffering",
+                                   "gx:criteria": {
+                                     "P1.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.8": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.9": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.10": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.8": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.9": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.10": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.11": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.12": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.13": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.14": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.15": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.16": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.17": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.18": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.19": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.20": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P4.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P4.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     }
+                                   }
+                                 }
                             }
                             """)
             })

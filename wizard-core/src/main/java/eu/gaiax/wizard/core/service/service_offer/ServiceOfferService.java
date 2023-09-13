@@ -122,10 +122,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, policyUrl));
-            if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
+            if (StringUtils.hasText(hostPolicyJson)) {
                 this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
-                if (credentialSubject.containsKey("gx:policy")) {
+                if (StringUtils.hasText(policy.customAttribute())) {
                     credentialSubject.put("gx:policy", List.of(policyUrl, policy.customAttribute()));
+                } else {
+                    credentialSubject.put("gx:policy", List.of(policyUrl));
                 }
                 this.credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
             }
