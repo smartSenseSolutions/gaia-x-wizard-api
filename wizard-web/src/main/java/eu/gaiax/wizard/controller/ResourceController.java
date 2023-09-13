@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +35,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ResourceController extends BaseController {
 
     private final ResourceService resourceService;
+    private final MessageSource messageSource;
 
 
     @Operation(summary = "Create Resource")
@@ -129,7 +132,7 @@ public class ResourceController extends BaseController {
     })
     public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
         this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), "Resource created successfully");
+        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -224,7 +227,7 @@ public class ResourceController extends BaseController {
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
-        return CommonResponse.of(this.resourceService.createResource(request, null), "Resource created successfully");
+        return CommonResponse.of(this.resourceService.createResource(request, null), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
     @PostMapping(path = "public/resource/validation", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

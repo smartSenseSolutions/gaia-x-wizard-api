@@ -255,11 +255,11 @@ public class PolicyService {
         try {
             countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
         } catch (Exception e) {
-            throw new BadDataException("Legal Address does not have country parameter");
+            throw new BadDataException("catalogue.location.invalid");
         }
 
         if (CollectionUtils.isEmpty(countryCode)) {
-            throw new BadDataException("Legal Address does not have country parameter");
+            throw new BadDataException("catalogue.location.invalid");
         }
 
         JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
@@ -271,17 +271,14 @@ public class PolicyService {
                 if (policyUrl.endsWith(".json")) {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
-                    try {
-                        if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                            throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
-                        }
-                    } catch (Exception e) {
-                        log.error("Error while fetching location constraint from policy with URL: {}", policyUrl, e);
+                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                        throw new ForbiddenAccessException("service.access.forbidden");
                     }
+
                 }
             }
         }
-        
+
         return serviceOffer;
     }
 
