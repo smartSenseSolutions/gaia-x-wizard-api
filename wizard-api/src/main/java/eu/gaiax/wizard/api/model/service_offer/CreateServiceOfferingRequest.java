@@ -31,6 +31,6 @@ public class CreateServiceOfferingRequest {
     private String participantJsonUrl;
     private String verificationMethod;
     private boolean storeVault = false;
-    @NotNull(message = "credential subject required")
+    @NotNull(message = "Credential subject required")
     private Map<String, Object> credentialSubject;
 }

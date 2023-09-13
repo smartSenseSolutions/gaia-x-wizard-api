@@ -47,7 +47,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -91,25 +90,19 @@ public class ResourceService extends BaseService<Resource, UUID> {
     private String wizardHost;
 
     @NotNull
-    private static List<Map<String, Object>> getMaps(Participant participant, List<String> customAttribute) {
+    private static List<Map<String, Object>> getMaps(Participant participant) {
         List<Map<String, Object>> permission = new ArrayList<>();
         Map<String, Object> perMap = new HashMap<>();
         perMap.put("target", participant.getDid());
         perMap.put("assigner", participant.getDid());
         perMap.put("action", "view");
-        List<Map<String, Object>> constraint = new ArrayList<>();
+
+        /*List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
-        if (!CollectionUtils.isEmpty(customAttribute)) {
-            Map<String, Object> customConstraintMap = new HashMap<>();
-            customConstraintMap.put("name", "customAttribute");
-            customConstraintMap.put("operator", "isAnyOf");
-            customConstraintMap.put("rightOperand", customAttribute);
-            constraint.add(customConstraintMap);
-        } else {
-            constraintMap.put("default", "allow");
-        }
+        constraintMap.put("default", "allow");
         constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
+
+        perMap.put("constraint", constraint);*/
         permission.add(perMap);
         return permission;
     }
@@ -181,14 +174,14 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return null;
     }
 
-    private String hostOdrlPolicy(Participant participant, List<String> customAttribute) throws JsonProcessingException {
+    private String hostOdrlPolicy(Participant participant) throws JsonProcessingException {
         Map<String, Object> policyMap = new HashMap<>();
 
         String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + ".json";
         policyMap.put("@context", this.contextConfig.ODRLPolicy());
         policyMap.put("type", "Offer");
         policyMap.put("id", this.wizardHost + hostUrl);
-        List<Map<String, Object>> permission = getMaps(participant, customAttribute);
+        List<Map<String, Object>> permission = getMaps(participant);
         policyMap.put("permission", permission);
         String policyJson = this.objectMapper.writeValueAsString(policyMap);
         File file = new File("/tmp/" + hostUrl);
@@ -331,11 +324,11 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
                 credentialSub.remove("subType");
                 if (request.getCredentialSubject().containsKey("gx:policy")) {
-                    Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
-                    List<String> customAttribute = policy.get("gx:customAttribute");
-                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant, customAttribute)));
+                    Map<String, String> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
+                    String customAttribute = policy.get("gx:customAttribute");
+                    credentialSub.put("gx:policy", List.of(customAttribute));
                 } else {
-                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant, null)));
+                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
                 }
             }
         }

@@ -18,6 +18,7 @@ import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
+import eu.gaiax.wizard.api.model.policy.ServiceOfferPolicyDto;
 import eu.gaiax.wizard.api.model.policy.SubdivisionName;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -83,7 +84,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public ServiceOfferResponse createServiceOffering(CreateServiceOfferingRequest request, String id, boolean isOwnDid) throws IOException {
-        Map<String, Object> response = new HashMap<>();
         this.validateServiceOfferMainRequest(request);
         Participant participant;
         if (id != null) {
@@ -108,9 +108,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             participant.setKeyStored(true);
-            participantRepository.save(participant);
+            this.participantRepository.save(participant);
         }
-        
+
         String serviceName = "service_" + this.getRandomString();
         String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
@@ -118,16 +118,14 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (request.getCredentialSubject().containsKey("gx:policy")) {
             String policyId = participant.getId() + "/" + serviceName + "_policy";
             String policyUrl = this.wizardHost + policyId + ".json";
-            Map<String, List<String>> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
-            List<String> country = policy.get("gx:location");
-            List<String> customAttribute = policy.get("gx:customAttribute");
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(country, StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName, customAttribute);
+            ServiceOfferPolicyDto policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), ServiceOfferPolicyDto.class);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, policyUrl));
             if (!org.apache.commons.lang3.StringUtils.isAllBlank(hostPolicyJson)) {
                 this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
                 if (credentialSubject.containsKey("gx:policy")) {
-                    credentialSubject.put("gx:policy", List.of(policyUrl));
+                    credentialSubject.put("gx:policy", List.of(policyUrl, policy.customAttribute()));
                 }
                 this.credentialService.createCredential(hostPolicyJson, policyUrl, CredentialTypeEnum.ODRL_POLICY.getCredentialType(), "", participant);
             }

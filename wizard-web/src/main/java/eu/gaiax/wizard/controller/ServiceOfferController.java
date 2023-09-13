@@ -48,7 +48,8 @@ public class ServiceOfferController extends BaseController {
                                  "gx:policy": {
                                    "gx:location": [
                                      "DE-BE"
-                                   ]
+                                   ],
+                                   "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                  },
                                  "gx:dataAccountExport": {
                                    "gx:requestType": "API",
@@ -814,9 +815,7 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
-                                                                    "gx:customAttribute": [
-                                                                        "BE-BRU", "IN-GJ"
-                                                                    ]
+                                                                    "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",
@@ -951,9 +950,7 @@ public class ServiceOfferController extends BaseController {
                                   "gx:location": [
                                     "BE-BRU"
                                   ],
-                                  "gx:customAttribute": [
-                                     "BE-BRU", "IN-GJ"
-                                  ]
+                                  "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                 },
                                 "gx:dataAccountExport": {
                                   "gx:requestType": "API",
@@ -1032,9 +1029,7 @@ public class ServiceOfferController extends BaseController {
                                   "gx:location": [
                                     "BE-BRU"
                                   ],
-                                  "gx:customAttribute": [
-                                     "BE-BRU", "IN-GJ"
-                                  ]
+                                  "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                 },
                                 "gx:dataAccountExport": {
                                   "gx:requestType": "API",
@@ -1238,9 +1233,7 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
-                                                                    "gx:customAttribute": [
-                                                                        "BE-BRU", "IN-GJ"
-                                                                    ]
+                                                                    "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",

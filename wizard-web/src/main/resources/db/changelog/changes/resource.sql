@@ -23,4 +23,9 @@ ALTER TABLE resource ADD COLUMN "obsolete_date" timestamp(6) NULL;
 ALTER TABLE resource ADD COLUMN "expiry_date" timestamp(6) NULL;
 ALTER TABLE resource DROP COLUMN "sub_type";
 
+--changeset Neha:4
+ALTER TABLE resource ALTER COLUMN name TYPE text USING name::text;
+ALTER TABLE resource ALTER COLUMN description TYPE text USING description::text;
+
+
 

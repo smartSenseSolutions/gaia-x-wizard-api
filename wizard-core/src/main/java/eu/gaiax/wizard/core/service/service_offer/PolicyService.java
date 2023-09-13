@@ -43,7 +43,6 @@ public class PolicyService {
     private final S3Utils s3Utils;
     private final ContextConfig contextConfig;
 
-
     public Map<String, Object> createServiceOfferPolicy(ODRLPolicyRequest odrlPolicyRequest, String hostUrl) {
         Map<String, Object> policyMap = new HashMap<>();
         policyMap.put("@context", this.contextConfig.ODRLPolicy());
@@ -52,7 +51,7 @@ public class PolicyService {
             hostUrl = odrlPolicyRequest.domain() + odrlPolicyRequest.target() + "/" + odrlPolicyRequest.serviceName() + "_policy.json";
         }
         policyMap.put("id", hostUrl);
-        List<Map<String, Object>> permission = getServiceOfferPermissionList(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand(), odrlPolicyRequest.customAttribute());
+        List<Map<String, Object>> permission = getServiceOfferPermissionList(odrlPolicyRequest.rightOperand(), odrlPolicyRequest.target(), odrlPolicyRequest.assigner(), odrlPolicyRequest.leftOperand());
         policyMap.put("permission", permission);
         return policyMap;
     }
@@ -76,7 +75,7 @@ public class PolicyService {
     }*/
 
     @NotNull
-    private static List<Map<String, Object>> getServiceOfferPermissionList(List<String> rightOperand, String target, String assigner, String leftOperand, List<String> customAttribute) {
+    private static List<Map<String, Object>> getServiceOfferPermissionList(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permissionList = new ArrayList<>();
         Map<String, Object> permissionMap = new HashMap<>();
         permissionMap.put("target", target);
@@ -88,14 +87,6 @@ public class PolicyService {
         constraintMap.put("operator", "isAnyOf");
         constraintMap.put("rightOperand", rightOperand);
         constraint.add(constraintMap);
-
-        if (!CollectionUtils.isEmpty(customAttribute)) {
-            Map<String, Object> customConstraintMap = new HashMap<>();
-            customConstraintMap.put("name", "customAttribute");
-            customConstraintMap.put("operator", "isAnyOf");
-            customConstraintMap.put("rightOperand", customAttribute);
-            constraint.add(customConstraintMap);
-        }
 
         permissionMap.put("constraint", constraint);
         permissionList.add(permissionMap);
@@ -181,7 +172,7 @@ public class PolicyService {
     private Constraint getLocationConstraintFromPolicy(String policyUrl) {
         Policy accessPolicy = this.getPolicyForServiceOffer(policyUrl);
         if (accessPolicy == null) {
-            throw new EntityNotFoundException("Policy not found for the specified entity.");
+            return null;
         }
 
         Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("use")).findAny();
@@ -241,11 +232,15 @@ public class PolicyService {
         JsonNode policyArray = this.getPolicyArrayFromServiceOffer(catalogSelfDescription);
 
         if (policyArray != null && policyArray.has(0)) {
-            for (JsonNode policyUrl : policyArray) {
-                Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
 
-                if (constraint.getName().equals("spatial")) {
-                    return List.of(constraint.getRightOperand());
+            for (JsonNode policyUrlJsonNode : policyArray) {
+                String policyUrl = policyUrlJsonNode.asText();
+                if (policyUrl.endsWith(".json")) {
+                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
+
+                    if (constraint != null && constraint.getName().equals("spatial")) {
+                        return List.of(constraint.getRightOperand());
+                    }
                 }
             }
         }
@@ -271,19 +266,22 @@ public class PolicyService {
         JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
         if (policyArray != null && policyArray.has(0)) {
-            policyArray.forEach(policyUrl -> {
-                try {
-                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl.asText());
+            for (JsonNode policyUrlJsonNode : policyArray) {
+                String policyUrl = policyUrlJsonNode.asText();
+                if (policyUrl.endsWith(".json")) {
+                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
-                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                        throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                    try {
+                        if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                            throw new ForbiddenAccessException("The catalogue does not have permission to view this entity.");
+                        }
+                    } catch (Exception e) {
+                        log.error("Error while fetching location constraint from policy with URL: {}", policyUrl, e);
                     }
-                } catch (Exception e) {
-                    log.error("Error while fetching location constraint from policy with URL: {}", policyUrl, e);
                 }
-            });
+            }
         }
-
+        
         return serviceOffer;
     }
 
