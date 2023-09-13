@@ -71,3 +71,7 @@ ALTER TABLE service_offer ALTER COLUMN label_level TYPE varchar(20) USING label_
 
 --changeset Neha:7
 ALTER TABLE service_offer ALTER COLUMN name TYPE varchar(255) USING name::varchar;
+
+--changeset Neha:8
+ALTER TABLE service_offer ALTER COLUMN name TYPE text USING name::text;
+ALTER TABLE service_offer ALTER COLUMN description TYPE text USING description::text;
