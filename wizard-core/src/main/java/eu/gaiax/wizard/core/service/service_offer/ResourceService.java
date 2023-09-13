@@ -17,6 +17,7 @@ import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.ResourceType;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -84,6 +85,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private final Vault vault;
 
+    private final ServiceEndpointConfig serviceEndpointConfig;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -143,10 +146,12 @@ public class ResourceService extends BaseService<Resource, UUID> {
         this.validateResourceRequest(request);
         String name = "resource_" + UUID.randomUUID();
         String json = this.resourceVc(request, participant, name);
-        String hostUrl = participant.getId() + "/" + name + ".json";
-
+        String hostUrl = this.wizardHost + participant.getId() + "/" + name + ".json";
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
+        }
         if (StringUtils.hasText(json)) {
-            Credential resourceVc = this.credentialService.createCredential(json, this.wizardHost + hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
+            Credential resourceVc = this.credentialService.createCredential(json, hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.getCredentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
                     .type(request.getCredentialSubject().get("type").toString())

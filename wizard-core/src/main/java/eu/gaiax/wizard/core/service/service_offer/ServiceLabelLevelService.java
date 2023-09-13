@@ -5,6 +5,7 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelFileUpload;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
@@ -46,6 +47,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     private final CredentialService credentialService;
     private final SpecificationUtil<ServiceLabelLevel> specificationUtil;
     private final ServiceLabelLevelRepository serviceLabelLevelRepository;
+    private final ServiceEndpointConfig serviceEndpointConfig;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -54,8 +56,13 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         String name = "labelLevel_" + UUID.randomUUID();
         String json = this.signLabelLevelVc(request, participant, name, serviceOfferId);
         Map<String, String> response = new HashMap<>();
+        String labelLevelHostUrl = this.wizardHost + participant.getId() + "/" + name + ".json";
+
         response.put("labelLevelVc", json);
-        response.put("vcUrl", this.wizardHost + participant.getId() + "/" + name + ".json");
+        response.put("vcUrl", labelLevelHostUrl);
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), labelLevelHostUrl, this.serviceEndpointConfig.linkDomainType(), labelLevelHostUrl);
+        }
         return response;
     }
 
