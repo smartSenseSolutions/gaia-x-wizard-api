@@ -32,7 +32,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ServiceOfferController extends BaseController {
 
     private final ServiceOfferService serviceOfferService;
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
 
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
