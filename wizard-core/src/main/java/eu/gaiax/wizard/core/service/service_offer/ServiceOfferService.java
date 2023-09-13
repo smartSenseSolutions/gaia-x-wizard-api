@@ -171,12 +171,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
-
         try {
             String messageReferenceId = this.publishServiceComplianceToMessagingQueue(complianceCredential.get("serviceVc"));
-            log.info("service: {}, messageReferenceId: {}", request.getName(), messageReferenceId);
-            serviceOffer.setMessageReferenceId(messageReferenceId);
-            this.serviceOfferRepository.save(serviceOffer);
+            this.serviceOfferRepository.updateMessageReferenceId(serviceOffer.getId(), messageReferenceId);
         } catch (Exception e) {
             log.error("Error encountered while publishing service to message queue", e);
         }

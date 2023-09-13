@@ -37,6 +37,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -64,6 +66,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private final S3Utils s3Utils;
     private final Vault vault;
     private final ObjectMapper mapper;
+    private final MessageSource messageSource;
     private final SpecificationUtil<Participant> specificationUtil;
     @Value("${wizard.domain}")
     private String domain;
@@ -136,6 +139,10 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.privateKey())).launch("invalid.private.key");
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
             Validate.isFalse(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
+            Participant participantFromDid = this.participantRepository.getByDid(request.issuer());
+            if (Objects.nonNull(participantFromDid)) {
+                throw new BadDataException(this.messageSource.getMessage("did.already.registered", new String[]{participantFromDid.getEmail()}, LocaleContextHolder.getLocale()));
+            }
         }
 
         if (Objects.nonNull(request.ownDid()) && request.ownDid()) {
