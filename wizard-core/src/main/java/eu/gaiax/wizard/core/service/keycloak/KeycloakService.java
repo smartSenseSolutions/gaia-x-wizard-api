@@ -73,7 +73,7 @@ public class KeycloakService {
         Response response = usersResource.create(userRepresentation);
         log.info("Keycloak User Creation status: {}", response.getStatus());
         if (response.getStatus() != HttpStatus.CREATED.value()) {
-            throw new BadDataException("Invalid request for user registration");
+            throw new BadDataException("keycloak.create.user.failed");
         }
 
         log.info("keycloak user created");

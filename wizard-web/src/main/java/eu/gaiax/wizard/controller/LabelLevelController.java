@@ -71,7 +71,7 @@ public class LabelLevelController extends BaseController {
         try {
             LabelLevelFileTypeEnum.valueOf(labelLevelFileUpload.fileType());
         } catch (Exception e) {
-            throw new BadDataException("Please select a valid file type");
+            throw new BadDataException("invalid.label.level.file");
         }
 
         return CommonResponse.of(this.labelLevelService.uploadLabelLevelFile(labelLevelFileUpload));

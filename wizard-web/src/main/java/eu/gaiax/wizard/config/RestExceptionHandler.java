@@ -229,4 +229,10 @@ public class RestExceptionHandler {
         log.error(FILE_UPLOAD_LIMIT_EXCEPTION, exception.getMessage());
         return ResponseEntity.badRequest().body(CommonResponse.builder(new Object()).message("file.size.exceeds.limit").status(HttpStatus.BAD_REQUEST.value()).build());
     }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler({ForbiddenAccessException.class})
+    public CommonResponse<Object> handleForbiddenException(ForbiddenAccessException exception) {
+        return CommonResponse.builder(new Object()).message(this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale())).status(HttpStatus.FORBIDDEN.value()).build();
+    }
 }

@@ -90,7 +90,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
@@ -303,7 +303,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.validateDependsOn(request);
         this.validateDataAccountExport(request);
         if (!request.getCredentialSubject().containsKey("gx:policy")) {
-            throw new BadDataException("policy.not.null");
+            throw new BadDataException("invalid.policy");
         }
     }
 

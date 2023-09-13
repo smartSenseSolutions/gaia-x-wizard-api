@@ -129,7 +129,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 this.participantRepository.save(participant);
             }
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.json.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, true);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
@@ -199,9 +199,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     public void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
         Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
-        if (Objects.nonNull(request.getCredentialSubject().get("gx:description")) && (String.valueOf(request.getCredentialSubject().get("gx:description")).length() > 500)) {
-            throw new BadDataException("Description exceeds maximum character limit");
-        }
         this.validateAggregationOf(request);
         JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
 
@@ -218,7 +215,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     String idValue = aggregationObject.get("id").getAsString();
                     ids.add(idValue);
                 }
-                this.signerService.validateRequestUrl(ids, "maintainedBy.of.not.found", null);
+                this.signerService.validateRequestUrl(ids, "maintained.by.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:ownedBy")) {
                 JsonArray aggregationArray = jsonObject
@@ -231,7 +228,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     String idValue = aggregationObject.get("id").getAsString();
                     ids.add(idValue);
                 }
-                this.signerService.validateRequestUrl(ids, "ownedBy.of.not.found", null);
+                this.signerService.validateRequestUrl(ids, "owned.by.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:manufacturedBy")) {
                 JsonArray aggregationArray = jsonObject
@@ -244,7 +241,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     String idValue = aggregationObject.get("id").getAsString();
                     ids.add(idValue);
                 }
-                this.signerService.validateRequestUrl(ids, "manufacturedBy.of.not.found", null);
+                this.signerService.validateRequestUrl(ids, "manufactured.by.not.found", null);
             }
         } else {
             if (request.getCredentialSubject().containsKey("gx:copyrightOwnedBy")) {
@@ -258,7 +255,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     String idValue = aggregationObject.get("id").getAsString();
                     ids.add(idValue);
                 }
-                this.signerService.validateRequestUrl(ids, "manufacturedBy.of.not.found", null);
+                this.signerService.validateRequestUrl(ids, "manufactured.by.of.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:producedBy")) {
                 JsonObject produceBy = jsonObject
@@ -267,13 +264,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
                 String idValue = produceBy.get("id").getAsString();
 
-                this.signerService.validateRequestUrl(List.of(idValue), "producedBy.of.not.found", null);
+                this.signerService.validateRequestUrl(List.of(idValue), "produced.by.not.found", null);
             }
         }
         if (request.getCredentialSubject().containsKey("gx:containsPII")) {
             if (Boolean.parseBoolean(request.getCredentialSubject().get("gx:containsPII").toString()) == true) {
                 if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
-                    throw new BadDataException("legal.basic.not.null");
+                    throw new BadDataException("invalid.legal.basis");
                 }
                 if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
                     throw new BadDataException("data.protection.contact.required");

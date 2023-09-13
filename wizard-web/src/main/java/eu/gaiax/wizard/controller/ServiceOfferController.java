@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -30,6 +32,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ServiceOfferController extends BaseController {
 
     private final ServiceOfferService serviceOfferService;
+    private MessageSource messageSource;
 
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
@@ -929,7 +932,7 @@ public class ServiceOfferController extends BaseController {
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString(), false));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString(), false), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
     @Operation(summary = "Validate Service offering for enterprise, role = enterprise")
@@ -1911,7 +1914,7 @@ public class ServiceOfferController extends BaseController {
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = PUBLIC_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null, true));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null, true), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
     @Operation(summary = "Get service locations from policy")
