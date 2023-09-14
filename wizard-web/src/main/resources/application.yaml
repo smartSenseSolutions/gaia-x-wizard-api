@@ -71,6 +71,9 @@ wizard:
         threadCount: 10
   management:
     port: 8090
+  multipart:
+    max-file-size:
+    max-request-size:
   signer-policies:
   vault:
     host:
@@ -147,7 +150,6 @@ spring:
       app-role:
         roleId: ${wizard.vault.role-id}
         secretId: ${wizard.vault.secret-id}
-
   jpa:
     show-sql: false
     hibernate:
@@ -165,6 +167,10 @@ spring:
           batch_versioned_data: true
         order_inserts: true
         order_updates: true
+  servlet:
+    multipart:
+      max-file-size: ${wizard.multipart.max-file-size}
+      max-request-size: ${wizard.multipart.max-request-size}
 
 management:
   server:

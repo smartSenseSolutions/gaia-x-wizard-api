@@ -48,3 +48,6 @@ ALTER TABLE participant ADD own_cert Boolean default false;
 
 --changeset Neha:7
 ALTER TABLE participant RENAME COLUMN own_cert TO key_stored;
+
+--changeset Neha:8
+ALTER TABLE credential ADD CONSTRAINT vc_url_type_unique UNIQUE ("vc_url","type");

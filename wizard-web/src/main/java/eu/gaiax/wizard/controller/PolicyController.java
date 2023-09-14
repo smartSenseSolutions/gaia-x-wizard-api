@@ -22,6 +22,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Policy")
 public class PolicyController extends BaseController {
 
     private final PolicyService policyService;
@@ -30,7 +31,7 @@ public class PolicyController extends BaseController {
     @Operation(summary = "Create Policy")
     @PostMapping(path = PUBLIC_POLICY, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, Object>> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
-        return CommonResponse.of(this.policyService.createPolicy(odrlPolicyRequest, null));
+        return CommonResponse.of(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, null));
     }
 
     @Tag(name = "Policy")

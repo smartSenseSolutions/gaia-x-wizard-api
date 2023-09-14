@@ -32,13 +32,15 @@ public class WizardRestConstant {
 
     public static final String POLICY_EVALUATE = "/public/policy/evaluate";
 
+    public static final String POLICY_EVALUATE_V2 = "/public/policy/evaluate/v2";
+
     public static final String PARTICIPANT_CONFIG = "/participant/config";
 
     public static final String PARTICIPANT_EXPORT = "/participant/{participantId}/export";
 
     public static final String SERVICE_OFFER = "/service-offer";
-    public static final String LABEL_LEVEL = "/label-level";
-    public static final String LABEL_LEVEL_FILE_UPLOAD = "label-level/file";
+    public static final String LABEL_LEVEL = "/public/label-level";
+    public static final String LABEL_LEVEL_FILE_UPLOAD = "/public/label-level/file";
     public static final String LABEL_LEVEL_FILE_DOWNLOAD = "label-level/file/{fileName}/**";
 
     public static final String PUBLIC_SERVICE_OFFER = "/public/service-offer";
@@ -52,6 +54,8 @@ public class WizardRestConstant {
     public static final String SERVICE_OFFER_FILTER = "/public/service-offer/filter";
 
     public static final String PARTICIPANT_SERVICE_OFFER_FILTER = "/participant/{participantId}/service-offer/filter";
+
+    public static final String PARTICIPANT_SERVICE_OFFER_DETAILS = "/participant/{participantId}/service-offer/{serviceOfferId}";
 
     public static final String RESOURCE_FILTER = "/public/resource/filter";
 

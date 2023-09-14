@@ -49,6 +49,7 @@ public class StringPool {
      * The constant PARTICIPANT_ID.
      */
     public static final String PARTICIPANT_ID = "participantId";
+    public static final String FILTER_PARTICIPANT_ID = "participant.id";
     /**
      * The constant JOB_TYPE.
      */
@@ -97,7 +98,8 @@ public class StringPool {
     public static final String GX_COUNTRY_SUBDIVISION = "gx:countrySubdivisionCode";
     public static final String GX_POLICY = "gx:policy";
     public static final String GX_DATA_PROTECTION_REGIME = "gx:dataProtectionRegime";
-    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
+    //    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
+    public static final String POLICY_LOCATION_LEFT_OPERAND = "spatial";
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
 

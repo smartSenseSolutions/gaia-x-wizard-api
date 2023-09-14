@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Getter
@@ -25,5 +26,9 @@ public enum ResourceType {
 
     public static ResourceType getByValue(String value) {
         return resourceTypeMap.getOrDefault(value, null);
+    }
+
+    public static Set<String> getValueSet() {
+        return resourceTypeMap.keySet();
     }
 }

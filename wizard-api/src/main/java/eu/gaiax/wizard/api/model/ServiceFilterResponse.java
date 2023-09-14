@@ -1,6 +1,6 @@
 package eu.gaiax.wizard.api.model;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
+import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,21 +16,11 @@ public class ServiceFilterResponse {
 
     private String name;
 
-    private Integer labelLevel;
+    private String labelLevel;
 
-    @JsonAlias("vcUrl")
-    private String selfDescription;
+    private CredentialDto credential;
 
     private List<StandardTypeDto> serviceOfferStandardType;
 
     private Date createdAt;
-
-    @Getter
-    @Setter
-    public static class StandardTypeDto {
-
-        private UUID id;
-        private String type;
-    }
-
 }

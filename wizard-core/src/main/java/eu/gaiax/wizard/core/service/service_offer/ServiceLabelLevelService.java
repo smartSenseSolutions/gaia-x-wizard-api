@@ -5,6 +5,7 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelFileUpload;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
@@ -46,6 +47,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     private final CredentialService credentialService;
     private final SpecificationUtil<ServiceLabelLevel> specificationUtil;
     private final ServiceLabelLevelRepository serviceLabelLevelRepository;
+    private final ServiceEndpointConfig serviceEndpointConfig;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
@@ -54,8 +56,13 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         String name = "labelLevel_" + UUID.randomUUID();
         String json = this.signLabelLevelVc(request, participant, name, serviceOfferId);
         Map<String, String> response = new HashMap<>();
+        String labelLevelHostUrl = this.wizardHost + participant.getId() + "/" + name + ".json";
+
         response.put("labelLevelVc", json);
-        response.put("vcUrl", this.wizardHost + participant.getId() + "/" + name + ".json");
+        response.put("vcUrl", labelLevelHostUrl);
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), labelLevelHostUrl, this.serviceEndpointConfig.linkDomainType(), labelLevelHostUrl);
+        }
         return response;
     }
 
@@ -69,17 +76,15 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         );
     }
 
-
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
         File file = null;
         try {
-            String uuid = UUID.randomUUID().toString();
-            String fileName = uuid + "/" + labelLevelFileUpload.level() + "/" + labelLevelFileUpload.type() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
+            String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
             file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
             FileOutputStream fos = new FileOutputStream(file);
             fos.write(labelLevelFileUpload.file().getBytes());
             fos.close();
-            this.s3Utils.uploadFileWithPublicAcl(fileName, file);
+            this.s3Utils.uploadFile(fileName, file);
             return this.s3Utils.getObject(fileName);
         } catch (Exception e) {
             throw new RemoteException("File not Upload " + e.getMessage());
@@ -109,10 +114,15 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         labelLevel.put("credentialSubject", credentialSub);
         map.put("labelLevel", labelLevel);
         Map<String, Object> labelLevelMap = new HashMap<>();
-        labelLevelMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
         labelLevelMap.put("issuer", participant.getDid());
         labelLevelMap.put("verificationMethod", request.verificationMethod());
         labelLevelMap.put("vcs", map);
+        labelLevelMap.put("isVault", participant.isKeyStored());
+        if (!participant.isKeyStored()) {
+            labelLevelMap.put("privateKey", HashingService.encodeToBase64(request.privateKey()));
+        } else {
+            labelLevelMap.put("privateKey", participant.getId().toString());
+        }
         return this.signerService.signLabelLevel(labelLevelMap, participant.getId(), name);
     }
 

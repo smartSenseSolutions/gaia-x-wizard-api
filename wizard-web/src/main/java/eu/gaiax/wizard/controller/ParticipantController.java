@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +42,7 @@ public class ParticipantController extends BaseController {
     private final CertificateService certificateService;
     private final K8SService k8SService;
     private final SignerService signerService;
+    private final MessageSource messageSource;
 
     @Operation(
             summary = "Check for user existence",
@@ -66,8 +69,9 @@ public class ParticipantController extends BaseController {
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<CheckParticipantRegisteredResponse> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
         CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email);
-        String message = checkParticipantRegisteredResponse.userRegistered() ? "User is registered in the application" : "User is not registered in the application";
-        return CommonResponse.of(checkParticipantRegisteredResponse, message);
+
+        String message = checkParticipantRegisteredResponse.userRegistered() ? "user.registered" : "user.not.registered";
+        return CommonResponse.of(checkParticipantRegisteredResponse, this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()));
     }
 
     @Operation(
@@ -846,7 +850,7 @@ public class ParticipantController extends BaseController {
     @PostMapping(SEND_REQUIRED_ACTIONS_EMAIL)
     public CommonResponse<Object> sendRequiredActionsEmail(@RequestBody SendRegistrationEmailRequest sendRegistrationEmailRequest) {
         this.participantService.sendRegistrationLink(sendRegistrationEmailRequest.email());
-        return CommonResponse.of("Registration email sent successfully");
+        return CommonResponse.of(this.messageSource.getMessage("registration.mail.sent", null, LocaleContextHolder.getLocale()));
     }
 
     @Operation(

@@ -39,12 +39,16 @@ public class LabelLevelQuestionMaster extends SuperEntity {
     @Enumerated(EnumType.STRING)
     private ApplicableLevelCriterionEnum level1;
 
+    @Column(name = "highest_label_level")
+    private String highestLabelLevel;
+
     @Column(name = "active")
     private boolean active;
 
-    public LabelLevelQuestionMaster(UUID id, String criterionNumber, String question) {
+    public LabelLevelQuestionMaster(UUID id, String criterionNumber, String question, String highestLabelLevel) {
         super(id);
         this.criterionNumber = criterionNumber;
         this.question = question;
+        this.highestLabelLevel = highestLabelLevel;
     }
 }

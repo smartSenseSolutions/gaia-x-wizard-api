@@ -29,6 +29,7 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
+import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.vault.Vault;
@@ -38,9 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
@@ -77,10 +83,17 @@ public class SignerService {
     @Value("${wizard.gaiax.tnc}")
     private String tnc;
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createParticipantJson(UUID participantId) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}", participantId);
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+
+        if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
+            log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
+            return;
+        }
+
         this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
     }
 
@@ -150,14 +163,16 @@ public class SignerService {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}, ownDid {}", participant.getId(), ownDid);
         File file = new File("/tmp/participant.json");
         try {
+            boolean isVault = false;
             String privateKey = key;
             if (!ownDid || participant.isKeyStored()) {
-                privateKey = (String) this.vault.get(key).get("pkcs8.key");
-                Validate.isFalse(StringUtils.hasText(privateKey)).launch(new EntityNotFoundException("keys.not.found"));
+                isVault = true;
                 log.info("SignerService(createParticipantJson) -> PrivateKey(pkcs8.key) resolve successfully from store with key {}", key);
+            } else {
+                privateKey = HashingService.encodeToBase64(privateKey);
             }
             Map<String, Object> credentials = this.prepareCredentialSubjectForLegalParticipant(participant);
-            CreateVCRequest request = new CreateVCRequest(HashingService.encodeToBase64(privateKey), issuer, verificationMethod, credentials);
+            CreateVCRequest request = new CreateVCRequest(privateKey, issuer, verificationMethod, credentials, isVault);
             log.info("SignerService(createParticipantJson) -> Initiate the signer client call to create legal participant json.");
             ResponseEntity<Map<String, Object>> responseEntity = this.signerClient.createVc(request);
             log.info("SignerService(createParticipantJson) -> Receive success response from signer tool.");
@@ -165,7 +180,8 @@ public class SignerService {
             FileUtils.writeStringToFile(file, participantString, Charset.defaultCharset());
             String hostedPath = participant.getId() + "/participant.json";
             this.s3Utils.uploadFile(hostedPath, file);
-            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
+
+            String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId()) + "#0";
             this.credentialService.createCredential(participantString, participantJsonUrl, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType(), null, participant);
             if (!ownDid) {
                 this.addServiceEndpoint(participant.getId(), participantJsonUrl, this.serviceEndpointConfig.linkDomainType(), participantJsonUrl);
@@ -184,9 +200,20 @@ public class SignerService {
 
     public void createDid(UUID participantId) {
         log.info("SignerService(createDid) -> Initiate process for creating did document for participant {}", participantId);
-        File file = new File("/tmp/did.json");
+
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        if (StringUtils.hasText(participant.getDid())) {
+            log.info("DID exists for participantId {}. Exiting DID creation.", participantId);
+            return;
+        }
+
+        if (!this.fetchX509Certificate(participant.getDomain())) {
+            this.createDidCreationJob(participant);
+            return;
+        }
+
+        File file = new File("/tmp/did.json");
         try {
             String domain = participant.getDomain();
             log.info("SignerService(createDid) ->  DID creation is initiated for domain {}", domain);
@@ -211,20 +238,32 @@ public class SignerService {
         }
     }
 
+    private boolean fetchX509Certificate(String domain) {
+        try {
+            String x509Certificate = InvokeService.executeRequest("https://" + domain + "/.well-known/x509CertificateChain.pem", HttpMethod.GET);
+            Validate.isFalse(StringUtils.hasText(x509Certificate)).launch("x509certificate.not.resolved");
+            return true;
+        } catch (Exception ex) {
+            log.error("Not able to fetch x509 certificate for domain {}", domain, ex);
+            return false;
+        }
+    }
+
     private void createParticipantCreationJob(Participant participant) {
         try {
             this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_PARTICIPANT, 0);
-            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.info("SignerService(createParticipantCreationJob) -> Create legal participant corn has been scheduled.");
         } catch (Exception e) {
+            participant.setStatus(RegistrationStatus.PARTICIPANT_JSON_CREATION_FAILED.getStatus());
             log.error("SignerService(createParticipantCreationJob) -> Not able to create legal participant corn for participant {}", participant.getId(), e);
         }
     }
 
-    public String signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+    public Map<String, String> signService(Participant participant, CreateServiceOfferingRequest request, String name) {
+        Map<String, String> response = new HashMap<>();
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         Map<String, Object> providedBy = new HashMap<>();
-        providedBy.put("id", request.getParticipantJsonUrl() + "#0");
+        providedBy.put("id", request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
         request.getCredentialSubject().put("id", id);
         request.getCredentialSubject().put("gx:name", request.getName());
@@ -243,20 +282,24 @@ public class SignerService {
                         .build()).build();
         List<VerifiableCredential> verifiableCredentialList = new ArrayList<>();
         verifiableCredentialList.add(verifiableCredential);
-        SignerServiceRequest signerServiceRequest = SignerServiceRequest.builder()
-                .privateKey(HashingService.encodeToBase64(request.getPrivateKey()))
-                .issuer(participant.getDid())
-                .verificationMethod(request.getVerificationMethod())
-                .vcs(verifiableCredential)
-                .build();
+        String privateKey = participant.getId().toString();
+        if (!participant.isKeyStored()) {
+            privateKey = HashingService.encodeToBase64(request.getPrivateKey());
+        }
         try {
+            SignerServiceRequest signerServiceRequest = new SignerServiceRequest(participant.getDid(), request.getVerificationMethod(), privateKey, verifiableCredential, participant.isKeyStored());
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.createServiceOfferVc(signerServiceRequest);
-            String serviceOfferingString = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
-            if (serviceOfferingString != null) {
-                this.hostJsonFile(serviceOfferingString, participant.getId(), name);
+            String serviceVc = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("completeSD"));
+            String trustIndex = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("trustIndex"));
+            response.put("serviceVc", serviceVc);
+            if (trustIndex != null) {
+                response.put("trustIndex", trustIndex);
+            }
+            if (serviceVc != null) {
+                this.hostJsonFile(serviceVc, participant.getId(), name);
             }
             log.debug("Send request to signer for service create vc");
-            return serviceOfferingString;
+            return response;
         } catch (Exception e) {
             log.debug("Service vc not created", e.getMessage());
             throw new SignerException(e);
@@ -294,7 +337,6 @@ public class SignerService {
 
     public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
         try {
-            log.info(this.mapper.writeValueAsString(labelLevelRequest) + ">>>>>>>>>>>>.Label level");
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
             String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get("data")).get("selfDescriptionCredential"));
             if (signResource != null) {
@@ -340,7 +382,14 @@ public class SignerService {
                 jsonObject.put("service", new ArrayList<>());
                 services = jsonObject.getJSONArray("service");
             }
-            services.put(map);
+            List<String> serviceIds = new ArrayList<>();
+            for (Object service : services) {
+                JSONObject s = (JSONObject) service;
+                serviceIds.add(s.getString("id"));
+            }
+            if (!serviceIds.contains(id)) {
+                services.put(map);
+            }
             FileUtils.writeStringToFile(updatedFile, jsonObject.toString(), Charset.defaultCharset());
             this.s3Utils.uploadFile(participantId + "/did.json", updatedFile);
         } catch (Exception ex) {
@@ -360,6 +409,35 @@ public class SignerService {
         } catch (Exception ex) {
             log.error("Issue occurred while validating did {} with verification method {}", issuerDid, verificationMethod);
             return false;
+        }
+    }
+
+    public boolean validateRegistrationNumber(Map<String, Object> credential) {
+        try {
+            Map<String, Object> request = new HashMap<>();
+            TypeReference<Map<String, Object>> typeReference = new TypeReference<>() {
+            };
+            Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get("legalRegistrationNumber"), typeReference);
+            legalRegistrationNumber.put("@context", this.contextConfig.registrationNumber());
+            legalRegistrationNumber.put("type", "gx:legalRegistrationNumber");
+            legalRegistrationNumber.put("id", "did:web:gaia-x.eu:legalRegistrationNumber.json");
+            request.put("legalRegistrationNumber", legalRegistrationNumber);
+            ResponseEntity<Map<String, Object>> response = this.signerClient.validateRegistrationNumber(request);
+            boolean valid = (boolean) ((Map<String, Object>) Objects.requireNonNull(response.getBody()).get("data")).get("isValid");
+            return valid;
+        } catch (Exception ex) {
+            log.error("Issue occurred while validating the registration number.", ex);
+            return false;
+        }
+    }
+
+    private void createDidCreationJob(Participant participant) {
+        try {
+            this.scheduleService.createJob(participant.getId().toString(), StringPool.JOB_TYPE_CREATE_DID, 0);
+            log.info("K8sService(createDidCreationJob) -> DID creation corn has been scheduled.");
+        } catch (SchedulerException e) {
+            log.info("K8sService(createDidCreationJob) -> DID creation failed for participant {}", participant.getId());
+            participant.setStatus(RegistrationStatus.DID_JSON_CREATION_FAILED.getStatus());
         }
     }
 }

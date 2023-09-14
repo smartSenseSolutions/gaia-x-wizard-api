@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +35,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class ResourceController extends BaseController {
 
     private final ResourceService resourceService;
+    private final MessageSource messageSource;
 
 
     @Operation(summary = "Create Resource")
@@ -76,27 +79,25 @@ public class ResourceController extends BaseController {
                                   }
                                 }
                             """),
-                    @ExampleObject(name = "Create virtual resource , Software resource", value = """
-                                                        
+                    @ExampleObject(name = "Create virtual resource , Software resource", value = """                                                        
                                  {
                                   "email":"exmaple@gmail.com",
                                    "verificationMethod": "did:web:example.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                                   "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                                    "credentialSubject": {
                                      "type": "VirtualResource",
                                      "subType":"VirtualSoftwareResource",
                                      "gx:name": "Soft_res_sing_2",
-                                    "gx:description": "sign Test Resource 2 description",
+                                     "gx:description": "sign Test Resource 2 description",
                                      "gx:copyrightOwnedBy": [
-                                     {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
+                                       {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"
-                             ],     
-                               "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}]
-                             
+                                     "gx:license": [ "http://smartproof.in/.well-known/license"],     
+                                     "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
+                                     "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                    }
                                                         
-                                                        }
+                                 }
                             """),
                     @ExampleObject(name = "Create virtual resource , Data resource", value = """
                                {
@@ -122,7 +123,8 @@ public class ResourceController extends BaseController {
                                    "gx:exposedThrough": [
                                      "http://smartproof.in/api/test-resource-1"
                                    ],
-                                   "gx:containsPII": false
+                                   "gx:containsPII": false,
+                                   "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                  }
                                }                   
                             """)
@@ -130,7 +132,7 @@ public class ResourceController extends BaseController {
     })
     public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
         this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()));
+        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -172,8 +174,7 @@ public class ResourceController extends BaseController {
                                   }
                                 }
                             """),
-                    @ExampleObject(name = "Create virtual resource , Software resource", value = """
-                                                        
+                    @ExampleObject(name = "Create virtual resource , Software resource", value = """                                                        
                                  {
                                   "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
                                    "verificationMethod": "did:web:example.com",
@@ -186,13 +187,11 @@ public class ResourceController extends BaseController {
                                      "gx:copyrightOwnedBy": [
                                      {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"
-                             ],     
-                               "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}]
-                             
-                                   }
-                                                        
-                                                        }
+                                     "gx:license": [ "http://smartproof.in/.well-known/license"],     
+                                     "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
+                                     "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
+                                   }                       
+                                 }
                             """),
                     @ExampleObject(name = "Create virtual resource , Data resource", value = """
                                {
@@ -218,7 +217,8 @@ public class ResourceController extends BaseController {
                                    "gx:exposedThrough": [
                                      "http://smartproof.in/api/test-resource-1"
                                    ],
-                                   "gx:containsPII": false
+                                   "gx:containsPII": false,
+                                   "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                  }
                                }                   
                             """)
@@ -227,10 +227,14 @@ public class ResourceController extends BaseController {
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
-        return CommonResponse.of(this.resourceService.createResource(request, null));
+        return CommonResponse.of(this.resourceService.createResource(request, null), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
-    @Tag(name = "Resources")
+    @PostMapping(path = "public/resource/validation", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
+    public void validateResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
+        this.resourceService.validateResourceRequest(request);
+    }
+
     @Operation(summary = "Public API to filter resources")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
@@ -319,11 +323,10 @@ public class ResourceController extends BaseController {
             }),
     })
     @PostMapping(path = RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ResourceFilterResponse>> getServiceOfferingLList(@Valid @RequestBody FilterRequest filterRequest) {
+    public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@Valid @RequestBody FilterRequest filterRequest) {
         return CommonResponse.of(this.resourceService.filterResource(filterRequest, null));
     }
 
-    @Tag(name = "Resources")
     @Operation(summary = "API to filter user's resources")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {

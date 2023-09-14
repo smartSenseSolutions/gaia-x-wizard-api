@@ -4,12 +4,8 @@ import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceFilterResponse;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
-import eu.gaiax.wizard.api.model.service_offer.ServiceOfferingLocationResponse;
+import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.core.service.service_offer.ResourceService;
 import eu.gaiax.wizard.core.service.service_offer.ServiceOfferService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,25 +15,25 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.UUID;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Service-Offering")
 public class ServiceOfferController extends BaseController {
 
     private final ServiceOfferService serviceOfferService;
-    private final ResourceService resourceService;
+    private final MessageSource messageSource;
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -45,10 +41,7 @@ public class ServiceOfferController extends BaseController {
                     @ExampleObject(name = "Create Service offer", value = """
                             {
                               "name": "name of service",
-                              "verificationMethod": "did:web:exmaple.com",
-                              "email": "casio50@exmaple.com",
                               "description": "test service data",
-                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                               "credentialSubject": {
                                 "gx:termsAndConditions": {
                                   "gx:URL": "https://aws.amazon.com/service-terms/"
@@ -56,6 +49,10 @@ public class ServiceOfferController extends BaseController {
                                 "gx:policy": {
                                   "gx:location": [
                                     "BE-BRU"
+                                  ],
+                                  "gx:customAttribute": [
+                                    "BE-BRU",
+                                    "IN-GJ"
                                   ]
                                 },
                                 "gx:dataAccountExport": {
@@ -74,10 +71,569 @@ public class ServiceOfferController extends BaseController {
                                   }
                                 ],
                                 "gx:dataProtectionRegime": "GDPR2016",
-                                "type": "gx:ServiceOffering"
+                                "type": "gx:ServiceOffering",
+                                "gx:criteria": {
+                                  "P1.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.8": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.9": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.2.10": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P1.3.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.2.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P2.3.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.8": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.9": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.10": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.11": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.12": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.13": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.14": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.15": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.16": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.17": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.18": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.19": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P3.1.20": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P4.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P4.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.2": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.3": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.4": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.5": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.6": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.1.7": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  },
+                                  "P5.2.1": {
+                                    "evidence": {
+                                      "website": "",
+                                      "pdf": {},
+                                      "vc": {}
+                                    },
+                                    "response": "Confirm",
+                                    "reason": ""
+                                  }
+                                }
                               }
-                            }
-                            """)
+                            }""")
             })
     })
     @ApiResponses(value = {
@@ -260,6 +816,7 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
+                                                                    "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",
@@ -375,10 +932,9 @@ public class ServiceOfferController extends BaseController {
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
         //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString()));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString(), false), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Validate Service offering for enterprise, role = enterprise")
     @PostMapping(path = VALIDATE_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
@@ -394,7 +950,8 @@ public class ServiceOfferController extends BaseController {
                                 "gx:policy": {
                                   "gx:location": [
                                     "BE-BRU"
-                                  ]
+                                  ],
+                                  "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                 },
                                 "gx:dataAccountExport": {
                                   "gx:requestType": "API",
@@ -466,32 +1023,596 @@ public class ServiceOfferController extends BaseController {
                               "description": "test service data",
                               "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                               "credentialSubject": {
-                                "gx:termsAndConditions": {
-                                  "gx:URL": "https://aws.amazon.com/service-terms/"
-                                },
-                                "gx:policy": {
-                                  "gx:location": [
-                                    "BE-BRU"
-                                  ]
-                                },
-                                "gx:dataAccountExport": {
-                                  "gx:requestType": "API",
-                                  "gx:accessType": "physical",
-                                  "gx:formatType": "pdf"
-                                },
-                                "gx:aggregationOf": [
-                                  {
-                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
-                                  }
-                                ],
-                                "gx:dependsOn": [
-                                  {
-                                    "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/service_S7GZ.json"
-                                  }
-                                ],
-                                "gx:dataProtectionRegime": "GDPR2016",
-                                "type": "gx:ServiceOffering"
-                              }
+                                   "gx:termsAndConditions": {
+                                     "gx:URL": "https://aws.amazon.com/service-terms/"
+                                   },
+                                   "gx:policy": {
+                                     "gx:location": [
+                                       "BE-BRU"
+                                     ],
+                                     "gx:customAttribute": [
+                                       "BE-BRU",
+                                       "IN-GJ"
+                                     ]
+                                   },
+                                   "gx:dataAccountExport": {
+                                     "gx:requestType": "API",
+                                     "gx:accessType": "physical",
+                                     "gx:formatType": "pdf"
+                                   },
+                                   "gx:aggregationOf": [
+                                     {
+                                       "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/resource_9a40cafd-43ed-41b0-a53e-4e2af164fde5.json"
+                                     }
+                                   ],
+                                   "gx:dependsOn": [
+                                     {
+                                       "id": "https://exmaple.com/12081064-8878-477e-8092-564a240c69e2/service_S7GZ.json"
+                                     }
+                                   ],
+                                   "gx:dataProtectionRegime": "GDPR2016",
+                                   "type": "gx:ServiceOffering",
+                                   "gx:criteria": {
+                                     "P1.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.8": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.9": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.2.10": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P1.3.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.2.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P2.3.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.8": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.9": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.10": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.11": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.12": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.13": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.14": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.15": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.16": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.17": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.18": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.19": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P3.1.20": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P4.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P4.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.2": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.3": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.4": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.5": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.6": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.1.7": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     },
+                                     "P5.2.1": {
+                                       "evidence": {
+                                         "website": "",
+                                         "pdf": {},
+                                         "vc": {}
+                                       },
+                                       "response": "Confirm",
+                                       "reason": ""
+                                     }
+                                   }
+                                 }
                             }
                             """)
             })
@@ -676,6 +1797,7 @@ public class ServiceOfferController extends BaseController {
                                                                     "gx:location": [
                                                                       "BE-BRU"
                                                                     ],
+                                                                    "gx:customAttribute": "https://www.smartsensesolutions.com/",
                                                                     "gx:dataAccountExport": {
                                                                       "gx:requestType": "API",
                                                                       "gx:accessType": "physical",
@@ -789,14 +1911,12 @@ public class ServiceOfferController extends BaseController {
                             })
                     }),
     })
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = PUBLIC_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null));
+        return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null, true), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
-    @Tag(name = "Service-Offering")
     @Operation(summary = "Get service locations from policy")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
@@ -844,13 +1964,12 @@ public class ServiceOfferController extends BaseController {
             }),
     })
     @PostMapping(path = SERVICE_OFFER_LOCATION, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Object> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
+    public CommonResponse<ServiceOfferingLocationResponse> getServiceOfferingLocation(@Valid @RequestBody ServiceIdRequest serviceIdRequest) {
         ServiceOfferingLocationResponse serviceOfferingLocationResponse = new ServiceOfferingLocationResponse(this.serviceOfferService.getLocationFromService(serviceIdRequest));
         return CommonResponse.of(serviceOfferingLocationResponse);
     }
 
-    @Tag(name = "Service-Offering")
-    @Operation(summary = "Get service list for dropdown")
+    @Operation(summary = "Public service list")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Filter request with sort",
@@ -938,16 +2057,108 @@ public class ServiceOfferController extends BaseController {
             }),
     })
     @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@Valid @RequestBody FilterRequest filterRequest) {
+    public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingFilter(@Valid @RequestBody FilterRequest filterRequest) {
+//        return CommonResponse.of(this.serviceOfferViewService.filterServiceOfferView(filterRequest, null));
         return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, null));
     }
 
-    @Tag(name = "Service-Offering")
+    @Operation(summary = "Get service list for logged in participant")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
+            @Content(examples = {
+                    @ExampleObject(name = "Filter request with sort",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      }
+                                    }"""
+                    ),
+                    @ExampleObject(name = "Filter request with sort and search",
+                            value = """
+                                    {
+                                      "page": 0,
+                                      "size": 5,
+                                      "sort": {
+                                        "column": "name",
+                                        "sortType": "ASC"
+                                      },
+                                      "criteriaOperator": "AND",
+                                      "criteria": [
+                                        {
+                                          "column": "name",
+                                          "operator": "CONTAIN",
+                                          "values": [
+                                            "xyz"
+                                          ]
+                                        }
+                                      ]
+                                    }"""
+                    ),
+            })
+    })
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Service list fetched successfully.", content = {
+                    @Content(examples = {
+                            @ExampleObject(name = "Successful request", value = """
+                                    {
+                                       "status": 200,
+                                       "payload": {
+                                         "content": [
+                                           {
+                                             "id": "0fa1180c-a8bf-4994-8798-66744886acea",
+                                             "name": "Storage service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Storage service.json"
+                                           },
+                                           {
+                                             "id": "ab06e01c-978a-459c-9104-1018cb5e1ec9",
+                                             "name": "Clould service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Clould_service.json"
+                                           },
+                                           {
+                                             "id": "0749b43f-b187-4a57-8119-8d72ea7dd01f",
+                                             "name": "Database service",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/Database_service.json"
+                                           },
+                                           {
+                                             "id": "c6a04238-fa3a-45b9-af1d-1d92872bcaf3",
+                                             "name": "Sertvice_offer_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_QTJG.json"
+                                           },
+                                           {
+                                             "id": "bcb1e1e1-347e-4aa8-ba38-ac35d331e2c6",
+                                             "name": "Sertvice_of_1",
+                                             "vcUrl": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/service_6vSP.json"
+                                           }
+                                         ],
+                                         "pageable": {
+                                           "pageSize": 5,
+                                           "totalPages": 4,
+                                           "pageNumber": 0,
+                                           "numberOfElements": 5,
+                                           "totalElements": 18
+                                         }
+                                       }
+                                    }"""
+                            )
+                    })
+            }),
+            @ApiResponse(responseCode = "400", description = "Invalid request", content = {
+                    @Content(examples = {})
+            }),
+    })
     @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingList(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
         this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, participantId));
     }
 
+    @GetMapping(path = PARTICIPANT_SERVICE_OFFER_DETAILS, produces = APPLICATION_JSON_VALUE)
+    public CommonResponse<ServiceDetailResponse> getServiceOfferingDetails(@PathVariable(value = "participantId") String participantId, @PathVariable(value = "serviceOfferId") UUID serviceOfferId, Principal principal) {
+        this.validateParticipantId(participantId, principal);
+        return CommonResponse.of(this.serviceOfferService.getServiceOfferingById(serviceOfferId));
+    }
 
 }

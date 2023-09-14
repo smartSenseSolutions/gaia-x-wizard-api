@@ -29,6 +29,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,8 @@ public class RestExceptionHandler {
      * The constant HANDLE_ENTITY_EXCEPTION_ERROR.
      */
     public static final String HANDLE_ENTITY_EXCEPTION_ERROR = "handleEntityException: Error";
+
+    public static final String FILE_UPLOAD_LIMIT_EXCEPTION = "handleSizeLimitExceededException: Exception";
     /**
      * The constant ERROR.
      */
@@ -218,5 +221,18 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ValidationErrorResponse(messages, HttpStatus.BAD_REQUEST.value(), "Validation failed"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder(map).message(messages.entrySet().iterator().next().getValue()).status(HttpStatus.BAD_REQUEST.value()).build());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({MaxUploadSizeExceededException.class})
+    public ResponseEntity<CommonResponse<Object>> handleValidation(MaxUploadSizeExceededException exception) {
+        log.error(FILE_UPLOAD_LIMIT_EXCEPTION, exception.getMessage());
+        return ResponseEntity.badRequest().body(CommonResponse.builder(new Object()).message("file.size.exceeds.limit").status(HttpStatus.BAD_REQUEST.value()).build());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler({ForbiddenAccessException.class})
+    public CommonResponse<Object> handleForbiddenException(ForbiddenAccessException exception) {
+        return CommonResponse.builder(new Object()).message(this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale())).status(HttpStatus.FORBIDDEN.value()).build();
     }
 }
