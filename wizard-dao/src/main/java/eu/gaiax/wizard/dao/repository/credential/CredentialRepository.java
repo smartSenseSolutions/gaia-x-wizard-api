@@ -1,7 +1,7 @@
-package eu.gaiax.wizard.dao.repository;
+package eu.gaiax.wizard.dao.repository.credential;
 
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
-import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.credential.Credential;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;

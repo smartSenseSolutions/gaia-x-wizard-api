@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.service_offer;
+package eu.gaiax.wizard.core.service.resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,7 +30,7 @@ import eu.gaiax.wizard.core.service.participant.ParticipantService;
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
-import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.credential.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;

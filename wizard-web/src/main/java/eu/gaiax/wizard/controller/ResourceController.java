@@ -7,7 +7,7 @@ import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.core.service.service_offer.ResourceService;
+import eu.gaiax.wizard.core.service.resource.ResourceService;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

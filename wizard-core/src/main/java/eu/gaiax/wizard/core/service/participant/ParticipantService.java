@@ -24,7 +24,7 @@ import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegiste
 import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
-import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.credential.Credential;
 import eu.gaiax.wizard.dao.entity.data_master.EntityTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.data_master.EntityTypeMasterRepository;

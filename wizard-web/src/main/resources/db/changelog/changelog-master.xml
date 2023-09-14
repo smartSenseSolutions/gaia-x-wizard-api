@@ -12,6 +12,7 @@
     <include file="/db/changelog/changes/participant.sql"/>
     <include file="/db/changelog/changes/resource.sql"/>
     <include file="/db/changelog/changes/service_offer.sql"/>
+    <include file="/db/changelog/changes/credential_view.sql"/>
 
 
     <changeSet author="Neha" id="1">

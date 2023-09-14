@@ -6,9 +6,9 @@ package eu.gaiax.wizard.core.service.credential;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.credential.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
-import eu.gaiax.wizard.dao.repository.CredentialRepository;
+import eu.gaiax.wizard.dao.repository.credential.CredentialRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

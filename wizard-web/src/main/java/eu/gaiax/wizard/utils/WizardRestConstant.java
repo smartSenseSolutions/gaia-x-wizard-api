@@ -79,5 +79,6 @@ public class WizardRestConstant {
     public static final String PARTICIPANT_DID = "/did/{participantId}";
 
     public static final String CREATE_PARTICIPANT = "/participant/{participantId}";
+    public static final String PARTICIPANT_CREDENTIAL = "/participant/{participantId}/credential";
 
 }

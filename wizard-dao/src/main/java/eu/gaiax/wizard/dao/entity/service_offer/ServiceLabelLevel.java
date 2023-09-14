@@ -1,7 +1,7 @@
 package eu.gaiax.wizard.dao.entity.service_offer;
 
-import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.SuperEntity;
+import eu.gaiax.wizard.dao.entity.credential.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import jakarta.persistence.*;
 import lombok.*;
