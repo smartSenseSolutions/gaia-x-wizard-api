@@ -1,26 +1,120 @@
 server:
-  port: ${APPLICATION_PORT:8080}
+  port: ${wizard.server.port}
   shutdown: graceful
   compression:
     enabled: true
 
+wizard:
+  application:
+    name: "gaia-x-wizard"
+  info:
+    name:
+    description:
+    version:
+    contact:
+      name:
+      email:
+      url:
+  aws:
+    accessKey:
+    secretKey:
+    hostedZoneId:
+    serverIp:
+    baseDomain:
+    bucket:
+    region:
+  database:
+    postgres:
+      host:
+      port:
+      name:
+      username:
+      password:
+      connection-timeout: 120000
+      pool-size: 10
+  k8s:
+    basePath:
+    token:
+    serviceName:
+    issuer:
+  keycloak:
+    authServer:
+    realm:
+    clientId:
+    clientSecret:
+    publicClientId:
+    apiDocsClient:
+    webAuthRedirectUrl:
+    actionTokenLifespan:
+    requiredActionsEmailRedirectionUrl:
+  security:
+    enabled: true
+    realm: ${wizard.keycloak.realm}
+    clientId: ${wizard.keycloak.client-id}
+    auth-server-url: ${wizard.keycloak.auth-server}
+    authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
+    tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
+    refreshTokenUrl: ${wizard.security.token-url}
+    corsOrigins: "*"
+  host:
+    signer:
+    wizard:
+    messagingQueue:
+  server:
+    port: 8080
+  quartz:
+    scheduler:
+      instanceName: smartSense
+      instanceId: AUTO
+      batchTriggerAcquisitionMaxCount: 10
+      threadPool:
+        threadCount: 10
+  management:
+    port: 8090
+  multipart:
+    max-file-size:
+    max-request-size:
+  signer-policies:
+  vault:
+    host:
+    port:
+    scheme:
+    authentication:
+    role-id:
+    secret-id:
+    secret-path:
+  gaia-x:
+    registryService: https://registry.gaia-x.eu/v1
+  context:
+    participant:
+    registrationNumber:
+    tnc:
+    serviceOffer:
+    ODRLPolicy:
+    labelLevel:
+  domain:
+  gaiax:
+    tnc:
+  service-endpoint:
+    linkDomainType:
+    pdpType:
+    pdpUrl:
+
 spring:
-  profiles:
-    active: ${APPLICATION_ENVIRONMENT:dev}
   liquibase:
     change-log: classpath:/db/changelog/changelog-master.xml
   main:
     allow-bean-definition-overriding: true
   application:
-    name: smartsense-gaia-x-api
+    name: ${wizard.application.name}
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=${USE_SSL}
-    username: ${DB_USER_NAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://${wizard.database.postgres.host}:${wizard.database.postgres.port}/${wizard.database.postgres.name}
+    username: ${wizard.database.postgres.username}
+    password: ${wizard.database.postgres.password}
     initialization-mode: always
     hikari:
-      connectionTimeout: ${DB_CONNECTION_TIME_OUT:120000}
-      maximumPoolSize: ${DB_POOL_SIZE:10}
+      connectionTimeout: ${wizard.database.postgres.connection-timeout}
+      maximumPoolSize: ${wizard.database.postgres.pool-size}
       leakDetectionThreshold: 50000
       maxLifetime: 30000
   quartz:
@@ -31,7 +125,7 @@ spring:
           scheduler:
             instanceName: smartSense
             instanceId: AUTO
-            batchTriggerAcquisitionMaxCount: ${QUARTZ_BATCH_TRIGGER_ACQUISITION_MAX_COUNT:10}
+            batchTriggerAcquisitionMaxCount: ${wizard.quartz.scheduler.batchTriggerAcquisitionMaxCount}
             batchTriggerAcquisitionFireAheadTimeWindow: 1000
           jobStore:
             isClustered: true
@@ -39,8 +133,23 @@ spring:
             acquireTriggersWithinLock: true
             driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
           threadPool:
-            threadCount: ${QUARTZ_THREAD_COUNT:10}
-
+            threadCount: ${wizard.quartz.scheduler.threadPool.threadCount}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          #Issuer-uri indicates the iss claims from jwt token
+          issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
+          jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
+  cloud:
+    vault:
+      host: ${wizard.vault.host}
+      port: ${wizard.vault.port}
+      scheme: ${wizard.vault.scheme}
+      authentication: ${wizard.vault.authentication}
+      app-role:
+        roleId: ${wizard.vault.role-id}
+        secretId: ${wizard.vault.secret-id}
   jpa:
     show-sql: false
     hibernate:
@@ -58,10 +167,14 @@ spring:
           batch_versioned_data: true
         order_inserts: true
         order_updates: true
+  servlet:
+    multipart:
+      max-file-size: ${wizard.multipart.max-file-size}
+      max-request-size: ${wizard.multipart.max-request-size}
 
 management:
   server:
-    port: ${MANAGEMENT_PORT:8090}
+    port: ${wizard.management.port}
   endpoint:
     health:
       probes:
@@ -78,17 +191,15 @@ management:
     readinessState:
       enabled: true
 
-aws:
-  accessKey: ${AWS_ACCESS_KEY}
-  secretKey: ${AWS_SECRET_KEY}
-  hostedZoneId: ${HOSTED_ZONE_ID}
-  serverIp: ${SERVER_IP}
-  baseDomain: ${BASE_DOMAIN}
-k8s:
-  basePath: ${K8S_BASE_PATH}
-  token: ${K8S_TOKEN}
-  serviceName: ${K8S_SERVICE_NAME}
-signer:
-  host: ${SIGNER_API_HOST}
-jwt:
-  tokenSigningKey: ${JWT_TOKEN_SIGNING_KEY}
+springdoc:
+  swagger-ui:
+    oauth:
+      clientId: ${wizard.keycloak.api-docs-client}
+      clientSecret:
+    disable-swagger-default-url: true
+    path: /ui/swagger-ui
+    show-common-extensions: true
+    csrf:
+      enabled: true
+  api-docs:
+    path: /docs/api-docs

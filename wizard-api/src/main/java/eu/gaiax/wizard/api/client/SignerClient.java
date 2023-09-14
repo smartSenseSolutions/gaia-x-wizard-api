@@ -4,10 +4,11 @@
 
 package eu.gaiax.wizard.api.client;
 
-import eu.gaiax.wizard.api.models.CreateDidRequest;
-import eu.gaiax.wizard.api.models.CreateVCRequest;
-import eu.gaiax.wizard.api.models.CreateVPRequest;
-import eu.gaiax.wizard.api.models.VerifyRequest;
+import eu.gaiax.wizard.api.model.CreateVCRequest;
+import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
+import eu.gaiax.wizard.api.model.did.CreateDidRequest;
+import eu.gaiax.wizard.api.model.did.ValidateDidRequest;
+import eu.gaiax.wizard.api.model.service_offer.SignerServiceRequest;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,47 +17,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-/**
- * The interface Signer client.
- */
-@FeignClient(value = "Signerapi", url = "${signer.host}")
+@FeignClient(value = "Signerapi", url = "${wizard.host.signer}")
 public interface SignerClient {
 
-    /**
-     * Create did response entity.
-     *
-     * @param createDidRequest the create did request
-     * @return the response entity
-     */
-    @PostMapping(path = "createWebDID", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/v1/create-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createDid(@RequestBody CreateDidRequest createDidRequest);
 
-    /**
-     * On board to gaia x response entity.
-     *
-     * @param request the request
-     * @return the response entity
-     */
-    @PostMapping(path = "onBoardToGaiaX", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = "/v1/gaia-x/legal-participant", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createVc(@RequestBody CreateVCRequest request);
 
+    @PostMapping(path = "/v1/gaia-x/verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> verify(@RequestBody ParticipantVerifyRequest request);
 
-    /**
-     * Create vp response entity.
-     *
-     * @param request the request
-     * @return the response entity
-     */
-    @PostMapping(path = "createVP", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Map<String, Object>> createVP(@RequestBody CreateVPRequest request);
+    @PostMapping(path = "/v1/gaia-x/service-offering", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> createServiceOfferVc(@RequestBody SignerServiceRequest request);
 
-    /**
-     * Verify response entity.
-     *
-     * @param request the request
-     * @return the response entity
-     */
-    @PostMapping(path = "verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Map<String, Object>> verify(@RequestBody VerifyRequest request);
+    @PostMapping(path = "/v1/gaia-x/resource", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> signResource(@RequestBody Map<String, Object> request);
 
+    @PostMapping(path = "/v1/verify-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> validateDid(@RequestBody ValidateDidRequest request);
+
+    @PostMapping(path = "/v1/gaia-x/label-level", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> signLabelLevel(@RequestBody Map<String, Object> request);
+
+    @PostMapping(path = "/v1/gaia-x/validate-registration-number", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<Map<String, Object>> validateRegistrationNumber(@RequestBody Map<String, Object> request);
 }

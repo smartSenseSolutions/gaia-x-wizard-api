@@ -5,19 +5,14 @@
 package eu.gaiax.wizard.config;
 
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.exception.DuplicateEntityException;
-import eu.gaiax.wizard.api.exception.EntityCreationException;
-import eu.gaiax.wizard.api.exception.EntityModificationException;
-import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.models.CommonResponse;
-import eu.gaiax.wizard.api.models.ErrorResponse;
-import eu.gaiax.wizard.api.models.ValidationErrorResponse;
+import eu.gaiax.wizard.api.exception.*;
+import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.ErrorResponse;
+import eu.gaiax.wizard.api.model.ValidationErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
@@ -34,6 +29,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -44,19 +40,21 @@ import java.util.Map;
  * The type Rest exception handler.
  */
 @RestControllerAdvice
+@Slf4j
 public class RestExceptionHandler {
 
     /**
      * The constant HANDLE_ENTITY_EXCEPTION_ERROR.
      */
     public static final String HANDLE_ENTITY_EXCEPTION_ERROR = "handleEntityException: Error";
-    private static final String INTERNAL_SERVER_ERROR = "internal.server.error";
+
+    public static final String FILE_UPLOAD_LIMIT_EXCEPTION = "handleSizeLimitExceededException: Exception";
     /**
      * The constant ERROR.
      */
     public static final String ERROR = "error";
+    private static final String INTERNAL_SERVER_ERROR = "internal.server.error";
     private final MessageSource messageSource;
-    private final Logger log = LoggerFactory.getLogger(RestExceptionHandler.class);
 
     /**
      * Instantiates a new Platform exception handler.
@@ -80,11 +78,28 @@ public class RestExceptionHandler {
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleException(Exception exception, HttpServletRequest request) {
 
         log.error("Internal server error, API={}, Method={}", request.getRequestURI(), request.getMethod(), exception);
-        String message = messageSource.getMessage(INTERNAL_SERVER_ERROR, new Object[]{}, LocaleContextHolder.getLocale());
+        String message = this.messageSource.getMessage(INTERNAL_SERVER_ERROR, new Object[]{}, LocaleContextHolder.getLocale());
 
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ErrorResponse(message, HttpStatus.INTERNAL_SERVER_ERROR.value()));
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(CommonResponse.builder(map).message(message).status(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+    }
+
+    @ExceptionHandler({SignerException.class})
+    public ResponseEntity<CommonResponse<Map<String, Object>>> handleException(SignerException exception) {
+        log.error("Signer error", exception);
+        String message;
+        try {
+            message = this.messageSource.getMessage(exception.getMessage(), new Object[]{}, LocaleContextHolder.getLocale());
+        } catch (NoSuchMessageException e) {
+            message = exception.getMessage();
+        }
+        message = "Signer service says \"" + message + "\"";
+
+        //send email to admin and save in database
+        Map<String, Object> map = new HashMap<>();
+        map.put(ERROR, new ErrorResponse(message, HttpStatus.valueOf(exception.getStatus()).value()));
+        return ResponseEntity.status(HttpStatus.valueOf(exception.getStatus())).body(CommonResponse.builder(map).message(message).status(HttpStatus.valueOf(exception.getStatus()).value()).build());
     }
 
     /**
@@ -101,7 +116,7 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         String msg;
         try {
-            msg = messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
+            msg = this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             msg = exception.getMessage();
         }
@@ -123,7 +138,7 @@ public class RestExceptionHandler {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception.getMessage());
         String msg;
         try {
-            msg = messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
+            msg = this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
         } catch (NoSuchMessageException e) {
             if (exception instanceof HttpMessageNotReadableException) {
                 msg = "Invalid data";
@@ -162,7 +177,7 @@ public class RestExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleValidation(MethodArgumentNotValidException exception) {
         List<FieldError> fieldErrors = exception.getBindingResult().getAllErrors().stream().map(FieldError.class::cast).toList();
-        return handleValidationError(fieldErrors);
+        return this.handleValidationError(fieldErrors);
 
     }
 
@@ -191,7 +206,7 @@ public class RestExceptionHandler {
     public ResponseEntity<CommonResponse<Map<String, Object>>> handleValidation(BindException exception) {
         log.error(HANDLE_ENTITY_EXCEPTION_ERROR, exception.getMessage());
         List<FieldError> fieldErrors = exception.getBindingResult().getAllErrors().stream().map(FieldError.class::cast).toList();
-        return handleValidationError(fieldErrors);
+        return this.handleValidationError(fieldErrors);
 
     }
 
@@ -206,5 +221,18 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ValidationErrorResponse(messages, HttpStatus.BAD_REQUEST.value(), "Validation failed"));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder(map).message(messages.entrySet().iterator().next().getValue()).status(HttpStatus.BAD_REQUEST.value()).build());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({MaxUploadSizeExceededException.class})
+    public ResponseEntity<CommonResponse<Object>> handleValidation(MaxUploadSizeExceededException exception) {
+        log.error(FILE_UPLOAD_LIMIT_EXCEPTION, exception.getMessage());
+        return ResponseEntity.badRequest().body(CommonResponse.builder(new Object()).message("file.size.exceeds.limit").status(HttpStatus.BAD_REQUEST.value()).build());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler({ForbiddenAccessException.class})
+    public CommonResponse<Object> handleForbiddenException(ForbiddenAccessException exception) {
+        return CommonResponse.builder(new Object()).message(this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale())).status(HttpStatus.FORBIDDEN.value()).build();
     }
 }

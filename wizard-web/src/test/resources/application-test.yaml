@@ -1,0 +1,188 @@
+server:
+  port: 8080
+  shutdown: graceful
+  compression:
+    enabled: true
+
+wizard:
+  application:
+    name: "gaia-x-wizard"
+  aws:
+    accessKey:
+    secretKey:
+    hostedZoneId:
+    serverIp:
+    baseDomain:
+    bucket:
+    region:
+  database:
+    postgres:
+      host:
+      port:
+      name:
+      username:
+      password:
+      connection-timeout: 120000
+      pool-size: 10
+  k8s:
+    basePath:
+    token:
+    serviceName:
+    issuer:
+  keycloak:
+    authServer:
+    realm:
+    clientId:
+    clientSecret:
+    publicClientId:
+    apiDocsClient:
+    webAuthRedirectUrl: http://localhost:8189/*
+    actionTokenLifespan: 300
+    requiredActionsEmailRedirectionUrl: http://localhost:8189
+  security:
+    enabled: true
+    realm: ${wizard.keycloak.realm}
+    clientId: ${wizard.keycloak.client-id}
+    auth-server-url: ${wizard.keycloak.auth-server}
+    authUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/auth
+    tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
+    refreshTokenUrl: ${wizard.security.token-url}
+    corsOrigins: "*"
+  host:
+    signer: localhost:8080
+    wizard: localhost:8080
+  server:
+    port: 8080
+  quartz:
+    scheduler:
+      instanceName: smartSense
+      instanceId: AUTO
+      batchTriggerAcquisitionMaxCount: 10
+      threadPool:
+        threadCount: 10
+  management:
+    port: 8090
+  vault:
+    host:
+    port:
+    scheme:
+    authentication:
+    role-id:
+    secret-id:
+    secret-path:
+  gaia-x:
+    registryService: https://registry.gaia-x.eu/v1
+  context:
+    participant:
+    registrationNumber:
+    tnc:
+    serviceOffer:
+    ODRLPolicy:
+  domain:
+  gaiax:
+    tnc:
+  service-endpoint:
+    linkDomainType:
+    pdpType:
+    pdpUrl:
+
+spring:
+  liquibase:
+    change-log: classpath:/db/changelog/changelog-master.xml
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: ${wizard.application.name}
+  datasource:
+    url: jdbc:postgresql://${wizard.database.postgres.host}:${wizard.database.postgres.port}/${wizard.database.postgres.name}
+    username: ${wizard.database.postgres.username}
+    password: ${wizard.database.postgres.password}
+    initialization-mode: always
+    hikari:
+      connectionTimeout: ${wizard.database.postgres.connection-timeout}
+      maximumPoolSize: ${wizard.database.postgres.pool-size}
+      leakDetectionThreshold: 50000
+      maxLifetime: 30000
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: smartSense
+            instanceId: AUTO
+            batchTriggerAcquisitionMaxCount: ${wizard.quartz.scheduler.batchTriggerAcquisitionMaxCount}
+            batchTriggerAcquisitionFireAheadTimeWindow: 1000
+          jobStore:
+            isClustered: true
+            clusterCheckinInterval: 10000
+            acquireTriggersWithinLock: true
+            driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+          threadPool:
+            threadCount: ${wizard.quartz.scheduler.threadPool.threadCount}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          #Issuer-uri indicates the iss claims from jwt token
+          issuer-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}
+          jwk-set-uri: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/certs
+  cloud:
+    vault:
+      host: ${wizard.vault.host}
+      port: ${wizard.vault.port}
+      scheme: ${wizard.vault.scheme}
+      authentication: ${wizard.vault.authentication}
+      app-role:
+        roleId: ${wizard.vault.role-id}
+        secretId: ${wizard.vault.secret-id}
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+    properties:
+      hibernate:
+        proc:
+          param_null_passing: true
+        c3p0:
+          timeout: 1800
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 100
+          batch_versioned_data: true
+        order_inserts: true
+        order_updates: true
+
+management:
+  server:
+    port: ${wizard.management.port}
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*, pre-stop'
+  health:
+    db:
+      enabled: true
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    oauth:
+      clientId: ${wizard.keycloak.api-docs-client}
+      clientSecret:
+    disable-swagger-default-url: true
+    path: /ui/swagger-ui
+    show-common-extensions: true
+    csrf:
+      enabled: true
+  api-docs:
+    path: /docs/api-docs

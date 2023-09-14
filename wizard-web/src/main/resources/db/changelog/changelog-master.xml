@@ -7,7 +7,232 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <include file="/db/changelog/changes/sample.sql"/>
-    <include file="/db/changelog/changes/init.sql"/>
     <include file="/db/changelog/changes/quartz.sql"/>
+    <include file="/db/changelog/changes/master_tables.sql"/>
+    <include file="/db/changelog/changes/participant.sql"/>
+    <include file="/db/changelog/changes/resource.sql"/>
+    <include file="/db/changelog/changes/service_offer.sql"/>
+
+
+    <changeSet author="Neha" id="1">
+        <sql>
+            CREATE TABLE subdivision_code_master(
+            id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            country_code VARCHAR(5) NULL,
+            subdivision_code VARCHAR(10) NOT NULL,
+            name VARCHAR(255) NULL,
+            active Boolean NOT NULL DEFAULT true,
+            created_at timestamp(6) NOT NULL DEFAULT NOW(),
+            updated_at timestamp(6) NOT NULL DEFAULT NOW()
+            );
+        </sql>
+
+        <loadData catalogName="iso-3166-2"
+                  file="masterData/subdivisions.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="subdivision_code_master">
+            <column header="country_code"
+                    name="country_code"
+                    type="VARCHAR(5)"/>
+            <column header="subdivision_code"
+                    name="subdivision_code"
+                    type="VARCHAR(10)"/>
+            <column header="name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet author="Neha" id="2">
+        <sql>
+            CREATE TABLE format_type_master(
+            id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            name VARCHAR(255) NOT NULL,
+            type VARCHAR(255) NOT NULL,
+            reference VARCHAR(255) NOT NULL,
+            active Boolean NOT NULL DEFAULT true,
+            created_at timestamp(6) NOT NULL DEFAULT NOW(),
+            updated_at timestamp(6) NOT NULL DEFAULT NOW()
+            );
+        </sql>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/application.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/audio.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/font.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/image.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/message.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/model.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/multipart.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/text.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+
+        <loadData catalogName="iana_type"
+                  file="masterData/iana_type/video.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="format_type_master">
+
+            <column header="Name"
+                    name="name"
+                    type="VARCHAR(255)"/>
+            <column header="Template"
+                    name="type"
+                    type="VARCHAR(255)"/>
+            <column header="Reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+        </loadData>
+    </changeSet>
+
+    <changeSet author="Neha" id="3">
+        <sql>
+            CREATE TABLE spdx_license_master(
+            id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
+            license_id VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
+            reference VARCHAR(255) NOT NULL,
+            active Boolean NOT NULL DEFAULT true,
+            created_at timestamp(6) NOT NULL DEFAULT NOW(),
+            updated_at timestamp(6) NOT NULL DEFAULT NOW()
+            );
+        </sql>
+
+        <loadData catalogName="spdx_license_master"
+                  file="masterData/spdx_licenses.csv"
+                  quotchar='"'
+                  schemaName="public"
+                  tableName="spdx_license_master">
+            <column header="licenseId"
+                    name="license_id"
+                    type="VARCHAR(255)"/>
+            <column header="name"
+                    name="name"
+                    type="VARCHAR(10)"/>
+            <column header="reference"
+                    name="reference"
+                    type="VARCHAR(255)"/>
+            <column header="active"
+                    name="active"
+                    type="Boolean"/>
+        </loadData>
+    </changeSet>
 </databaseChangeLog>

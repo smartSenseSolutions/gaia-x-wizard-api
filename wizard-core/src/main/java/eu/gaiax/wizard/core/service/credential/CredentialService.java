@@ -5,29 +5,22 @@
 package eu.gaiax.wizard.core.service.credential;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.gaiax.wizard.api.client.SignerClient;
-import eu.gaiax.wizard.api.exception.BadDataException;
-import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.models.CreateVPRequest;
-import eu.gaiax.wizard.api.utils.S3Utils;
-import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.dao.entity.Enterprise;
-import eu.gaiax.wizard.dao.entity.EnterpriseCredential;
-import eu.gaiax.wizard.dao.repository.EnterpriseCredentialRepository;
-import eu.gaiax.wizard.dao.repository.EnterpriseRepository;
-import org.json.JSONObject;
-import org.springframework.http.ResponseEntity;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.dao.entity.Credential;
+import eu.gaiax.wizard.dao.entity.participant.Participant;
+import eu.gaiax.wizard.dao.repository.CredentialRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 
 /**
  * The type Credential service.
  */
 @Service
+@RequiredArgsConstructor
 public class CredentialService {
+/*
 
     private final EnterpriseRepository enterpriseRepository;
 
@@ -38,23 +31,7 @@ public class CredentialService {
     private final SignerClient signerClient;
     private final S3Utils s3Utils;
 
-    /**
-     * Instantiates a new Credential service.
-     *
-     * @param enterpriseRepository           the enterprise repository
-     * @param enterpriseCredentialRepository the enterprise credential repository
-     * @param objectMapper                   the object mapper
-     * @param signerClient                   the signer client
-     * @param s3Utils                        the s 3 utils
-     */
-    public CredentialService(EnterpriseRepository enterpriseRepository, EnterpriseCredentialRepository enterpriseCredentialRepository, ObjectMapper objectMapper, SignerClient signerClient, S3Utils s3Utils) {
-        this.enterpriseRepository = enterpriseRepository;
-        this.enterpriseCredentialRepository = enterpriseCredentialRepository;
-        this.objectMapper = objectMapper;
-        this.signerClient = signerClient;
-        this.s3Utils = s3Utils;
-    }
-
+    */
     /**
      * Create vp map.
      *
@@ -62,7 +39,8 @@ public class CredentialService {
      * @param name         the name
      * @return the map
      * @throws JsonProcessingException the json processing exception
-     */
+     *//*
+
     public Map<String, Object> createVP(long enterpriseId, String name) throws JsonProcessingException {
         Enterprise enterprise = enterpriseRepository.findById(enterpriseId).orElseThrow(BadDataException::new);
         EnterpriseCredential enterpriseCredential = enterpriseCredentialRepository.getByEnterpriseIdAndLabel(enterpriseId, name);
@@ -79,5 +57,26 @@ public class CredentialService {
 
         String serviceOfferingString = objectMapper.writeValueAsString(((Map<String, Object>) vp.getBody().get("data")).get("verifiablePresentation"));
         return new JSONObject(serviceOfferingString).toMap();
+    }
+*/
+
+    private final CredentialRepository credentialRepository;
+
+    public Credential createCredential(String vcJson, String vcUrl, String credentialType, String metadata, Participant participant) {
+        return this.credentialRepository.save(Credential.builder()
+                .vcJson(vcJson)
+                .vcUrl(vcUrl)
+                .credentialType(credentialType)
+                .metadata(metadata)
+                .participant(participant)
+                .build());
+    }
+
+    public Credential getLegalParticipantCredential(UUID participantId) {
+        return this.getByParticipantWithCredentialType(participantId, CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+    }
+
+    public Credential getByParticipantWithCredentialType(UUID participantId, String credentialType) {
+        return this.credentialRepository.findByParticipantIdAndCredentialType(participantId, credentialType);
     }
 }

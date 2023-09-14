@@ -5,15 +5,9 @@
 package eu.gaiax.wizard.core.service.job;
 
 
-import eu.gaiax.wizard.api.models.StringPool;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.JobKey;
-import org.quartz.Scheduler;
-import org.quartz.SchedulerException;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.SimpleTrigger;
-import org.quartz.TriggerBuilder;
+import eu.gaiax.wizard.api.utils.StringPool;
+import lombok.RequiredArgsConstructor;
+import org.quartz.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,19 +19,11 @@ import java.util.UUID;
  * The type Schedule service.
  */
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduleService.class);
 
     private final Scheduler scheduler;
-
-    /**
-     * Instantiates a new Schedule service.
-     *
-     * @param scheduler the scheduler
-     */
-    public ScheduleService(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
 
     /**
      * Delete job.
@@ -46,7 +32,7 @@ public class ScheduleService {
      */
     public void deleteJob(JobKey jobKey) {
         try {
-            scheduler.deleteJob(jobKey);
+            this.scheduler.deleteJob(jobKey);
             LOGGER.debug("Job deleted for group-{}, name-{}", jobKey.getGroup(), jobKey.getName());
         } catch (SchedulerException e) {
             LOGGER.error("Can not delete job with group-{}, name-{}", jobKey.getGroup(), jobKey.getName());
@@ -56,17 +42,17 @@ public class ScheduleService {
     /**
      * Create job.
      *
-     * @param enterpriseId the enterprise id
-     * @param type         the type
-     * @param count        the count
+     * @param id    the participantId
+     * @param type  the type
+     * @param count the count
      * @throws SchedulerException the scheduler exception
      */
-    public void createJob(long enterpriseId, String type, int count) throws SchedulerException {
+    public void createJob(String id, String type, int count) throws SchedulerException {
         JobDetail job = JobBuilder.newJob(ScheduledJobBean.class)
                 .withIdentity(UUID.randomUUID().toString(), type)
                 .storeDurably()
                 .requestRecovery()
-                .usingJobData(StringPool.ENTERPRISE_ID, enterpriseId)
+                .usingJobData(StringPool.ID, id)
                 .usingJobData(StringPool.JOB_TYPE, type)
                 .build();
 
@@ -76,7 +62,7 @@ public class ScheduleService {
                 .startAt(new Date(System.currentTimeMillis() + 10000)) //start after 10 sec
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule().withRepeatCount(count).withIntervalInSeconds(30))
                 .build();
-        scheduler.scheduleJob(job, activateEnterpriseUserTrigger);
-        LOGGER.debug("{}: job created for enterprise id->{}", type, enterpriseId);
+        this.scheduler.scheduleJob(job, activateEnterpriseUserTrigger);
+        LOGGER.debug("{}: job created for participant with id->{}", type, id);
     }
 }
