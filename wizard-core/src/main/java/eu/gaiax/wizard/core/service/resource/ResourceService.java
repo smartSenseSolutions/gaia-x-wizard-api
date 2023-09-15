@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.service_offer;
+package eu.gaiax.wizard.core.service.resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -18,6 +18,7 @@ import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.ResourceType;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
+import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
@@ -27,7 +28,6 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
@@ -56,6 +56,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 @Service
 @Slf4j
@@ -97,12 +99,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
         perMap.put("assigner", participant.getDid());
         perMap.put("action", "view");
 
-        /*List<Map<String, Object>> constraint = new ArrayList<>();
-        Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("default", "allow");
-        constraint.add(constraintMap);
-
-        perMap.put("constraint", constraint);*/
         permission.add(perMap);
         return permission;
     }
@@ -114,6 +110,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         if (StringUtils.hasText(id)) {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+
 
             if (participant.isKeyStored()) {
                 if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
@@ -139,7 +136,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         this.validateResourceRequest(request);
         String name = "resource_" + UUID.randomUUID();
         String json = this.resourceVc(request, participant, name);
-        String hostUrl = this.wizardHost + participant.getId() + "/" + name + ".json";
+        String hostUrl = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
         if (!participant.isOwnDidSolution()) {
             this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
         }
@@ -147,7 +144,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             Credential resourceVc = this.credentialService.createCredential(json, hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.getCredentialSubject().get("gx:name").toString())
                     .credential(resourceVc)
-                    .type(request.getCredentialSubject().get("type").toString())
+                    .type(request.getCredentialSubject().get(TYPE).toString())
                     .description((String) request.getCredentialSubject().getOrDefault("gx:description", null))
                     .participant(participant)
                     .build();
@@ -177,10 +174,10 @@ public class ResourceService extends BaseService<Resource, UUID> {
     private String hostOdrlPolicy(Participant participant) throws JsonProcessingException {
         Map<String, Object> policyMap = new HashMap<>();
 
-        String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + ".json";
-        policyMap.put("@context", this.contextConfig.ODRLPolicy());
-        policyMap.put("type", "Offer");
-        policyMap.put("id", this.wizardHost + hostUrl);
+        String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + JSON_EXTENSION;
+        policyMap.put(CONTEXT, this.contextConfig.ODRLPolicy());
+        policyMap.put(TYPE, "Offer");
+        policyMap.put(ID, this.wizardHost + hostUrl);
         List<Map<String, Object>> permission = getMaps(participant);
         policyMap.put("permission", permission);
         String policyJson = this.objectMapper.writeValueAsString(policyMap);
@@ -202,43 +199,43 @@ public class ResourceService extends BaseService<Resource, UUID> {
         this.validateAggregationOf(request);
         JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
 
-        if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
+        if (request.getCredentialSubject().get(TYPE).toString().contains("Physical")) {
 
             if (request.getCredentialSubject().containsKey("gx:maintainedBy")) {
                 JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonObject(CREDENTIAL_SUBJECT)
                         .getAsJsonArray("gx:maintainedBy");
                 List<String> ids = new ArrayList<>();
 
                 for (int i = 0; i < aggregationArray.size(); i++) {
                     JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get("id").getAsString();
+                    String idValue = aggregationObject.get(ID).getAsString();
                     ids.add(idValue);
                 }
                 this.signerService.validateRequestUrl(ids, "maintained.by.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:ownedBy")) {
                 JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonObject(CREDENTIAL_SUBJECT)
                         .getAsJsonArray("gx:ownedBy");
                 List<String> ids = new ArrayList<>();
 
                 for (int i = 0; i < aggregationArray.size(); i++) {
                     JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get("id").getAsString();
+                    String idValue = aggregationObject.get(ID).getAsString();
                     ids.add(idValue);
                 }
                 this.signerService.validateRequestUrl(ids, "owned.by.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:manufacturedBy")) {
                 JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonObject(CREDENTIAL_SUBJECT)
                         .getAsJsonArray("gx:manufacturedBy");
                 List<String> ids = new ArrayList<>();
 
                 for (int i = 0; i < aggregationArray.size(); i++) {
                     JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get("id").getAsString();
+                    String idValue = aggregationObject.get(ID).getAsString();
                     ids.add(idValue);
                 }
                 this.signerService.validateRequestUrl(ids, "manufactured.by.not.found", null);
@@ -246,51 +243,50 @@ public class ResourceService extends BaseService<Resource, UUID> {
         } else {
             if (request.getCredentialSubject().containsKey("gx:copyrightOwnedBy")) {
                 JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonObject(CREDENTIAL_SUBJECT)
                         .getAsJsonArray("gx:copyrightOwnedBy");
                 List<String> ids = new ArrayList<>();
 
                 for (int i = 0; i < aggregationArray.size(); i++) {
                     JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get("id").getAsString();
+                    String idValue = aggregationObject.get(ID).getAsString();
                     ids.add(idValue);
                 }
                 this.signerService.validateRequestUrl(ids, "manufactured.by.of.not.found", null);
             }
             if (request.getCredentialSubject().containsKey("gx:producedBy")) {
                 JsonObject produceBy = jsonObject
-                        .getAsJsonObject("credentialSubject")
+                        .getAsJsonObject(CREDENTIAL_SUBJECT)
                         .getAsJsonObject("gx:producedBy");
 
-                String idValue = produceBy.get("id").getAsString();
+                String idValue = produceBy.get(ID).getAsString();
 
                 this.signerService.validateRequestUrl(List.of(idValue), "produced.by.not.found", null);
             }
         }
-        if (request.getCredentialSubject().containsKey("gx:containsPII")) {
-            if (Boolean.parseBoolean(request.getCredentialSubject().get("gx:containsPII").toString()) == true) {
-                if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
-                    throw new BadDataException("invalid.legal.basis");
-                }
-                if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
-                    throw new BadDataException("data.protection.contact.required");
-                }
+        if (request.getCredentialSubject().containsKey("gx:containsPII") && Boolean.parseBoolean(request.getCredentialSubject().get("gx:containsPII").toString())) {
+
+            if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
+                throw new BadDataException("invalid.legal.basis");
+            }
+            if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
+                throw new BadDataException("data.protection.contact.required");
             }
         }
     }
 
 
     private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
-        if (request.getCredentialSubject().containsKey("gx:aggregationOf")) {
+        if (request.getCredentialSubject().containsKey(AGGREGATION_OF)) {
             JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
             JsonArray aggregationArray = jsonObject
-                    .getAsJsonObject("credentialSubject")
-                    .getAsJsonArray("gx:aggregationOf");
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonArray(AGGREGATION_OF);
             List<String> ids = new ArrayList<>();
 
             for (int i = 0; i < aggregationArray.size(); i++) {
                 JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                String idValue = aggregationObject.get("id").getAsString();
+                String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
             this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
@@ -299,37 +295,37 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws
             JsonProcessingException {
-        String id = this.wizardHost + participant.getId() + "/" + name + ".json";
+        String id = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> resourceRequest = new HashMap<>();
         Map<String, Object> map = new HashMap<>();
-        resourceRequest.put("@context", this.contextConfig.resource());
-        resourceRequest.put("type", Collections.singleton("VerifiableCredential"));
-        resourceRequest.put("id", id);
+        resourceRequest.put(CONTEXT, this.contextConfig.resource());
+        resourceRequest.put(TYPE, Collections.singleton(VERIFIABLE_CREDENTIAL));
+        resourceRequest.put(ID, id);
         resourceRequest.put("issuer", participant.getDid());
         resourceRequest.put("issuanceDate", issuanceDate);
         Map<String, Object> credentialSub = request.getCredentialSubject();
         if (credentialSub != null) {
-            credentialSub.put("@context", this.contextConfig.resource());
-            credentialSub.put("id", id);
-            if (request.getCredentialSubject().get("type").toString().contains("Physical")) {
-                credentialSub.put("type", "gx:" + request.getCredentialSubject().get("type").toString());
+            credentialSub.put(CONTEXT, this.contextConfig.resource());
+            credentialSub.put(ID, id);
+            if (request.getCredentialSubject().get(TYPE).toString().contains("Physical")) {
+                credentialSub.put(TYPE, "gx:" + request.getCredentialSubject().get(TYPE).toString());
             } else {
-                if (!StringUtils.hasText(request.getCredentialSubject().get("subType").toString())) {
+                if (!StringUtils.hasText(request.getCredentialSubject().get(SUBTYPE).toString())) {
                     throw new BadDataException("sub.type.required");
                 }
-                credentialSub.put("type", "gx:" + request.getCredentialSubject().get("subType").toString());
-                credentialSub.remove("subType");
-                if (request.getCredentialSubject().containsKey("gx:policy")) {
-                    Map<String, String> policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), Map.class);
-                    String customAttribute = policy.get("gx:customAttribute");
-                    credentialSub.put("gx:policy", List.of(customAttribute));
+                credentialSub.put(TYPE, "gx:" + request.getCredentialSubject().get(SUBTYPE).toString());
+                credentialSub.remove(SUBTYPE);
+                if (request.getCredentialSubject().containsKey(GX_POLICY) && request.getCredentialSubject().get(GX_POLICY) != null) {
+                    Map<String, String> policy = this.objectMapper.convertValue(request.getCredentialSubject().get(GX_POLICY), Map.class);
+                    String customAttribute = policy.get(CUSTOM_ATTRIBUTE);
+                    credentialSub.put(GX_POLICY, List.of(customAttribute));
                 } else {
-                    credentialSub.put("gx:policy", List.of(this.hostOdrlPolicy(participant)));
+                    credentialSub.put(GX_POLICY, List.of(this.hostOdrlPolicy(participant)));
                 }
             }
         }
-        resourceRequest.put("credentialSubject", credentialSub);
+        resourceRequest.put(CREDENTIAL_SUBJECT, credentialSub);
         map.put("resource", resourceRequest);
         Map<String, Object> resourceMap = new HashMap<>();
         resourceMap.put("issuer", participant.getDid());

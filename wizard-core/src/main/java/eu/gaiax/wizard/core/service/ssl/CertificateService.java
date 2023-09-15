@@ -181,7 +181,7 @@ public class CertificateService {
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
             //save files in vault
-            this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
+            this.uploadCertificatesToVault(participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
             participant.setKeyStored(true);
 
             //create Job tp create ingress and tls secret
@@ -353,7 +353,7 @@ public class CertificateService {
 
     }
 
-    private void uploadCertificatesToVault(String participantId, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
+    private void uploadCertificatesToVault(String participantId, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
         this.uploadCertificatesToVault(participantId,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));

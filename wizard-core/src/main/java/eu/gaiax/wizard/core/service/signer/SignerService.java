@@ -32,7 +32,6 @@ import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
-import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +72,6 @@ public class SignerService {
     private final S3Utils s3Utils;
     private final ObjectMapper mapper;
     private final ScheduleService scheduleService;
-    private final Vault vault;
     private final ServiceEndpointConfig serviceEndpointConfig;
 
     @Value("${wizard.signer-policies}")

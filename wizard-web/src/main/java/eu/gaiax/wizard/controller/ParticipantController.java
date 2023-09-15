@@ -1,15 +1,14 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
-import eu.gaiax.wizard.core.service.participant.ParticipantAndKeyResponse;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantCreationRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;

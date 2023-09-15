@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(value = "Signerapi", url = "${wizard.host.signer}")
+@FeignClient(value = "SignerClient", url = "${wizard.host.signer}")
 public interface SignerClient {
 
     @PostMapping(path = "/v1/create-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)

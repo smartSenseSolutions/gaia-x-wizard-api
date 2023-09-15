@@ -1,18 +1,15 @@
 package eu.gaiax.wizard.api.model;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.List;
 import java.util.UUID;
 
 
 public interface LabelLevelTypeInterface {
 
-    UUID getId() ;
+    UUID getId();
 
-    String getName() ;
+    String getName();
 
-     List<LabelLevelQuestionInterface> getLabelLevelQuestionMasterList();
+    List<LabelLevelQuestionInterface> getLabelLevelQuestionMasterList();
 
 }

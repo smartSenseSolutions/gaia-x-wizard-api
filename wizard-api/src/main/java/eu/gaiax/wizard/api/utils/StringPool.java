@@ -34,14 +34,6 @@ public class StringPool {
     public static final String JOB_TYPE_CREATE_PARTICIPANT = "JOB_TYPE_CREATE_PARTICIPANT";
 
     /**
-     * The constant ENTERPRISE_ID.
-     */
-    public static final String ENTERPRISE_ID = "enterpriseId";
-    /**
-     * The constant DID.
-     */
-    public static final String DID = "did";
-    /**
      * The constant ID.
      */
     public static final String ID = "id";
@@ -54,29 +46,6 @@ public class StringPool {
      * The constant JOB_TYPE.
      */
     public static final String JOB_TYPE = "JOB_TYPE";
-    /**
-     * The constant ROLE.
-     */
-    public static final String ROLE = "role";
-    /**
-     * The constant EMAIL.
-     */
-    public static final String EMAIL = "email";
-
-    /**
-     * The constant INVALID_USERNAME_OR_PASSWORD.
-     */
-    public static final String INVALID_USERNAME_OR_PASSWORD = "invalid.username.or.password"; //pragma: allowlist secret
-
-    /**
-     * The constant TERMS_AND_CONDITIONS_HASH.
-     */
-    public static final String TERMS_AND_CONDITIONS_HASH = "hash_value"; //pragma: allowlist secret
-
-    /**
-     * The constant REQUIRED_ACTIONS_PATH.
-     */
-    public static final String REQUIRED_ACTIONS_PATH = "/login-actions/action-token?key=";
 
     /**
      * The constant VERIFIABLE_CREDENTIAL.
@@ -89,19 +58,26 @@ public class StringPool {
      */
     public static final String CREDENTIAL_SUBJECT = "credentialSubject";
 
-    /**
-     * The constant USER_REGISTERED.
-     */
-    public static final String USER_REGISTERED = "userRegistered";
-
     public static final String GX_LEGAL_ADDRESS = "gx:legalAddress";
     public static final String GX_COUNTRY_SUBDIVISION = "gx:countrySubdivisionCode";
     public static final String GX_POLICY = "gx:policy";
     public static final String GX_DATA_PROTECTION_REGIME = "gx:dataProtectionRegime";
-    //    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
+
     public static final String POLICY_LOCATION_LEFT_OPERAND = "spatial";
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
+
+    public static final String CONTEXT = "@context";
+    public static final String TYPE = "type";
+    public static final String TARGET = "target";
+    public static final String ASSIGNER = "assigner";
+    public static final String ACTION = "action";
+    public static final String SUBTYPE = "subtype";
+    public static final String JSON_EXTENSION = ".json";
+    public static final String AGGREGATION_OF = "gx:aggregationOf";
+
+    public static final String CUSTOM_ATTRIBUTE = "gx:customAttribute";
+
 
     private StringPool() {
     }
