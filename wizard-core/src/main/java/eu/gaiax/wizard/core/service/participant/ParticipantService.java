@@ -3,6 +3,7 @@ package eu.gaiax.wizard.core.service.participant;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
@@ -11,6 +12,7 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
+import eu.gaiax.wizard.api.model.ParticipantProfileDto;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -45,11 +47,15 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 @Service
 @Slf4j
@@ -367,4 +373,78 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.keycloakService.sendRequiredActionsEmail(email);
         log.info("registration email sent to email: {}", email);
     }
+
+    @SneakyThrows
+    public ParticipantProfileDto getParticipantProfile(String participantId) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+
+        ParticipantProfileDto participantProfileDto = this.mapper.convertValue(participant, ParticipantProfileDto.class);
+        JsonNode participantCredentialRequest = this.mapper.readTree(participant.getCredentialRequest());
+        participantProfileDto.setLegalRegistrationNumber(participantCredentialRequest.get(LEGAL_REGISTRATION_NUMBER));
+
+        JsonNode credentialSubject = participantCredentialRequest.get(LEGAL_PARTICIPANT).get(CREDENTIAL_SUBJECT);
+        participantProfileDto.setHeadquarterAddress(credentialSubject.get(HEADQUARTER_ADDRESS).get(SUBDIVISION_CODE).asText());
+        participantProfileDto.setLegalAddress(credentialSubject.get(LEGAL_ADDRESS).get(SUBDIVISION_CODE).asText());
+
+        if (StringUtils.hasText(participant.getProfileImage())) {
+            participantProfileDto.setProfileImage(this.s3Utils.getPreSignedUrl(participant.getProfileImage()));
+        }
+
+        List<String> organizationList;
+        if (credentialSubject.has(PARENT_ORGANIZATION)) {
+            organizationList = this.getParentOrSubOrganizationList((ArrayNode) credentialSubject.get(PARENT_ORGANIZATION));
+            participantProfileDto.setParentOrganization(organizationList);
+        }
+
+        if (credentialSubject.has(SUB_ORGANIZATION)) {
+            organizationList = this.getParentOrSubOrganizationList((ArrayNode) credentialSubject.get(SUB_ORGANIZATION));
+            participantProfileDto.setParentOrganization(organizationList);
+        }
+
+        return participantProfileDto;
+    }
+
+    private List<String> getParentOrSubOrganizationList(ArrayNode organizationArrayNode) {
+        List<Map<String, String>> organizationlist = this.mapper.convertValue(organizationArrayNode, new TypeReference<>() {
+        });
+        return organizationlist.stream().map(org -> org.get(ID)).sorted().collect(Collectors.toList());
+    }
+
+    public void updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+
+        if (StringUtils.hasText(participant.getProfileImage())) {
+            this.s3Utils.deleteFile(participant.getProfileImage());
+        }
+
+        String fileName = "participant/" + participantId + "_" + System.currentTimeMillis() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+        File profileImage = new File(fileName);
+        try {
+            FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
+            this.s3Utils.uploadFile(fileName, profileImage);
+            participant.setProfileImage(fileName);
+            this.participantRepository.save(participant);
+        } catch (Exception e) {
+            throw new BadDataException("invalid.file");
+        } finally {
+            FileUtils.deleteQuietly(profileImage);
+        }
+
+    }
+
+    public void deleteParticipantProfileImage(String participantId) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
+        Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+
+        if (!StringUtils.hasText(participant.getProfileImage())) {
+            throw new BadDataException("file.not.found");
+        }
+
+        participant.setProfileImage(null);
+        this.participantRepository.save(participant);
+    }
+
+
 }
