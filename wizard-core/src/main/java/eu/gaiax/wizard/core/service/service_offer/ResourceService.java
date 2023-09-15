@@ -272,7 +272,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
                     throw new BadDataException("invalid.legal.basis");
                 }
-                if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
+                if (!(request.getCredentialSubject().containsKey("gx:email") || request.getCredentialSubject().containsKey("gx:url"))) {
                     throw new BadDataException("data.protection.contact.required");
                 }
             }
