@@ -35,7 +35,6 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -299,12 +298,13 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
     }
 
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
-        UserRepresentation userRepresentation = this.keycloakService.getKeycloakUserByEmail(email);
+        boolean participantExists = this.participantRepository.existsByEmail(email);
 
         return new CheckParticipantRegisteredResponse(
-                userRepresentation != null,
-                userRepresentation != null ? this.keycloakService.isLoginDeviceConfigured(userRepresentation) : null
+                participantExists,
+                participantExists ? this.keycloakService.isLoginDeviceConfigured(email) : null
         );
     }
 
