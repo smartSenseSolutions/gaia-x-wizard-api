@@ -79,6 +79,20 @@ public class StringPool {
     public static final String CUSTOM_ATTRIBUTE = "gx:customAttribute";
 
 
+    public static final String LEGAL_REGISTRATION_NUMBER = "legalRegistrationNumber";
+
+    public static final String LEGAL_ADDRESS = "gx:legalAddress";
+    public static final String LEGAL_PARTICIPANT = "legalParticipant";
+
+    public static final String HEADQUARTER_ADDRESS = "gx:headquarterAddress";
+
+    public static final String SUBDIVISION_CODE = "gx:countrySubdivisionCode";
+
+    public static final String SUB_ORGANIZATION = "gx:subOrganization";
+
+    public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
+
+
     private StringPool() {
     }
 }

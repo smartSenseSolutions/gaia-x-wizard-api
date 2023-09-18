@@ -54,8 +54,9 @@ public class KeycloakService {
     }
 
     public void addUser(String id, String legalName, String email) {
-        if (this.getKeycloakUserByEmail(email) != null) {
-            return;
+        UserRepresentation existingUser = this.getKeycloakUserByEmail(email);
+        if (existingUser != null) {
+            this.deleteExistingUser(existingUser);
         }
 
         UserRepresentation userRepresentation = new UserRepresentation();
@@ -78,6 +79,13 @@ public class KeycloakService {
         }
         
         log.info("keycloak user created");
+    }
+
+    private void deleteExistingUser(UserRepresentation userRepresentation) {
+        UsersResource usersResource = this.getRealmResource().users();
+        try (Response ignored = usersResource.delete(userRepresentation.getId())) {
+            log.info("Deleting existing user with email: {}", userRepresentation.getEmail());
+        }
     }
 
     public void sendRequiredActionsEmail(String email) {
@@ -126,9 +134,9 @@ public class KeycloakService {
         }
     }
 
-    public Boolean isLoginDeviceConfigured(UserRepresentation userRepresentation) {
+    public Boolean isLoginDeviceConfigured(String email) {
         try {
-            UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
+            UserResource userResource = this.getRealmResource().users().get(this.getKeycloakUserByEmail(email).getId());
             return userResource.credentials().stream().anyMatch(credentialRepresentation -> credentialRepresentation.getType().equals(StringPool.WEBAUTHN_PASSWORDLESS));
         } catch (Exception e) {
             log.error("Error while fetching user credential list: ", e);

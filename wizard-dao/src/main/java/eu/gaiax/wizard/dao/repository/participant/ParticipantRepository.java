@@ -17,4 +17,6 @@ public interface ParticipantRepository extends BaseRepository<Participant, UUID>
     Participant getByLegalName(String legalName);
 
     Participant getByShortName(String shortName);
+
+    boolean existsByEmail(String email);
 }

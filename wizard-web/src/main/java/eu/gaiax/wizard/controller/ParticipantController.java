@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequiredArgsConstructor
@@ -850,6 +852,36 @@ public class ParticipantController extends BaseController {
     public CommonResponse<Object> sendRequiredActionsEmail(@RequestBody SendRegistrationEmailRequest sendRegistrationEmailRequest) {
         this.participantService.sendRegistrationLink(sendRegistrationEmailRequest.email());
         return CommonResponse.of(this.messageSource.getMessage("registration.mail.sent", null, LocaleContextHolder.getLocale()));
+    }
+
+    @Operation(
+            summary = "Participant profile",
+            description = "This endpoint returns logged in participant's profile."
+    )
+    @GetMapping(PARTICIPANT_PROFILE)
+    public CommonResponse<Object> getParticipantProfile(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
+        return CommonResponse.of(this.participantService.getParticipantProfile(participantId));
+    }
+
+    @Operation(
+            summary = "Update participant profile image",
+            description = "This endpoint updates participant's profile image."
+    )
+    @PutMapping(value = PARTICIPANT_PROFILE_IMAGE, consumes = MULTIPART_FORM_DATA_VALUE)
+    public CommonResponse<Object> updateParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId,
+                                                                @Valid @ModelAttribute FileUploadRequest fileUploadRequest) {
+        this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file());
+        return CommonResponse.of(this.messageSource.getMessage("profile.image.updated", null, LocaleContextHolder.getLocale()));
+    }
+
+    @Operation(
+            summary = "Delete participant profile image",
+            description = "This endpoint deletes participant's profile image."
+    )
+    @DeleteMapping(value = PARTICIPANT_PROFILE_IMAGE)
+    public CommonResponse<Object> deleteParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
+        this.participantService.deleteParticipantProfileImage(participantId);
+        return CommonResponse.of(this.messageSource.getMessage("profile.image.deleted", null, LocaleContextHolder.getLocale()));
     }
 
     @Operation(

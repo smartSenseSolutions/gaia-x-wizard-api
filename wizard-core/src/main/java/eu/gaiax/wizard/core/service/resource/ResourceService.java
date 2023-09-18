@@ -111,7 +111,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
 
-
             if (participant.isKeyStored()) {
                 if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
                     throw new BadDataException("private.key.not.found");
@@ -269,7 +268,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
                 throw new BadDataException("invalid.legal.basis");
             }
-            if (!request.getCredentialSubject().containsKey("gx:email") || !request.getCredentialSubject().containsKey("gx:contactNo")) {
+            if (!(request.getCredentialSubject().containsKey("gx:email") || request.getCredentialSubject().containsKey("gx:url"))) {
                 throw new BadDataException("data.protection.contact.required");
             }
         }
