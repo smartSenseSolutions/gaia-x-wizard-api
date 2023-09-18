@@ -411,7 +411,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return organizationlist.stream().map(org -> org.get(ID)).sorted().collect(Collectors.toList());
     }
 
-    public void updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
+    public String updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
 
@@ -427,11 +427,13 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             participant.setProfileImage(fileName);
             this.participantRepository.save(participant);
         } catch (Exception e) {
+            log.error("Error while saving profile picture for participantId: {}", participant.getId(), e);
             throw new BadDataException("invalid.file");
         } finally {
             FileUtils.deleteQuietly(profileImage);
         }
-
+        
+        return this.s3Utils.getPreSignedUrl(fileName);
     }
 
     public void deleteParticipantProfileImage(String participantId) {
