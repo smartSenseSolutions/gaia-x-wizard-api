@@ -123,7 +123,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, policyUrl));
             if (StringUtils.hasText(hostPolicyJson)) {
-                this.policyService.hostODRLPolicy(hostPolicyJson, policyId);
+                this.policyService.hostPolicy(hostPolicyJson, policyId);
                 if (StringUtils.hasText(policy.customAttribute())) {
                     credentialSubject.put("gx:policy", List.of(policyUrl, policy.customAttribute()));
                 } else {

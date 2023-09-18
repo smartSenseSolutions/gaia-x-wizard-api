@@ -28,6 +28,7 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
+import eu.gaiax.wizard.core.service.service_offer.PolicyService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
@@ -88,16 +89,18 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private final ServiceEndpointConfig serviceEndpointConfig;
 
+    private final PolicyService policyService;
+
     @Value("${wizard.host.wizard}")
     private String wizardHost;
 
     @NotNull
-    private static List<Map<String, Object>> getMaps(Participant participant) {
+    private static List<Map<String, Object>> getPermissionMaps(Participant participant) {
         List<Map<String, Object>> permission = new ArrayList<>();
         Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", participant.getDid());
-        perMap.put("assigner", participant.getDid());
-        perMap.put("action", "view");
+        perMap.put(TARGET, participant.getDid());
+        perMap.put(ASSIGNER, participant.getDid());
+        perMap.put(ACTION, "view");
 
         permission.add(perMap);
         return permission;
@@ -105,25 +108,12 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     @SneakyThrows
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRES_NEW)
-    public Resource createResource(CreateResourceRequest request, String id) throws JsonProcessingException {
+    public Resource createResource(CreateResourceRequest request, String id) {
         Participant participant;
         if (StringUtils.hasText(id)) {
-            participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
-            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+            participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
+            this.addPrivateKey(participant, request);
 
-            if (participant.isKeyStored()) {
-                if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
-                    throw new BadDataException("private.key.not.found");
-                }
-
-                request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
-                request.setVerificationMethod(participant.getDid());
-            }
-            if (request.isStoreVault() && !participant.isKeyStored()) {
-                this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
-                participant.setKeyStored(true);
-                this.participantRepository.save(participant);
-            }
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
         } else {
@@ -136,9 +126,11 @@ public class ResourceService extends BaseService<Resource, UUID> {
         String name = "resource_" + UUID.randomUUID();
         String json = this.resourceVc(request, participant, name);
         String hostUrl = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
+
         if (!participant.isOwnDidSolution()) {
             this.signerService.addServiceEndpoint(participant.getId(), hostUrl, this.serviceEndpointConfig.linkDomainType(), hostUrl);
         }
+
         if (StringUtils.hasText(json)) {
             Credential resourceVc = this.credentialService.createCredential(json, hostUrl, CredentialTypeEnum.RESOURCE.getCredentialType(), "", participant);
             Resource resource = Resource.builder().name(request.getCredentialSubject().get("gx:name").toString())
@@ -149,13 +141,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     .build();
 
             if (resource.getType().equals(ResourceType.VIRTUAL_DATA_RESOURCE.getValue())) {
-                SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                if (request.getCredentialSubject().containsKey("gx:obsoleteDateTime")) {
-                    resource.setObsoleteDate(formatter.parse((String) request.getCredentialSubject().get("gx:obsoleteDateTime")));
+                SimpleDateFormat formatter = new SimpleDateFormat(DATE_TIME_FORMAT);
+                if (request.getCredentialSubject().containsKey(OBSOLETE_TIME)) {
+                    resource.setObsoleteDate(formatter.parse((String) request.getCredentialSubject().get(OBSOLETE_TIME)));
                 }
 
-                if (request.getCredentialSubject().containsKey("gx:expirationDateTime")) {
-                    resource.setExpiryDate(formatter.parse((String) request.getCredentialSubject().get("gx:expirationDateTime")));
+                if (request.getCredentialSubject().containsKey(EXPIRATION_TIME)) {
+                    resource.setExpiryDate(formatter.parse((String) request.getCredentialSubject().get(EXPIRATION_TIME)));
                 }
             }
 
@@ -163,117 +155,137 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
 
         if (StringUtils.hasText(id) && request.isStoreVault() && !participant.isKeyStored()) {
-            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
-            participant.setKeyStored(true);
-            this.participantRepository.save(participant);
+            this.storePrivateKeyToVault(participant, request.getPrivateKey());
         }
         return null;
     }
 
-    private String hostOdrlPolicy(Participant participant) throws JsonProcessingException {
+    private void storePrivateKeyToVault(Participant participant, String privateKey) {
+        this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, privateKey);
+        participant.setKeyStored(true);
+        this.participantRepository.save(participant);
+    }
+
+    private void addPrivateKey(Participant participant, CreateResourceRequest request) {
+        if (participant.isKeyStored()) {
+            if (!this.vault.get(participant.getId().toString()).containsKey("pkcs8.key")) {
+                throw new BadDataException("private.key.not.found");
+            }
+
+            request.setPrivateKey(this.vault.get(participant.getId().toString()).get("pkcs8.key").toString());
+            request.setVerificationMethod(participant.getDid());
+        }
+
+        if (request.isStoreVault() && !participant.isKeyStored()) {
+            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+            participant.setKeyStored(true);
+            this.participantRepository.save(participant);
+        }
+    }
+
+    private String createAndHostPolicy(Participant participant) throws JsonProcessingException {
         Map<String, Object> policyMap = new HashMap<>();
 
         String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + JSON_EXTENSION;
         policyMap.put(CONTEXT, this.contextConfig.ODRLPolicy());
         policyMap.put(TYPE, "Offer");
         policyMap.put(ID, this.wizardHost + hostUrl);
-        List<Map<String, Object>> permission = getMaps(participant);
+        List<Map<String, Object>> permission = getPermissionMaps(participant);
         policyMap.put("permission", permission);
         String policyJson = this.objectMapper.writeValueAsString(policyMap);
-        File file = new File("/tmp/" + hostUrl);
-        try {
-            FileUtils.writeStringToFile(file, policyJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostUrl, file);
-            return this.wizardHost + hostUrl;
-        } catch (Exception e) {
-            log.error("Error while hosting service offer json for participant:{},error:{}", hostUrl, e.getMessage());
-            throw new BadDataException(e.getMessage());
-        } finally {
-            CommonUtils.deleteFile(file);
-        }
+
+        this.policyService.hostPolicy(policyJson, hostUrl);
+        return this.wizardHost + hostUrl;
     }
 
     public void validateResourceRequest(CreateResourceRequest request) throws JsonProcessingException {
-        Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get("gx:name").toString())).launch("invalid.resource.name");
+        Validate.isFalse(StringUtils.hasText(request.getCredentialSubject().get(NAME).toString())).launch("invalid.resource.name");
         this.validateAggregationOf(request);
         JsonObject jsonObject = JsonParser.parseString(this.objectMapper.writeValueAsString(request)).getAsJsonObject();
 
-        if (request.getCredentialSubject().get(TYPE).toString().contains("Physical")) {
-
-            if (request.getCredentialSubject().containsKey("gx:maintainedBy")) {
-                JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject(CREDENTIAL_SUBJECT)
-                        .getAsJsonArray("gx:maintainedBy");
-                List<String> ids = new ArrayList<>();
-
-                for (int i = 0; i < aggregationArray.size(); i++) {
-                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get(ID).getAsString();
-                    ids.add(idValue);
-                }
-                this.signerService.validateRequestUrl(ids, "maintained.by.not.found", null);
-            }
-            if (request.getCredentialSubject().containsKey("gx:ownedBy")) {
-                JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject(CREDENTIAL_SUBJECT)
-                        .getAsJsonArray("gx:ownedBy");
-                List<String> ids = new ArrayList<>();
-
-                for (int i = 0; i < aggregationArray.size(); i++) {
-                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get(ID).getAsString();
-                    ids.add(idValue);
-                }
-                this.signerService.validateRequestUrl(ids, "owned.by.not.found", null);
-            }
-            if (request.getCredentialSubject().containsKey("gx:manufacturedBy")) {
-                JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject(CREDENTIAL_SUBJECT)
-                        .getAsJsonArray("gx:manufacturedBy");
-                List<String> ids = new ArrayList<>();
-
-                for (int i = 0; i < aggregationArray.size(); i++) {
-                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get(ID).getAsString();
-                    ids.add(idValue);
-                }
-                this.signerService.validateRequestUrl(ids, "manufactured.by.not.found", null);
-            }
+        if (request.getCredentialSubject().get(TYPE).toString().contains(PHYSICAL)) {
+            this.validatePhysicalResource(request, jsonObject);
         } else {
-            if (request.getCredentialSubject().containsKey("gx:copyrightOwnedBy")) {
-                JsonArray aggregationArray = jsonObject
-                        .getAsJsonObject(CREDENTIAL_SUBJECT)
-                        .getAsJsonArray("gx:copyrightOwnedBy");
-                List<String> ids = new ArrayList<>();
-
-                for (int i = 0; i < aggregationArray.size(); i++) {
-                    JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
-                    String idValue = aggregationObject.get(ID).getAsString();
-                    ids.add(idValue);
-                }
-                this.signerService.validateRequestUrl(ids, "manufactured.by.of.not.found", null);
-            }
-            if (request.getCredentialSubject().containsKey("gx:producedBy")) {
-                JsonObject produceBy = jsonObject
-                        .getAsJsonObject(CREDENTIAL_SUBJECT)
-                        .getAsJsonObject("gx:producedBy");
-
-                String idValue = produceBy.get(ID).getAsString();
-
-                this.signerService.validateRequestUrl(List.of(idValue), "produced.by.not.found", null);
-            }
+            this.validateVirtualResource(request, jsonObject);
         }
-        if (request.getCredentialSubject().containsKey("gx:containsPII") && Boolean.parseBoolean(request.getCredentialSubject().get("gx:containsPII").toString())) {
+    }
 
-            if (!request.getCredentialSubject().containsKey("gx:legalBasis")) {
+    private void validatePhysicalResource(CreateResourceRequest request, JsonObject jsonObject) {
+        if (request.getCredentialSubject().containsKey(MAINTAINED_BY)) {
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonArray(MAINTAINED_BY);
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get(ID).getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "maintained.by.not.found", null);
+        }
+        if (request.getCredentialSubject().containsKey(OWNED_BY)) {
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonArray(OWNED_BY);
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get(ID).getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "owned.by.not.found", null);
+        }
+        if (request.getCredentialSubject().containsKey(MANUFACTURED_BY)) {
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonArray(MANUFACTURED_BY);
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get(ID).getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "manufactured.by.not.found", null);
+        }
+    }
+
+    private void validateVirtualResource(CreateResourceRequest request, JsonObject jsonObject) {
+        if (request.getCredentialSubject().containsKey(COPYRIGHT_OWNED_BY)) {
+            JsonArray aggregationArray = jsonObject
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonArray(COPYRIGHT_OWNED_BY);
+            List<String> ids = new ArrayList<>();
+
+            for (int i = 0; i < aggregationArray.size(); i++) {
+                JsonObject aggregationObject = aggregationArray.get(i).getAsJsonObject();
+                String idValue = aggregationObject.get(ID).getAsString();
+                ids.add(idValue);
+            }
+            this.signerService.validateRequestUrl(ids, "manufactured.by.of.not.found", null);
+        }
+        if (request.getCredentialSubject().containsKey(PRODUCED_BY)) {
+            JsonObject produceBy = jsonObject
+                    .getAsJsonObject(CREDENTIAL_SUBJECT)
+                    .getAsJsonObject(PRODUCED_BY);
+
+            String idValue = produceBy.get(ID).getAsString();
+
+            this.signerService.validateRequestUrl(List.of(idValue), "produced.by.not.found", null);
+        }
+
+        if (request.getCredentialSubject().containsKey(CONTAINS_PII) && Boolean.parseBoolean(request.getCredentialSubject().get(CONTAINS_PII).toString())) {
+
+            if (!request.getCredentialSubject().containsKey(LEGAL_BASIS)) {
                 throw new BadDataException("invalid.legal.basis");
             }
-            if (!(request.getCredentialSubject().containsKey("gx:email") || request.getCredentialSubject().containsKey("gx:url"))) {
+            if (!(request.getCredentialSubject().containsKey(GX_EMAIL) || request.getCredentialSubject().containsKey(GX_URL))) {
                 throw new BadDataException("data.protection.contact.required");
             }
         }
     }
-
 
     private void validateAggregationOf(CreateResourceRequest request) throws JsonProcessingException {
         if (request.getCredentialSubject().containsKey(AGGREGATION_OF)) {
@@ -320,7 +332,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     String customAttribute = policy.get(CUSTOM_ATTRIBUTE);
                     credentialSub.put(GX_POLICY, List.of(customAttribute));
                 } else {
-                    credentialSub.put(GX_POLICY, List.of(this.hostOdrlPolicy(participant)));
+                    credentialSub.put(GX_POLICY, List.of(this.createAndHostPolicy(participant)));
                 }
             }
         }

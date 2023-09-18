@@ -92,6 +92,34 @@ public class StringPool {
 
     public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
 
+    public static final String OBSOLETE_TIME = "gx:obsoleteDateTime";
+
+    public static final String EXPIRATION_TIME = "gx:expirationDateTime";
+
+    public static final String DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+
+    public static final String NAME = "gx:name";
+
+    public static final String PHYSICAL = "Physical";
+
+    public static final String MAINTAINED_BY = "gx:maintainedBy";
+
+    public static final String OWNED_BY = "gx:ownedBy";
+
+    public static final String MANUFACTURED_BY = "gx:manufacturedBy";
+
+    public static final String COPYRIGHT_OWNED_BY = "gx:copyrightOwnedBy";
+
+    public static final String PRODUCED_BY = "gx:producedBy";
+
+    public static final String CONTAINS_PII = "gx:containsPII";
+
+    public static final String LEGAL_BASIS = "gx:legalBasis";
+
+    public static final String GX_EMAIL = "gx:email";
+
+    public static final String GX_URL = "gx:url";
+
 
     private StringPool() {
     }
