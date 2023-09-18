@@ -871,7 +871,6 @@ public class ParticipantController extends BaseController {
     @PutMapping(value = PARTICIPANT_PROFILE_IMAGE, consumes = MULTIPART_FORM_DATA_VALUE)
     public CommonResponse<Map<String, Object>> updateParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId,
                                                                              @Valid @ModelAttribute FileUploadRequest fileUploadRequest) {
-        this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file());
         return CommonResponse.of("imageUrl", this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file()), this.messageSource.getMessage("profile.image.updated", null, LocaleContextHolder.getLocale()));
     }
 
