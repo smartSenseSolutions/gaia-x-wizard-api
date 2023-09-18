@@ -51,3 +51,6 @@ ALTER TABLE participant RENAME COLUMN own_cert TO key_stored;
 
 --changeset Neha:8
 ALTER TABLE credential ADD CONSTRAINT vc_url_type_unique UNIQUE ("vc_url","type");
+
+--changeset Neha:9
+ALTER TABLE participant ADD profile_image varchar(100) NULL;

@@ -35,6 +35,10 @@ public class S3Utils {
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
 
+    public void deleteFile(String objectName) {
+        this.s3Client.deleteObject(this.awsSettings.bucket(), objectName);
+    }
+
     public void uploadFileWithPublicAcl(String objectName, File file) {
         PutObjectRequest request = new PutObjectRequest(this.awsSettings.bucket(), objectName, file);
         request.setCannedAcl(CannedAccessControlList.PublicRead);
@@ -50,7 +54,7 @@ public class S3Utils {
     public String getPreSignedUrl(String objectName) {
         Date expiration = new Date();
         long expTimeMillis = expiration.getTime();
-        expTimeMillis += 10000; // 10 seconds
+        expTimeMillis += 20_000; // 20 seconds
         expiration.setTime(expTimeMillis);
 
         return this.s3Client.generatePresignedUrl(this.awsSettings.bucket(), objectName, expiration).toString();
