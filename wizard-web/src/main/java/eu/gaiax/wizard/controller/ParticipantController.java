@@ -859,7 +859,7 @@ public class ParticipantController extends BaseController {
             description = "This endpoint returns logged in participant's profile."
     )
     @GetMapping(PARTICIPANT_PROFILE)
-    public CommonResponse<Object> getParticipantProfile(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
+    public CommonResponse<ParticipantProfileDto> getParticipantProfile(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
         return CommonResponse.of(this.participantService.getParticipantProfile(participantId));
     }
 
@@ -868,10 +868,9 @@ public class ParticipantController extends BaseController {
             description = "This endpoint updates participant's profile image."
     )
     @PutMapping(value = PARTICIPANT_PROFILE_IMAGE, consumes = MULTIPART_FORM_DATA_VALUE)
-    public CommonResponse<Object> updateParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId,
-                                                                @Valid @ModelAttribute FileUploadRequest fileUploadRequest) {
-        this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file());
-        return CommonResponse.of(this.messageSource.getMessage("profile.image.updated", null, LocaleContextHolder.getLocale()));
+    public CommonResponse<Map<String, Object>> updateParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId,
+                                                                             @Valid @ModelAttribute FileUploadRequest fileUploadRequest) {
+        return CommonResponse.of("imageUrl", this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file()), this.messageSource.getMessage("profile.image.updated", null, LocaleContextHolder.getLocale()));
     }
 
     @Operation(

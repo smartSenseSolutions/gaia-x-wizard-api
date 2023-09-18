@@ -18,6 +18,7 @@ import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.model.ParticipantProfileDto;
+import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -384,6 +385,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         JsonNode participantCredentialRequest = this.mapper.readTree(participant.getCredentialRequest());
         participantProfileDto.setLegalRegistrationNumber(participantCredentialRequest.get(LEGAL_REGISTRATION_NUMBER));
 
+        Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
+        if (credential != null) {
+            participantProfileDto.setCredential(this.mapper.convertValue(credential, CredentialDto.class));
+        }
+
         JsonNode credentialSubject = participantCredentialRequest.get(LEGAL_PARTICIPANT).get(CREDENTIAL_SUBJECT);
         participantProfileDto.setHeadquarterAddress(credentialSubject.get(HEADQUARTER_ADDRESS).get(SUBDIVISION_CODE).asText());
         participantProfileDto.setLegalAddress(credentialSubject.get(LEGAL_ADDRESS).get(SUBDIVISION_CODE).asText());
@@ -412,7 +418,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         return organizationlist.stream().map(org -> org.get(ID)).sorted().collect(Collectors.toList());
     }
 
-    public void updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
+    public String updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
 
@@ -421,18 +427,21 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         String fileName = "participant/" + participantId + "_" + System.currentTimeMillis() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-        File profileImage = new File(fileName);
+        File profileImage = new File("/tmp/" + fileName);
         try {
             FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
             this.s3Utils.uploadFile(fileName, profileImage);
-            participant.setProfileImage(fileName);
-            this.participantRepository.save(participant);
         } catch (Exception e) {
+            log.error("Error while saving profile picture for participantId: {}", participant.getId(), e);
             throw new BadDataException("invalid.file");
         } finally {
             FileUtils.deleteQuietly(profileImage);
         }
 
+        participant.setProfileImage(fileName);
+        this.participantRepository.save(participant);
+
+        return this.s3Utils.getPreSignedUrl(fileName);
     }
 
     public void deleteParticipantProfileImage(String participantId) {
