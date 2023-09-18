@@ -405,7 +405,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
         if (credentialSubject.has(SUB_ORGANIZATION)) {
             organizationList = this.getParentOrSubOrganizationList((ArrayNode) credentialSubject.get(SUB_ORGANIZATION));
-            participantProfileDto.setParentOrganization(organizationList);
+            participantProfileDto.setSubOrganization(organizationList);
         }
 
         return participantProfileDto;
