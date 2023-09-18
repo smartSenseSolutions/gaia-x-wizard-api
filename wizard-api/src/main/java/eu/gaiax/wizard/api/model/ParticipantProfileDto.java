@@ -27,4 +27,14 @@ public class ParticipantProfileDto {
     private List<String> parentOrganization;
 
     private List<String> subOrganization;
+
+    private EntityTypeDto entityType;
+
+    @Getter
+    @Setter
+    public static class EntityTypeDto {
+        private String id;
+        private String type;
+
+    }
 }

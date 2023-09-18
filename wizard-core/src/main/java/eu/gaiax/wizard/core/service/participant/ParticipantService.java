@@ -424,15 +424,16 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         try {
             FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
             this.s3Utils.uploadFile(fileName, profileImage);
-            participant.setProfileImage(fileName);
-            this.participantRepository.save(participant);
         } catch (Exception e) {
             log.error("Error while saving profile picture for participantId: {}", participant.getId(), e);
             throw new BadDataException("invalid.file");
         } finally {
             FileUtils.deleteQuietly(profileImage);
         }
-        
+
+        participant.setProfileImage(fileName);
+        this.participantRepository.save(participant);
+
         return this.s3Utils.getPreSignedUrl(fileName);
     }
 
