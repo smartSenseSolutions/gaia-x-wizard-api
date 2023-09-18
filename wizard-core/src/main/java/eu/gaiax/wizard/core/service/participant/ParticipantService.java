@@ -13,6 +13,7 @@ import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
 import eu.gaiax.wizard.api.model.CredentialTypeEnum;
 import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.ParticipantProfileDto;
+import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -382,6 +383,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         ParticipantProfileDto participantProfileDto = this.mapper.convertValue(participant, ParticipantProfileDto.class);
         JsonNode participantCredentialRequest = this.mapper.readTree(participant.getCredentialRequest());
         participantProfileDto.setLegalRegistrationNumber(participantCredentialRequest.get(LEGAL_REGISTRATION_NUMBER));
+
+        Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
+        if (credential != null) {
+            participantProfileDto.setCredential(this.mapper.convertValue(credential, CredentialDto.class));
+        }
 
         JsonNode credentialSubject = participantCredentialRequest.get(LEGAL_PARTICIPANT).get(CREDENTIAL_SUBJECT);
         participantProfileDto.setHeadquarterAddress(credentialSubject.get(HEADQUARTER_ADDRESS).get(SUBDIVISION_CODE).asText());
