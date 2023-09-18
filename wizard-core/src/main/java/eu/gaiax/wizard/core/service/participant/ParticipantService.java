@@ -420,7 +420,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         String fileName = "participant/" + participantId + "_" + System.currentTimeMillis() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-        File profileImage = new File(fileName);
+        File profileImage = new File("/tmp/" + fileName);
         try {
             FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
             this.s3Utils.uploadFile(fileName, profileImage);
