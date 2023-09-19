@@ -129,8 +129,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
-        if (participant.isOwnDidSolution() != request.ownDid().booleanValue()) {
-            participant.setDomain(request.ownDid().booleanValue() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
+        if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
+            participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
             participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
@@ -147,7 +147,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             }
         }
 
-        if (Objects.nonNull(request.ownDid()) && request.ownDid().booleanValue()) {
+        if (Objects.nonNull(request.ownDid()) && request.ownDid()) {
             participant.setDid(request.issuer());
             participant.setOwnDidSolution(request.ownDid());
             participant = this.participantRepository.save(participant);
