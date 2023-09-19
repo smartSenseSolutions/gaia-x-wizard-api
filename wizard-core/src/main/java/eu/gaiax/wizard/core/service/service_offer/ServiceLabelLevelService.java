@@ -54,7 +54,9 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     public Map<String, String> createLabelLevelVc(LabelLevelRequest request, Participant participant, String serviceOfferId) {
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         String name = "labelLevel_" + UUID.randomUUID();
-        String json = this.signLabelLevelVc(request, participant, name, serviceOfferId);
+        Map<String, String> assignTo = new HashMap<>();
+        assignTo.put("id", serviceOfferId);
+        String json = this.signLabelLevelVc(request, participant, name, assignTo);
         Map<String, String> response = new HashMap<>();
         String labelLevelHostUrl = this.wizardHost + participant.getId() + "/" + name + ".json";
 
@@ -93,7 +95,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         }
     }
 
-    private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, String assignerTo) {
+    private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, Map<String, String> assignerTo) {
         String id = this.wizardHost + participant.getId() + "/" + name + ".json";
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         Map<String, Object> labelLevel = new HashMap<>();
