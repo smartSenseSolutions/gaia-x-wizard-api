@@ -313,8 +313,8 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceRequest.put(CONTEXT, this.contextConfig.resource());
         resourceRequest.put(TYPE, Collections.singleton(VERIFIABLE_CREDENTIAL));
         resourceRequest.put(ID, id);
-        resourceRequest.put("issuer", participant.getDid());
-        resourceRequest.put("issuanceDate", issuanceDate);
+        resourceRequest.put(ISSUER, participant.getDid());
+        resourceRequest.put(ISSUANCE_DATE, issuanceDate);
         Map<String, Object> credentialSub = request.getCredentialSubject();
         if (credentialSub != null) {
             credentialSub.put(CONTEXT, this.contextConfig.resource());
@@ -339,7 +339,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         resourceRequest.put(CREDENTIAL_SUBJECT, credentialSub);
         map.put("resource", resourceRequest);
         Map<String, Object> resourceMap = new HashMap<>();
-        resourceMap.put("issuer", participant.getDid());
+        resourceMap.put(ISSUER, participant.getDid());
         resourceMap.put("verificationMethod", request.getVerificationMethod());
         resourceMap.put("vcs", map);
         resourceMap.put("isVault", participant.isKeyStored());
@@ -352,7 +352,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
     }
 
     public void hostResourceJson(String resourceJson, String hostedPath) {
-        File file = new File("/tmp/" + hostedPath);
+        File file = new File(TEMP_FOLDER + hostedPath);
         try {
             FileUtils.writeStringToFile(file, resourceJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostedPath, file);

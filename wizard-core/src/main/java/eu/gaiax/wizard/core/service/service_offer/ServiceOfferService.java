@@ -285,11 +285,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
-    public void validateServiceOfferRequest(CreateServiceOfferingRequest request) {
-        Validate.isFalse(StringUtils.hasText(request.getName())).launch("invalid.service.name");
-        Validate.isTrue(CollectionUtils.isEmpty(request.getCredentialSubject())).launch("invalid.credential");
-    }
-
     public List<String> getLocationFromService(ServiceIdRequest serviceIdRequest) {
         String[] subdivisionCodeArray = this.policyService.getLocationByServiceOfferingId(serviceIdRequest.id());
         if (subdivisionCodeArray.length > 0) {

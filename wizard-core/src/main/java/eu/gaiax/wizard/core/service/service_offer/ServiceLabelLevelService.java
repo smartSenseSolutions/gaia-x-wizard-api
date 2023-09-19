@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -78,7 +80,7 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     }
 
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
-        File file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
+        File file = new File(TEMP_FOLDER + labelLevelFileUpload.file().getOriginalFilename());
         String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
 
         try (FileOutputStream fos = new FileOutputStream(file)) {

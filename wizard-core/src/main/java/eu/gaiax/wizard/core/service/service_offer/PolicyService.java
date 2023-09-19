@@ -77,7 +77,7 @@ public class PolicyService {
     }
 
     public void hostPolicy(String hostPolicyJson, String hostedPath) {
-        File file = new File("/tmp/" + hostedPath + JSON_EXTENSION);
+        File file = new File(TEMP_FOLDER + hostedPath + JSON_EXTENSION);
         try {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
             this.s3Utils.uploadFile(hostedPath + JSON_EXTENSION, file);

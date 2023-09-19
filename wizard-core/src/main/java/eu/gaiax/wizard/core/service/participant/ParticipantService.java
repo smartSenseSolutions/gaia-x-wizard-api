@@ -9,15 +9,11 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.ParticipantAndKeyResponse;
-import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
-import eu.gaiax.wizard.api.model.ParticipantProfileDto;
 import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
@@ -55,7 +51,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static eu.gaiax.wizard.api.utils.StringPool.*;
 
@@ -134,8 +129,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
         Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
-        if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
-            participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
+        if (participant.isOwnDidSolution() != request.ownDid().booleanValue()) {
+            participant.setDomain(request.ownDid().booleanValue() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
             participant.setOwnDidSolution(request.ownDid());
             this.participantRepository.save(participant);
         }
@@ -152,7 +147,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             }
         }
 
-        if (Objects.nonNull(request.ownDid()) && request.ownDid()) {
+        if (Objects.nonNull(request.ownDid()) && request.ownDid().booleanValue()) {
             participant.setDid(request.issuer());
             participant.setOwnDidSolution(request.ownDid());
             participant = this.participantRepository.save(participant);
@@ -263,7 +258,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
             Participant participant = this.participantRepository.getByDomain(host);
             Validate.isNull(participant).launch(new EntityNotFoundException("subdomain.not.found"));
-            if (fileName.equals("did.json")) {
+            if (fileName.equals(DID_JSON)) {
                 return this.getLegalParticipantJson(participant.getId().toString(), fileName);
             }
             Map<String, Object> certificates = this.vault.get(participant.getId().toString());
@@ -274,11 +269,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             //TODO need to remove
             log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
             Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
-            if (fileName.equals("did.json")) {
-                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension("did.json");
+            if (fileName.equals(DID_JSON)) {
+                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(DID_JSON);
                 File file = new File(fetchedFileName);
                 try {
-                    log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, "did.json");
+                    log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, DID_JSON);
                     file = this.s3Utils.getObject(host + "/did.json", fetchedFileName);
                     return FileUtils.readFileToString(file, Charset.defaultCharset());
                 } finally {
@@ -415,7 +410,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     private List<String> getParentOrSubOrganizationList(ArrayNode organizationArrayNode) {
         List<Map<String, String>> organizationlist = this.mapper.convertValue(organizationArrayNode, new TypeReference<>() {
         });
-        return organizationlist.stream().map(org -> org.get(ID)).sorted().collect(Collectors.toList());
+        return organizationlist.stream().map(org -> org.get(ID)).sorted().toList();
     }
 
     public String updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
@@ -427,7 +422,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         }
 
         String fileName = "participant/" + participantId + "_" + System.currentTimeMillis() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
-        File profileImage = new File("/tmp/" + fileName);
+        File profileImage = new File(TEMP_FOLDER + fileName);
         try {
             FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
             this.s3Utils.uploadFile(fileName, profileImage);

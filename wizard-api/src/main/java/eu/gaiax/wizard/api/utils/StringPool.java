@@ -153,6 +153,24 @@ public class StringPool {
 
     public static final String GX_HASH = "gx:hash";
 
+    public static final String GX_LEGAL_REGISTRATION_NUMBER = "gx:legalRegistrationNumber";
+
+    public static final String GAIA_X_LEGAL_REGISTRATION_NUMBER_DID = "did:web:gaia-x.eu:legalRegistrationNumber.json";
+
+    public static final String DID_JSON = "did.json";
+
+    public static final String PARTICIPANT_JSON = "participant.json";
+
+    public static final String DATA = "data";
+    public static final String IS_VALID = "isValid";
+    public static final String ISSUER = "issuer";
+    public static final String ISSUANCE_DATE = "issuanceDate";
+
+    public static final String GX_LEGAL_PARTICIPANT = "gx:LegalParticipant";
+
+    public static final String SERVICE = "service";
+
+    public static final String COMPLETE_SD = "completeSD";
 
     private StringPool() {
     }
