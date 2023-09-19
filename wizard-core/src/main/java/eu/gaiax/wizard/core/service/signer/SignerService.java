@@ -86,8 +86,7 @@ public class SignerService {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createParticipantJson(UUID participantId) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}", participantId);
-        Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
 
         if (this.credentialService.getLegalParticipantCredential(participant.getId()) != null) {
             log.info("Legal Participant exists for participantId {}. Exiting Legal Participant creation process", participantId);
@@ -201,8 +200,7 @@ public class SignerService {
     public void createDid(UUID participantId) {
         log.info("SignerService(createDid) -> Initiate process for creating did document for participant {}", participantId);
 
-        Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
         if (StringUtils.hasText(participant.getDid())) {
             log.info("DID exists for participantId {}. Exiting DID creation.", participantId);
             return;

@@ -400,8 +400,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
     @SneakyThrows
     public ServiceDetailResponse getServiceOfferingById(UUID serviceOfferId) {
-        ServiceOffer serviceOffer = this.serviceOfferRepository.findById(serviceOfferId).orElse(null);
-        Validate.isNull(serviceOffer).launch(new EntityNotFoundException("service.offer.not.found"));
+        ServiceOffer serviceOffer = this.serviceOfferRepository.findById(serviceOfferId).orElseThrow(() -> new EntityNotFoundException("service.offer.not.found"));
 
         ServiceDetailResponse serviceDetailResponse = this.objectMapper.convertValue(serviceOffer, ServiceDetailResponse.class);
         JsonNode veracityData = this.objectMapper.readTree(serviceOffer.getVeracityData());
