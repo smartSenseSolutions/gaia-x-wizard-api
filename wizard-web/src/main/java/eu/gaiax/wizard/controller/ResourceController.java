@@ -130,7 +130,7 @@ public class ResourceController extends BaseController {
                             """)
             })
     })
-    public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
+    public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) {
         this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
@@ -226,7 +226,7 @@ public class ResourceController extends BaseController {
     })
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
+    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) {
         return CommonResponse.of(this.resourceService.createResource(request, null), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 

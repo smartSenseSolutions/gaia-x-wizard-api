@@ -75,9 +75,9 @@ public class StringPool {
     public static final String SUBTYPE = "subtype";
     public static final String JSON_EXTENSION = ".json";
     public static final String AGGREGATION_OF = "gx:aggregationOf";
+    public static final String DEPENDS_ON = "gx:dependsOn";
 
     public static final String CUSTOM_ATTRIBUTE = "gx:customAttribute";
-
 
     public static final String LEGAL_REGISTRATION_NUMBER = "legalRegistrationNumber";
 
@@ -119,6 +119,39 @@ public class StringPool {
     public static final String GX_EMAIL = "gx:email";
 
     public static final String GX_URL = "gx:url";
+
+    public static final String TEMP_FOLDER = "/tmp/";
+
+    public static final String RESPONSE_MESSAGE = "message";
+
+    public static final String GX_CRITERIA = "gx:criteria";
+
+    public static final String GX_LABEL_LEVEL = "gx:labelLevel";
+
+    public static final String TRUST_INDEX = "trustIndex";
+
+    public static final String GX_TERMS_AND_CONDITIONS = "gx:termsAndConditions";
+
+    public static final String GX_DATA_ACCOUNT_EXPORT = "gx:dataAccountExport";
+
+    public static final String SELF_DESCRIPTION_CREDENTIAL = "selfDescriptionCredential";
+
+    public static final String SERVICE_VC = "serviceVc";
+
+    public static final String LABEL_LEVEL_VC = "labelLevelVc";
+
+    public static final String VERIFIABLE_CREDENTIAL_CAMEL_CASE = "verifiableCredential";
+
+    public static final String GX_URL_CAPS = "gx:URL";
+
+    public static final String GX_REQUEST_TYPE = "gx:requestType";
+
+    public static final String GX_FORMAT_TYPE = "gx:formatType";
+
+    public static final String GX_ACCESS_TYPE = "gx:accessType";
+    public static final String GX_SERVICE_OFFERING = "gx:ServiceOffering";
+
+    public static final String GX_HASH = "gx:hash";
 
 
     private StringPool() {

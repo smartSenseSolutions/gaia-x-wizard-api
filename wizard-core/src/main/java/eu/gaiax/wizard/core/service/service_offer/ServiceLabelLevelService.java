@@ -9,6 +9,7 @@ import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelFileUpload;
 import eu.gaiax.wizard.api.model.service_offer.LabelLevelRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
+import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -77,20 +78,20 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
     }
 
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
-        File file = null;
-        try {
-            String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
-            file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
-            FileOutputStream fos = new FileOutputStream(file);
+        File file = new File("/tmp/" + labelLevelFileUpload.file().getOriginalFilename());
+        String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(labelLevelFileUpload.file().getBytes());
-            fos.close();
+
             this.s3Utils.uploadFile(fileName, file);
             return this.s3Utils.getObject(fileName);
         } catch (Exception e) {
             throw new RemoteException("File not Upload " + e.getMessage());
         } finally {
-            file.delete();
+            CommonUtils.deleteFile(file);
         }
+
     }
 
     private String signLabelLevelVc(LabelLevelRequest request, Participant participant, String name, String assignerTo) {
@@ -104,13 +105,14 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
         labelLevel.put("issuer", participant.getDid());
         labelLevel.put("issuanceDate", issuanceDate);
         Map<String, Object> credentialSub = new HashMap<>();
-        credentialSub.put("gx:criteria", request.criteria());
-        if (credentialSub != null) {
+        if (request.criteria() != null) {
+            credentialSub.put("gx:criteria", request.criteria());
             credentialSub.put("@context", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#");
             credentialSub.put("id", id);
             credentialSub.put("type", "gx:ServiceOfferingLabel");
             credentialSub.put("gx:assignedTo", assignerTo);
         }
+
         labelLevel.put("credentialSubject", credentialSub);
         map.put("labelLevel", labelLevel);
         Map<String, Object> labelLevelMap = new HashMap<>();

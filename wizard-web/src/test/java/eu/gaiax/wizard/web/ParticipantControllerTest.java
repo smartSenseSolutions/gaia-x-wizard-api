@@ -35,7 +35,7 @@ import static org.springframework.http.HttpMethod.POST;
 @ActiveProfiles("test")
 @ContextConfiguration(initializers = {ContainerContextInitializer.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class ParticipantControllerTest {
+class ParticipantControllerTest {
 
     @Autowired
     private TestRestTemplate restTemplate;

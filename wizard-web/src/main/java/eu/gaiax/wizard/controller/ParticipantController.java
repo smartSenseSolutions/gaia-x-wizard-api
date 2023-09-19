@@ -30,6 +30,7 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
+import static eu.gaiax.wizard.api.utils.StringPool.RESPONSE_MESSAGE;
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -610,7 +611,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_SUBDOMAIN, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createSubDomain(@PathVariable(name = "participantId") String participantId) {
         this.domainService.createSubDomain(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "Subdomain creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "Subdomain creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from SLL certificate creation, role = admin, (only used for manual step in case of failure)")
@@ -709,7 +710,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_INGRESS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createIngress(@PathVariable(name = "participantId") String participantId) {
         this.k8SService.createIngress(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "Ingress creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "Ingress creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from did creation, role-=admin, (only used for manual step in case of failure)")
@@ -749,7 +750,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_DID, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createDid(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createDid(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "did creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "did creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from participant credential creation, role Admin, (only used for manual step in case of failure)")
@@ -789,7 +790,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = CREATE_PARTICIPANT, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createParticipantJson(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createParticipantJson(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "participant json creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "participant json creation started"));
     }
 
     @Operation(

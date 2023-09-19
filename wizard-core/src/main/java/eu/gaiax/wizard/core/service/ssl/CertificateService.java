@@ -29,6 +29,8 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.*;
 
+import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -79,10 +81,10 @@ public class CertificateService {
         Participant participant = this.participantRepository.findById(participantId).orElse(null);
         Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
 
-        File domainChainFile = new File("/tmp/" + participant.getDomain() + "_chain.crt");
-        File csrFile = new File("/tmp/" + participant.getDomain() + ".csr");
-        File keyfile = new File("/tmp/" + participant.getDomain() + ".key");
-        File pkcs8File = new File("/tmp/pkcs8_" + participant.getDomain() + ".key");
+        File domainChainFile = new File(TEMP_FOLDER + participant.getDomain() + "_chain.crt");
+        File csrFile = new File(TEMP_FOLDER + participant.getDomain() + ".csr");
+        File keyfile = new File(TEMP_FOLDER + participant.getDomain() + ".key");
+        File pkcs8File = new File(TEMP_FOLDER + "pkcs8_" + participant.getDomain() + ".key");
 
         try {
 

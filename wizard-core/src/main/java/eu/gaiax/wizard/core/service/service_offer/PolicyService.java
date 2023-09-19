@@ -56,24 +56,6 @@ public class PolicyService {
         return policyMap;
     }
 
-    /*@NotNull
-    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
-        List<Map<String, Object>> permission = new ArrayList<>();
-        Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", target);
-        perMap.put("assigner", assigner);
-        perMap.put("action", "view");
-        List<Map<String, Object>> constraint = new ArrayList<>();
-        Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("leftOperand", leftOperand);
-        constraintMap.put("operator", "isAnyOf");
-        constraintMap.put("rightOperand", rightOperand);
-        constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
-        permission.add(perMap);
-        return permission;
-    }*/
-
     @NotNull
     private static List<Map<String, Object>> getServiceOfferPermissionList(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permissionList = new ArrayList<>();
