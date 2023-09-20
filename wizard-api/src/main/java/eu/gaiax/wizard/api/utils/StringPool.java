@@ -116,8 +116,6 @@ public class StringPool {
 
     public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
 
-    public static final String SPATIAL_EVALUATION = "spatialEvaluation";
-
     private StringPool() {
     }
 }
