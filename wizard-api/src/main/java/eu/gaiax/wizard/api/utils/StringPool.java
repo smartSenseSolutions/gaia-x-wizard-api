@@ -116,6 +116,14 @@ public class StringPool {
 
     public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
 
+    public static final String VERIFY_URL_TYPE = "gxType";
+
+    public static final String GX_LEGAL_PARTICIPANT = "gx:LegalParticipant";
+
+    public static final String GX_SERVICE_OFFERING = "gx:ServiceOffering";
+
+    public static final String DATA = "data";
+
 
     private StringPool() {
     }
