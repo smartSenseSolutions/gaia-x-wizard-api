@@ -1,6 +1,5 @@
 package eu.gaiax.wizard.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
@@ -17,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.Map;
 
+import static eu.gaiax.wizard.api.utils.StringPool.SPATIAL;
 import static eu.gaiax.wizard.utils.WizardRestConstant.PUBLIC_POLICY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -37,7 +37,7 @@ public class PolicyController extends BaseController {
     @Tag(name = "Policy")
     @Operation(summary = "Policy evaluator for catalogue")
     @PostMapping(path = WizardRestConstant.POLICY_EVALUATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<JsonNode> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
-        return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
+    public CommonResponse<Map<String, Object>> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
+        return CommonResponse.of(SPATIAL, this.policyService.evaluatePolicy(policyEvaluationRequest));
     }
 }

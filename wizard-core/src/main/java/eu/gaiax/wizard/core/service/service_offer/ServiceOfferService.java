@@ -119,7 +119,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             String policyId = participant.getId() + "/" + serviceName + "_policy";
             String policyUrl = this.wizardHost + policyId + ".json";
             ServiceOfferPolicyDto policy = this.objectMapper.convertValue(request.getCredentialSubject().get("gx:policy"), ServiceOfferPolicyDto.class);
-            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
+            ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), StringPool.SPATIAL, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
             String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, policyUrl));
             if (StringUtils.hasText(hostPolicyJson)) {
