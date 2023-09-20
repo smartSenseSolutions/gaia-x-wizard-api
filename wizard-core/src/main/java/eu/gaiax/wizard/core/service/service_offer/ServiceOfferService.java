@@ -91,8 +91,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
         Participant participant;
         if (id != null) {
-            participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
-            Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
+            participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
+
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
@@ -217,11 +217,17 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         try {
             ResponseEntity<Object> publishServiceComplianceResponse = this.messagingQueueClient.publishServiceCompliance(publishToQueueRequest);
             if (publishServiceComplianceResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-                log.info("Publish Service Response Headers Set: {}", publishServiceComplianceResponse.getHeaders().keySet());
-                String rawMessageId = publishServiceComplianceResponse.getHeaders().get("location").get(0);
-                String messageReferenceId = rawMessageId.substring(rawMessageId.lastIndexOf("/") + 1);
+                if (publishServiceComplianceResponse.getHeaders().containsKey("location")) {
+                    String rawMessageId = publishServiceComplianceResponse.getHeaders().get("location").get(0);
+                    String messageReferenceId = rawMessageId.substring(rawMessageId.lastIndexOf("/") + 1);
 
-                this.serviceOfferRepository.updateMessageReferenceId(serviceOfferId, messageReferenceId);
+                    this.serviceOfferRepository.updateMessageReferenceId(serviceOfferId, messageReferenceId);
+                    log.info("Service offer published to messaging queue. Message Reference ID: {}", messageReferenceId);
+                } else {
+                    log.info("Location header not found for service offer ID: {}", serviceOfferId);
+                }
+            } else {
+                log.info("Error while publishing service offer with ID {} to messaging queue. Response status: {}", serviceOfferId, publishServiceComplianceResponse.getStatusCode());
             }
         } catch (Exception e) {
             log.error("Error encountered while publishing service to message queue", e);
