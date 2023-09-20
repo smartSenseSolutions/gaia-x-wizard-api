@@ -13,6 +13,8 @@ public class ParticipantProfileDto {
 
     private String id;
 
+    private String email;
+
     private String legalName;
 
     private String shortName;
