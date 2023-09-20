@@ -99,7 +99,7 @@ public class StringPool {
     public static final String GX_POLICY = "gx:policy";
     public static final String GX_DATA_PROTECTION_REGIME = "gx:dataProtectionRegime";
     //    public static final String POLICY_LOCATION_LEFT_OPERAND = "verifiableCredential.credentialSubject.legalAddress.country";
-    public static final String POLICY_LOCATION_LEFT_OPERAND = "spatial";
+    public static final String SPATIAL = "spatial";
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
 
@@ -116,6 +116,7 @@ public class StringPool {
 
     public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
 
+    public static final String SPATIAL_EVALUATION = "spatialEvaluation";
 
     private StringPool() {
     }
