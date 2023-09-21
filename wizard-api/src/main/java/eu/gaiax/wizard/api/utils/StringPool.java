@@ -72,7 +72,7 @@ public class StringPool {
     public static final String TARGET = "target";
     public static final String ASSIGNER = "assigner";
     public static final String ACTION = "action";
-    public static final String SUBTYPE = "subtype";
+    public static final String SUBTYPE = "subType";
     public static final String JSON_EXTENSION = ".json";
     public static final String AGGREGATION_OF = "gx:aggregationOf";
     public static final String DEPENDS_ON = "gx:dependsOn";
