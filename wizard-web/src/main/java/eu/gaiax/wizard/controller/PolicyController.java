@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.Map;
 
+import static eu.gaiax.wizard.api.utils.StringPool.SPATIAL;
 import static eu.gaiax.wizard.utils.WizardRestConstant.PUBLIC_POLICY;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -37,7 +39,7 @@ public class PolicyController extends BaseController {
     @Tag(name = "Policy")
     @Operation(summary = "Policy evaluator for catalogue")
     @PostMapping(path = WizardRestConstant.POLICY_EVALUATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<JsonNode> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
-        return CommonResponse.of(this.policyService.evaluatePolicy(policyEvaluationRequest));
+    public ResponseEntity<Map<String, Object>> evaluatePolicy(@Valid @RequestBody PolicyEvaluationRequest policyEvaluationRequest) {
+        return ResponseEntity.ok(Map.of(SPATIAL, this.policyService.evaluatePolicy(policyEvaluationRequest)));
     }
 }
