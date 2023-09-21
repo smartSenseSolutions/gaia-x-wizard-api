@@ -5,6 +5,7 @@
 package eu.gaiax.wizard.core.service.signer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
@@ -41,6 +42,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.quartz.SchedulerException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -57,6 +60,9 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static eu.gaiax.wizard.api.utils.StringPool.DATA;
+import static eu.gaiax.wizard.api.utils.StringPool.VERIFY_URL_TYPE;
 
 /**
  * The type Signer service.
@@ -75,6 +81,7 @@ public class SignerService {
     private final ScheduleService scheduleService;
     private final Vault vault;
     private final ServiceEndpointConfig serviceEndpointConfig;
+    private final MessageSource messageSource;
 
     @Value("${wizard.signer-policies}")
     private List<String> policies;
@@ -349,7 +356,7 @@ public class SignerService {
         }
     }
 
-    public void validateRequestUrl(List<String> urls, String message, List<String> policy) {
+    public void validateRequestUrl(List<String> urls, List<String> type, String message, List<String> policy) {
         AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
         if (policy == null) {
             policy = this.policies;
@@ -359,8 +366,12 @@ public class SignerService {
         urls.parallelStream().forEach(url -> {
             try {
                 participantValidatorRequest.set(new ParticipantVerifyRequest(url, finalPolicy));
-                ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
-                log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").toString());
+                ResponseEntity<JsonNode> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
+                log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").asText());
+                if (!type.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
+                    String urlType = type.size() == 1 ? type.get(0) : "resource";
+                    throw new BadDataException(this.messageSource.getMessage("invalid.url.type", new String[]{urlType}, LocaleContextHolder.getLocale()));
+                }
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
                 throw new BadDataException(message + ",url=" + url);

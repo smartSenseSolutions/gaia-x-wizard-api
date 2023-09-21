@@ -58,6 +58,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
+import static eu.gaiax.wizard.api.utils.StringPool.GX_LEGAL_PARTICIPANT;
+import static eu.gaiax.wizard.api.utils.StringPool.GX_SERVICE_OFFERING;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -90,7 +93,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElse(null);
             Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
@@ -325,8 +328,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             throw new BadDataException("term.condition.not.found");
         }
 
-        String termsAndConditionsUrl = termsCondition.get("gx:URL").toString();
-        this.signerService.validateRequestUrl(Collections.singletonList(termsAndConditionsUrl), "term.condition.not.found ", null);
+        try {
+            HashingService.fetchJsonContent(termsCondition.get("gx:URL").toString());
+        } catch (Exception e) {
+            throw new BadDataException("invalid.tnc.url");
+        }
     }
 
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -344,7 +350,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), "aggregation.of.not.found", Collections.singletonList("holderSignature"));
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -360,7 +366,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, "depends.on.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), "depends.on.not.found", null);
         }
 
     }
