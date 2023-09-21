@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.Date;
 
+import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
+
 /**
  * The type S 3 utils.
  */
@@ -68,7 +70,7 @@ public class S3Utils {
      * @return the object
      */
     public File getObject(String key, String fileName) {
-        File localFile = new File("/tmp/" + fileName);
+        File localFile = new File(TEMP_FOLDER + fileName);
         CommonUtils.deleteFile(localFile);
         this.s3Client.getObject(new GetObjectRequest(this.awsSettings.bucket(), key), localFile);
         return localFile;

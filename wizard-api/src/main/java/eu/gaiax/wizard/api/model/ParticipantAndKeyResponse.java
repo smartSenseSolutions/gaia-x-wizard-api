@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.participant;
+package eu.gaiax.wizard.api.model;
 
 import lombok.Getter;
 import lombok.Setter;

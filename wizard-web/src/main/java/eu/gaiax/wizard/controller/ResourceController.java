@@ -7,7 +7,7 @@ import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.core.service.service_offer.ResourceService;
+import eu.gaiax.wizard.core.service.resource.ResourceService;
 import eu.gaiax.wizard.dao.entity.resource.Resource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -92,7 +92,7 @@ public class ResourceController extends BaseController {
                                      "gx:copyrightOwnedBy": [
                                        {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"],     
+                                     "gx:license": [ "http://smartproof.in/.well-known/license"],
                                      "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
                                      "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                    }
@@ -126,11 +126,11 @@ public class ResourceController extends BaseController {
                                    "gx:containsPII": false,
                                    "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                  }
-                               }                   
+                               }
                             """)
             })
     })
-    public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) throws JsonProcessingException {
+    public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) {
         this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
@@ -187,10 +187,10 @@ public class ResourceController extends BaseController {
                                      "gx:copyrightOwnedBy": [
                                      {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"],     
+                                     "gx:license": [ "http://smartproof.in/.well-known/license"],
                                      "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
                                      "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
-                                   }                       
+                                   }
                                  }
                             """),
                     @ExampleObject(name = "Create virtual resource , Data resource", value = """
@@ -220,13 +220,13 @@ public class ResourceController extends BaseController {
                                    "gx:containsPII": false,
                                    "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                  }
-                               }                   
+                               }
                             """)
             })
     })
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
+    public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) {
         return CommonResponse.of(this.resourceService.createResource(request, null), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
@@ -319,7 +319,7 @@ public class ResourceController extends BaseController {
                     })
             }),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = {
-                    @Content(examples = {})
+                    @Content()
             }),
     })
     @PostMapping(path = RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
@@ -411,7 +411,7 @@ public class ResourceController extends BaseController {
                     })
             }),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = {
-                    @Content(examples = {})
+                    @Content()
             }),
     })
     @PostMapping(path = PARTICIPANT_RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

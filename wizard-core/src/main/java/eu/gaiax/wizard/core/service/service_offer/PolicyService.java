@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import static eu.gaiax.wizard.api.utils.StringPool.SPATIAL;
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 @Service
 @RequiredArgsConstructor
@@ -55,31 +55,13 @@ public class PolicyService {
         return policyMap;
     }
 
-    /*@NotNull
-    private static List<Map<String, Object>> getMaps(List<String> rightOperand, String target, String assigner, String leftOperand) {
-        List<Map<String, Object>> permission = new ArrayList<>();
-        Map<String, Object> perMap = new HashMap<>();
-        perMap.put("target", target);
-        perMap.put("assigner", assigner);
-        perMap.put("action", "view");
-        List<Map<String, Object>> constraint = new ArrayList<>();
-        Map<String, Object> constraintMap = new HashMap<>();
-        constraintMap.put("leftOperand", leftOperand);
-        constraintMap.put("operator", "isAnyOf");
-        constraintMap.put("rightOperand", rightOperand);
-        constraint.add(constraintMap);
-        perMap.put("constraint", constraint);
-        permission.add(perMap);
-        return permission;
-    }*/
-
     @NotNull
     private static List<Map<String, Object>> getServiceOfferPermissionList(List<String> rightOperand, String target, String assigner, String leftOperand) {
         List<Map<String, Object>> permissionList = new ArrayList<>();
         Map<String, Object> permissionMap = new HashMap<>();
-        permissionMap.put("target", target);
-        permissionMap.put("assigner", assigner);
-        permissionMap.put("action", "use");
+        permissionMap.put(TARGET, target);
+        permissionMap.put(ASSIGNER, assigner);
+        permissionMap.put(ACTION, "use");
         List<Map<String, Object>> constraint = new ArrayList<>();
         Map<String, Object> constraintMap = new HashMap<>();
         constraintMap.put("name", leftOperand);
@@ -93,11 +75,11 @@ public class PolicyService {
         return permissionList;
     }
 
-    public void hostODRLPolicy(String hostPolicyJson, String hostedPath) {
-        File file = new File("/tmp/" + hostedPath + ".json");
+    public void hostPolicy(String hostPolicyJson, String hostedPath) {
+        File file = new File(TEMP_FOLDER + hostedPath + JSON_EXTENSION);
         try {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostedPath + ".json", file);
+            this.s3Utils.uploadFile(hostedPath + JSON_EXTENSION, file);
         } catch (Exception e) {
             log.error("Error while hosting policy json on path " + hostedPath, e);
         } finally {
@@ -234,7 +216,7 @@ public class PolicyService {
 
             for (JsonNode policyUrlJsonNode : policyArray) {
                 String policyUrl = policyUrlJsonNode.asText();
-                if (policyUrl.endsWith(".json")) {
+                if (policyUrl.endsWith(JSON_EXTENSION)) {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
                     if (constraint != null && constraint.getName().equals("spatial")) {
@@ -267,7 +249,7 @@ public class PolicyService {
         if (policyArray != null && policyArray.has(0)) {
             for (JsonNode policyUrlJsonNode : policyArray) {
                 String policyUrl = policyUrlJsonNode.asText();
-                if (policyUrl.endsWith(".json")) {
+                if (policyUrl.endsWith(JSON_EXTENSION)) {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
                     if (!this.isCountryInPermittedRegion(countryCode, constraint)) {

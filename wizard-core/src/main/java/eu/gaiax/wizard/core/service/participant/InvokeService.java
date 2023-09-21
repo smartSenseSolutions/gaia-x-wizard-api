@@ -12,6 +12,10 @@ import java.util.Objects;
 @Slf4j
 @Service
 public class InvokeService {
+
+    private InvokeService() {
+    }
+
     public static String executeRequest(String url, HttpMethod method) {
         return executeRequest(url, method, null);
     }

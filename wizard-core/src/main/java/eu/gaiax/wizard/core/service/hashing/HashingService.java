@@ -21,24 +21,14 @@ import java.util.Base64;
 public class HashingService {
 
     public static final String SHA_256 = "SHA-256";
-    public static final String SHA_512 = "SHA-512";
 
     public static String generateSha256Hash(String content) {
         return generateHash(SHA_256, content);
     }
 
-    public static String generateSha512Hash(String content) {
-        return generateHash(SHA_512, content);
-    }
-
     public static String encodeToBase64(String content) {
         log.debug("HashingService(encodeToBase64) -> Encode the provided content.");
         return Base64.getEncoder().encodeToString(content.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static String decodeToBase64(String content) {
-        log.debug("HashingService(decodeToBase64) -> Decode the provided content.");
-        return new String(Base64.getDecoder().decode(content.getBytes(StandardCharsets.UTF_8)));
     }
 
     @SneakyThrows
@@ -48,7 +38,6 @@ public class HashingService {
         byte[] hash = digest.digest(content.getBytes(StandardCharsets.UTF_8));
         return Hex.encodeHexString(hash);
     }
-
 
     public static String fetchJsonContent(String url) throws IOException {
         URL jsonUrl = new URL(url);

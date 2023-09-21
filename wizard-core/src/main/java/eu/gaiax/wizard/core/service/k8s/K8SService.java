@@ -8,7 +8,6 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.setting.K8SSettings;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -46,8 +45,8 @@ public class K8SService {
 
     public void createIngress(UUID participantId) {
         log.info("K8sService(createIngress) -> Initiate the ingress creation process for participant {}", participantId);
-        Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+
         try {
             Map<String, Object> certificates = this.vault.get(participant.getId().toString());
             //Step 1: create secret using SSL certificate

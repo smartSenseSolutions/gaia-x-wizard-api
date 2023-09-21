@@ -1,8 +1,8 @@
 package eu.gaiax.wizard.util;
 
 import com.smartsensesolutions.java.commons.FilterRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.util.constant.TestConstant;
 
 import java.util.HashMap;

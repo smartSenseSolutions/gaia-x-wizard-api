@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.Map;
 
 import static eu.gaiax.wizard.api.utils.StringPool.SPATIAL;
@@ -32,7 +31,7 @@ public class PolicyController extends BaseController {
     @Tag(name = "Policy")
     @Operation(summary = "Create Policy")
     @PostMapping(path = PUBLIC_POLICY, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Map<String, Object>> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) throws IOException {
+    public CommonResponse<Map<String, Object>> createODRLPolicy(@Valid @RequestBody ODRLPolicyRequest odrlPolicyRequest) {
         return CommonResponse.of(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, null));
     }
 
