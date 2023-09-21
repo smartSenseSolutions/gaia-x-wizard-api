@@ -37,6 +37,7 @@ import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -362,19 +363,22 @@ public class SignerService {
             policy = this.policies;
         }
 
+        boolean checkType = !CollectionUtils.isEmpty(type);
         List<String> finalPolicy = policy;
         urls.parallelStream().forEach(url -> {
+            ResponseEntity<JsonNode> signerResponse;
             try {
                 participantValidatorRequest.set(new ParticipantVerifyRequest(url, finalPolicy));
-                ResponseEntity<JsonNode> signerResponse = this.signerClient.verify(participantValidatorRequest.get());
+                signerResponse = this.signerClient.verify(participantValidatorRequest.get());
                 log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").asText());
-                if (!type.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
-                    String urlType = type.size() == 1 ? type.get(0) : "resource";
-                    throw new BadDataException(this.messageSource.getMessage("invalid.url.type", new String[]{urlType}, LocaleContextHolder.getLocale()));
-                }
             } catch (Exception e) {
                 log.error("An error occurred for URL: " + url, e);
-                throw new BadDataException(message + ",url=" + url);
+                throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
+            }
+
+            if (checkType && !type.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
+                String urlType = type.size() == 1 ? type.get(0) : "resource";
+                throw new BadDataException(this.messageSource.getMessage("invalid.url.type", new String[]{urlType}, LocaleContextHolder.getLocale()));
             }
         });
     }
