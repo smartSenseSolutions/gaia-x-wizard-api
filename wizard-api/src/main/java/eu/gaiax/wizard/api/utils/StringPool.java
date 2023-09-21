@@ -63,7 +63,7 @@ public class StringPool {
     public static final String GX_POLICY = "gx:policy";
     public static final String GX_DATA_PROTECTION_REGIME = "gx:dataProtectionRegime";
 
-    public static final String POLICY_LOCATION_LEFT_OPERAND = "spatial";
+    public static final String SPATIAL = "spatial";
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
 
@@ -91,6 +91,14 @@ public class StringPool {
     public static final String SUB_ORGANIZATION = "gx:subOrganization";
 
     public static final String PARENT_ORGANIZATION = "gx:parentOrganization";
+
+    public static final String VERIFY_URL_TYPE = "gxType";
+
+    public static final String GX_LEGAL_PARTICIPANT = "gx:LegalParticipant";
+
+    public static final String GX_SERVICE_OFFERING = "gx:ServiceOffering";
+
+    public static final String DATA = "data";
 
     public static final String OBSOLETE_TIME = "gx:obsoleteDateTime";
 
@@ -149,7 +157,6 @@ public class StringPool {
     public static final String GX_FORMAT_TYPE = "gx:formatType";
 
     public static final String GX_ACCESS_TYPE = "gx:accessType";
-    public static final String GX_SERVICE_OFFERING = "gx:ServiceOffering";
 
     public static final String GX_HASH = "gx:hash";
 
@@ -161,12 +168,9 @@ public class StringPool {
 
     public static final String PARTICIPANT_JSON = "participant.json";
 
-    public static final String DATA = "data";
     public static final String IS_VALID = "isValid";
     public static final String ISSUER = "issuer";
     public static final String ISSUANCE_DATE = "issuanceDate";
-
-    public static final String GX_LEGAL_PARTICIPANT = "gx:LegalParticipant";
 
     public static final String SERVICE = "service";
 

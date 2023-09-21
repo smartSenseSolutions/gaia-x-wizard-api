@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
@@ -161,7 +160,7 @@ public class PolicyService {
         Constraint constraint = null;
         if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
             constraint = rule.get().getConstraint().stream()
-                    .filter(c -> c.getName().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                    .filter(c -> c.getName().equalsIgnoreCase(SPATIAL))
                     .findAny()
                     .orElse(null);
         }
@@ -183,7 +182,7 @@ public class PolicyService {
                 Optional<Rule> rule = accessPolicy.getPermission().stream().filter(permission -> permission.getAction().equalsIgnoreCase("use")).findAny();
                 if (rule.isPresent() && !CollectionUtils.isEmpty(rule.get().getConstraint())) {
                     constraint = rule.get().getConstraint().stream()
-                            .filter(c -> c.getName().equalsIgnoreCase(POLICY_LOCATION_LEFT_OPERAND))
+                            .filter(c -> c.getName().equalsIgnoreCase(SPATIAL))
                             .findAny()
                             .orElse(null);
                 }
@@ -230,7 +229,7 @@ public class PolicyService {
         return Collections.emptyList();
     }
 
-    public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
+    public boolean evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         List<String> countryCode;
 
@@ -254,14 +253,14 @@ public class PolicyService {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
 
                     if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                        throw new ForbiddenAccessException("service.access.forbidden");
+                        return false;
                     }
 
                 }
             }
         }
 
-        return serviceOffer;
+        return true;
     }
 
 }

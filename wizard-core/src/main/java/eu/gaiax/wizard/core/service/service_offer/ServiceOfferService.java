@@ -94,7 +94,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
 
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), "participant.url.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
@@ -195,7 +195,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         String policyId = participant.getId() + "/" + serviceName + "_policy";
         String policyUrl = this.wizardHost + policyId + ".json";
         ServiceOfferPolicyDto policy = this.objectMapper.convertValue(credentialSubject.get(GX_POLICY), ServiceOfferPolicyDto.class);
-        ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), StringPool.POLICY_LOCATION_LEFT_OPERAND, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
+        ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), SPATIAL, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
         String hostPolicyJson = this.objectMapper.writeValueAsString(this.policyService.createServiceOfferPolicy(odrlPolicyRequest, policyUrl));
         if (StringUtils.hasText(hostPolicyJson)) {
@@ -329,6 +329,25 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
+    private void validateTermsAndConditions(CreateServiceOfferingRequest request) {
+        Map<String, Object> credentialSubject = request.getCredentialSubject();
+        if (!credentialSubject.containsKey("gx:termsAndConditions")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
+
+        if (!termsCondition.containsKey("gx:URL")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        try {
+            HashingService.fetchJsonContent(termsCondition.get("gx:URL").toString());
+        } catch (Exception e) {
+            throw new BadDataException("invalid.tnc.url");
+        }
+    }
+
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
         if (!request.getCredentialSubject().containsKey(AGGREGATION_OF) || !StringUtils.hasText(request.getCredentialSubject().get(AGGREGATION_OF).toString())) {
             throw new BadDataException("aggregation.of.not.found");
@@ -344,7 +363,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), "aggregation.of.not.found", Collections.singletonList("holderSignature"));
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -360,7 +379,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, "depends.on.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), "depends.on.not.found", null);
         }
 
     }
