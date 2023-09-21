@@ -44,8 +44,7 @@ public class HashicorpVaultService implements Vault {
     @Override
     public boolean patch(String secretName, Map<String, Object> kv) {
         try {
-            boolean patch = this.template.opsForKeyValue(this.vaultPathConfiguration.secretPath(), VaultKeyValueOperationsSupport.KeyValueBackend.KV_2).patch(secretName, kv);
-            return patch;
+            return this.template.opsForKeyValue(this.vaultPathConfiguration.secretPath(), VaultKeyValueOperationsSupport.KeyValueBackend.KV_2).patch(secretName, kv);
         } catch (Exception ex) {
             throw new VaultException("HashicorpVaultService(patch): Issue occur while read the secrets from hashicorp vault.", ex);
         }

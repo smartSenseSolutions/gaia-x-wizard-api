@@ -54,8 +54,9 @@ public class KeycloakService {
     }
 
     public void addUser(String id, String legalName, String email) {
-        if (this.getKeycloakUserByEmail(email) != null) {
-            return;
+        UserRepresentation existingUser = this.getKeycloakUserByEmail(email);
+        if (existingUser != null) {
+            this.deleteExistingUser(existingUser);
         }
 
         UserRepresentation userRepresentation = new UserRepresentation();
@@ -70,13 +71,21 @@ public class KeycloakService {
         RealmResource realmResource = this.getRealmResource();
         UsersResource usersResource = realmResource.users();
 
-        Response response = usersResource.create(userRepresentation);
-        log.info("Keycloak User Creation status: {}", response.getStatus());
-        if (response.getStatus() != HttpStatus.CREATED.value()) {
-            throw new BadDataException("keycloak.create.user.failed");
+        try (Response response = usersResource.create(userRepresentation)) {
+            log.info("Keycloak User Creation status: {}", response.getStatus());
+            if (response.getStatus() != HttpStatus.CREATED.value()) {
+                throw new BadDataException("keycloak.create.user.failed");
+            }
         }
-
+        
         log.info("keycloak user created");
+    }
+
+    private void deleteExistingUser(UserRepresentation userRepresentation) {
+        UsersResource usersResource = this.getRealmResource().users();
+        try (Response ignored = usersResource.delete(userRepresentation.getId())) {
+            log.info("Deleting existing user with email: {}", userRepresentation.getEmail());
+        }
     }
 
     public void sendRequiredActionsEmail(String email) {
@@ -125,50 +134,13 @@ public class KeycloakService {
         }
     }
 
-    public Boolean isLoginDeviceConfigured(UserRepresentation userRepresentation) {
+    public Boolean isLoginDeviceConfigured(String email) {
         try {
-            UserResource userResource = this.getRealmResource().users().get(userRepresentation.getId());
+            UserResource userResource = this.getRealmResource().users().get(this.getKeycloakUserByEmail(email).getId());
             return userResource.credentials().stream().anyMatch(credentialRepresentation -> credentialRepresentation.getType().equals(StringPool.WEBAUTHN_PASSWORDLESS));
         } catch (Exception e) {
             log.error("Error while fetching user credential list: ", e);
             return false;
         }
     }
-
-    /*public String getRequiredActionsUri(String email) {
-        try {
-            String requiredActionsToken = getRequiredActionsToken(email).token();
-            return keycloakSettings.authServer() +
-              "/realms/" +
-              keycloakSettings.realm() +
-              StringPool.REQUIRED_ACTIONS_PATH +
-              requiredActionsToken;
-        } catch (Exception e) {
-            log.error("Error while generating action token for user with email: {}", email, e);
-            return null;
-        }
-    }
-
-    private RequiredActionsTokenDto getRequiredActionsToken(String email) {
-        UserRepresentation userRepresentation = getKeycloakUserByEmail(email);
-        if (userRepresentation == null) {
-            throw new BadDataException();
-        }
-        RequiredActionsTokenRequest requiredActionsTokenRequest = new RequiredActionsTokenRequest(
-          userRepresentation.getId(),
-          email,
-          Collections.singletonList(KeycloakRequiredActionsEnum.WEBAUTHN_REGISTER_PASSWORDLESS.getValue()),
-          keycloakSettings.webAuthRedirectUrl(),
-          keycloakSettings.actionTokenLifespan()
-        );
-
-        return keycloakClient.generateRequireActionsToken(keycloakSettings.realm(), requiredActionsTokenRequest, getAccessToken()).getBody();
-    }
-
-    private String getAccessToken() {
-        return "Bearer " + getKeycloak().tokenManager().getAccessTokenString();
-
-    }
-     */
-
 }

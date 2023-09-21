@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.util.Date;
 
+import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
+
 /**
  * The type S 3 utils.
  */
@@ -35,6 +37,10 @@ public class S3Utils {
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
 
+    public void deleteFile(String objectName) {
+        this.s3Client.deleteObject(this.awsSettings.bucket(), objectName);
+    }
+
     public void uploadFileWithPublicAcl(String objectName, File file) {
         PutObjectRequest request = new PutObjectRequest(this.awsSettings.bucket(), objectName, file);
         request.setCannedAcl(CannedAccessControlList.PublicRead);
@@ -50,7 +56,7 @@ public class S3Utils {
     public String getPreSignedUrl(String objectName) {
         Date expiration = new Date();
         long expTimeMillis = expiration.getTime();
-        expTimeMillis += 10000; // 10 seconds
+        expTimeMillis += 20_000; // 20 seconds
         expiration.setTime(expTimeMillis);
 
         return this.s3Client.generatePresignedUrl(this.awsSettings.bucket(), objectName, expiration).toString();
@@ -64,7 +70,7 @@ public class S3Utils {
      * @return the object
      */
     public File getObject(String key, String fileName) {
-        File localFile = new File("/tmp/" + fileName);
+        File localFile = new File(TEMP_FOLDER + fileName);
         CommonUtils.deleteFile(localFile);
         this.s3Client.getObject(new GetObjectRequest(this.awsSettings.bucket(), key), localFile);
         return localFile;

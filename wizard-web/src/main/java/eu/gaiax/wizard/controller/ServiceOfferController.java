@@ -906,7 +906,7 @@ public class ServiceOfferController extends BaseController {
                                                           }
                                                         ]
                                                       }
-                                                    }                                                                                              
+                                                    }
                                                     """)
                                     }
                             )
@@ -931,7 +931,6 @@ public class ServiceOfferController extends BaseController {
                     }),
     })
     public CommonResponse<ServiceOfferResponse> createServiceOffering(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, this.requestForClaim(StringPool.ID, principal).toString(), false), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
@@ -984,7 +983,7 @@ public class ServiceOfferController extends BaseController {
                                                     {"message":"Validate Successfully."
                                                       "status": 200,
                                                       "payload": {
-                                                    }                                                                                                        
+                                                    }
                                                     """)
                                     }
                             )
@@ -1008,8 +1007,7 @@ public class ServiceOfferController extends BaseController {
                             })
                     }),
     })
-    public void validateServiceOfferRequest(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
-        //todo email changes remaining get from auth(String) this.requestForClaim("email", principal)
+    public void validateServiceOfferRequest(@Valid @RequestBody CreateServiceOfferingRequest request) throws IOException {
         this.serviceOfferService.validateServiceOfferMainRequest(request);
     }
 
@@ -1887,7 +1885,7 @@ public class ServiceOfferController extends BaseController {
                                                           }
                                                         ]
                                                       }
-                                                    }                                               
+                                                    }
                                                     """)
                                     }
                             )
@@ -1913,7 +1911,7 @@ public class ServiceOfferController extends BaseController {
     })
     @Operation(summary = "Create Service offering for enterprise, role = enterprise")
     @PostMapping(path = PUBLIC_SERVICE_OFFER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request, Principal principal) throws IOException {
+    public CommonResponse<ServiceOfferResponse> createServiceOfferingPublic(@Valid @RequestBody CreateServiceOfferingRequest request) throws IOException {
         return CommonResponse.of(this.serviceOfferService.createServiceOffering(request, null, true), this.messageSource.getMessage("entity.creation.successful", new String[]{"Service offer"}, LocaleContextHolder.getLocale()));
     }
 
@@ -2053,12 +2051,11 @@ public class ServiceOfferController extends BaseController {
                     })
             }),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = {
-                    @Content(examples = {})
+                    @Content()
             }),
     })
     @PostMapping(path = SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ServiceFilterResponse>> getServiceOfferingFilter(@Valid @RequestBody FilterRequest filterRequest) {
-//        return CommonResponse.of(this.serviceOfferViewService.filterServiceOfferView(filterRequest, null));
         return CommonResponse.of(this.serviceOfferService.filterServiceOffering(filterRequest, null));
     }
 
@@ -2146,7 +2143,7 @@ public class ServiceOfferController extends BaseController {
                     })
             }),
             @ApiResponse(responseCode = "400", description = "Invalid request", content = {
-                    @Content(examples = {})
+                    @Content()
             }),
     })
     @PostMapping(path = PARTICIPANT_SERVICE_OFFER_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)

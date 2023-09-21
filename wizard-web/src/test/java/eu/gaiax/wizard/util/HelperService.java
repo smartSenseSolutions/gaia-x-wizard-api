@@ -1,12 +1,10 @@
 package eu.gaiax.wizard.util;
 
 import com.smartsensesolutions.java.commons.FilterRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
-import eu.gaiax.wizard.dao.repository.data_master.LabelLevelQuestionMasterRepository;
 import eu.gaiax.wizard.util.constant.TestConstant;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,9 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 public class HelperService {
-
-    @Autowired
-    private LabelLevelQuestionMasterRepository labelLevelQuestionMasterRepository;
 
     public static Map<String, Object> prepareDefaultCredential(String legalName, String headQuarterAddress, String legalAddress) {
         Map<String, Object> legalParticipantCredential = new HashMap<>();
@@ -54,7 +49,7 @@ public class HelperService {
         dataAccountExport.put("gx:requestType", "API");
         dataAccountExport.put("gx:accessType", "physical");
         dataAccountExport.put("gx:formatType", "pdf");
-        
+
         credentialSubject.put("gx:dataAccountExport", dataAccountExport);
         credentialSubject.put("gx:criteria", prepareLabelLevelMap(labelLevelCriteriaList));
 

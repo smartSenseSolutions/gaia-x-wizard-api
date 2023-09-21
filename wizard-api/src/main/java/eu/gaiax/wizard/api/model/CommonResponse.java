@@ -68,11 +68,10 @@ public class CommonResponse<T> implements Serializable {
     /**
      * Of common response.
      *
-     * @param <T>     the type parameter
      * @param message the message
      * @return the common response
      */
-    public static <T> CommonResponse<Object> of(String message) {
+    public static CommonResponse<Object> of(String message) {
         return CommonResponse.builder(new Object()).status(200).message(message).build();
     }
 
@@ -134,7 +133,7 @@ public class CommonResponse<T> implements Serializable {
      * @return {@link String}
      */
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     /**
@@ -152,7 +151,7 @@ public class CommonResponse<T> implements Serializable {
      * @return T payload
      */
     public T getPayload() {
-        return payload;
+        return this.payload;
     }
 
     /**
@@ -170,7 +169,7 @@ public class CommonResponse<T> implements Serializable {
      * @return errors error messages
      */
     public List<String> getErrorMessages() {
-        return errorMessages;
+        return this.errorMessages;
     }
 
     /**
@@ -189,7 +188,7 @@ public class CommonResponse<T> implements Serializable {
      * @return the status
      */
     public int getStatus() {
-        return status;
+        return this.status;
     }
 
     /**
@@ -217,7 +216,7 @@ public class CommonResponse<T> implements Serializable {
          * @param payload payload to return to the client
          */
         public Builder(T payload) {
-            response = new CommonResponse<>(payload);
+            this.response = new CommonResponse<>(payload);
         }
 
         /**
@@ -227,7 +226,7 @@ public class CommonResponse<T> implements Serializable {
          * @return Builder builder
          */
         public Builder<T> message(String message) {
-            response.message = message;
+            this.response.message = message;
             return this;
         }
 
@@ -239,7 +238,7 @@ public class CommonResponse<T> implements Serializable {
          * @return Builder builder
          */
         public Builder<T> status(int status) {
-            response.status = status;
+            this.response.status = status;
             return this;
         }
 
@@ -251,7 +250,7 @@ public class CommonResponse<T> implements Serializable {
          * @return builder builder
          */
         public Builder<T> errors(List<String> errorMessages) {
-            response.errorMessages = errorMessages;
+            this.response.errorMessages = errorMessages;
             return this;
         }
 
@@ -262,7 +261,7 @@ public class CommonResponse<T> implements Serializable {
          * @return builder builder
          */
         public Builder<T> payload(T payload) {
-            response.payload = payload;
+            this.response.payload = payload;
             return this;
         }
 
@@ -272,7 +271,7 @@ public class CommonResponse<T> implements Serializable {
          * @return {@link CommonResponse}
          */
         public CommonResponse<T> build() {
-            return response;
+            return this.response;
         }
     }
 }
