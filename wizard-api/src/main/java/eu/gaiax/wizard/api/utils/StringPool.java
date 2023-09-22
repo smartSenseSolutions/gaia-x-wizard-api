@@ -103,6 +103,8 @@ public class StringPool {
 
     public static final String WEBAUTHN_PASSWORDLESS = "webauthn-passwordless"; //pragma: allowlist secret
 
+    public static final String SPATIAL = "spatial"; //pragma: allowlist secret
+
     private StringPool() {
     }
 }
