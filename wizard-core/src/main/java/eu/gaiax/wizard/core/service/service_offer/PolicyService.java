@@ -231,28 +231,28 @@ public class PolicyService {
 
     public boolean evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
-        List<String> countryCode;
+        List<String> catalogueSubdivisionCodeList;
 
         try {
-            countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
+            catalogueSubdivisionCodeList = this.getCountryCodeFromSelfDescription(catalogueDescription);
         } catch (Exception e) {
             throw new BadDataException("catalogue.location.invalid");
         }
 
-        if (CollectionUtils.isEmpty(countryCode)) {
+        if (CollectionUtils.isEmpty(catalogueSubdivisionCodeList)) {
             throw new BadDataException("catalogue.location.invalid");
         }
 
         JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
+        JsonNode servicePolicyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
-        if (policyArray != null && policyArray.has(0)) {
-            for (JsonNode policyUrlJsonNode : policyArray) {
+        if (servicePolicyArray != null && servicePolicyArray.has(0)) {
+            for (JsonNode policyUrlJsonNode : servicePolicyArray) {
                 String policyUrl = policyUrlJsonNode.asText();
                 if (policyUrl.endsWith(JSON_EXTENSION)) {
-                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
+                    Constraint serviceOfferSpatialConstraint = this.getLocationConstraintFromPolicy(policyUrl);
 
-                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
+                    if (!this.isCountryInPermittedRegion(catalogueSubdivisionCodeList, serviceOfferSpatialConstraint)) {
                         return false;
                     }
 

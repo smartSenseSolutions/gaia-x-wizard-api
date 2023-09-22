@@ -18,8 +18,11 @@ public class TestConstant {
 
     //Other Constant
     public static final String EMAIL = "test@gaia-x.com";
-    public static final String LEGAL_NAME = UUID.randomUUID().toString();
+    public static final String LEGAL_NAME = "Legal Name Ltd.";
     public static final String SHORT_NAME = "shortname";
+    public static final String DOMAIN = "shortname.domain.com";
+
+    public static final String DID = "did:web:test.com";
 
     public static final String SERVICE_OFFER_NAME = UUID.randomUUID().toString();
 }
