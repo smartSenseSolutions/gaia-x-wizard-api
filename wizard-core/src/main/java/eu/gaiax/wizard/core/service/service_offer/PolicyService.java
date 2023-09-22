@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.exception.ForbiddenAccessException;
 import eu.gaiax.wizard.api.model.policy.Constraint;
 import eu.gaiax.wizard.api.model.policy.Policy;
 import eu.gaiax.wizard.api.model.policy.Rule;
@@ -248,7 +247,7 @@ public class PolicyService {
         return Collections.emptyList();
     }
 
-    public JsonNode evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
+    public boolean evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
         JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
         List<String> countryCode;
 
@@ -270,16 +269,12 @@ public class PolicyService {
                 String policyUrl = policyUrlJsonNode.asText();
                 if (policyUrl.endsWith(".json")) {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
-
-                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                        throw new ForbiddenAccessException("service.access.forbidden");
-                    }
-
+                    return this.isCountryInPermittedRegion(countryCode, constraint);
                 }
             }
         }
 
-        return serviceOffer;
+        return true;
     }
 
 }
