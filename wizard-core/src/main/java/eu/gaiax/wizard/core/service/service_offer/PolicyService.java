@@ -251,11 +251,7 @@ public class PolicyService {
                 String policyUrl = policyUrlJsonNode.asText();
                 if (policyUrl.endsWith(JSON_EXTENSION)) {
                     Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
-
-                    if (!this.isCountryInPermittedRegion(countryCode, constraint)) {
-                        return false;
-                    }
-
+                    return this.isCountryInPermittedRegion(countryCode, constraint);
                 }
             }
         }
