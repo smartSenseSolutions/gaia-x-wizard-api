@@ -950,7 +950,7 @@ public class ServiceOfferController extends BaseController {
                                   "gx:location": [
                                     "BE-BRU"
                                   ],
-                                  "gx:customAttribute": "https://www.smartsensesolutions.com/",
+                                  "gx:customAttribute": "https://www.smartsensesolutions.com/"
                                 },
                                 "gx:dataAccountExport": {
                                   "gx:requestType": "API",
