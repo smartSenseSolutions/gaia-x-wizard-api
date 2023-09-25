@@ -197,8 +197,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void generateServiceOfferPolicy(Participant participant, String serviceName, String serviceHostUrl, Map<String, Object> credentialSubject) throws JsonProcessingException {
-        String policyId = participant.getId() + "/" + serviceName + "_policy";
-        String policyUrl = this.wizardHost + policyId + ".json";
+        String policyId = participant.getId() + "/" + serviceName + "_policy" + JSON_EXTENSION;
+        String policyUrl = this.wizardHost + policyId;
         ServiceOfferPolicyDto policy = this.objectMapper.convertValue(credentialSubject.get(GX_POLICY), ServiceOfferPolicyDto.class);
         ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), SPATIAL, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 

@@ -76,10 +76,10 @@ public class PolicyService {
     }
 
     public void hostPolicy(String hostPolicyJson, String hostedPath) {
-        File file = new File(TEMP_FOLDER + hostedPath + JSON_EXTENSION);
+        File file = new File(TEMP_FOLDER + hostedPath);
         try {
             FileUtils.writeStringToFile(file, hostPolicyJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostedPath + JSON_EXTENSION, file);
+            this.s3Utils.uploadFile(hostedPath, file);
         } catch (Exception e) {
             log.error("Error while hosting policy json on path " + hostedPath, e);
         } finally {
