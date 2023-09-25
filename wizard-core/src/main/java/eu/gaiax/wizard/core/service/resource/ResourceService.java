@@ -185,11 +185,10 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     private String createAndHostPolicy(Participant participant) throws JsonProcessingException {
         Map<String, Object> policyMap = new HashMap<>();
-
-        String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID();
+        String hostUrl = participant.getId() + "/resource_policy_" + UUID.randomUUID() + JSON_EXTENSION;
         policyMap.put(CONTEXT, this.contextConfig.ODRLPolicy());
         policyMap.put(TYPE, "Offer");
-        policyMap.put(ID, this.wizardHost + hostUrl + JSON_EXTENSION);
+        policyMap.put(ID, this.wizardHost + hostUrl);
         List<Map<String, Object>> permission = getPermissionMaps(participant);
         policyMap.put("permission", permission);
         String policyJson = this.objectMapper.writeValueAsString(policyMap);
