@@ -115,19 +115,16 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         String serviceName = "service_" + this.getRandomString();
         String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
+        Map<String, String> labelLevelVc = this.createServiceOfferLabelLevel(participant, request, serviceHostUrl);
         Map<String, Object> credentialSubject = request.getCredentialSubject();
-        if (request.getCredentialSubject().containsKey(GX_POLICY)) {
+
+        if (credentialSubject.containsKey(GX_POLICY)) {
             this.generateServiceOfferPolicy(participant, serviceName, serviceHostUrl, credentialSubject);
         }
-
         this.createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
 
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        if (!participant.isOwnDidSolution()) {
-            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
-        }
-
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get(SERVICE_VC), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential.get(SERVICE_VC));
 
@@ -140,9 +137,13 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .veracityData(complianceCredential.getOrDefault(TRUST_INDEX, null))
                 .build();
 
-        this.addLabelLevel(participant, request, serviceOffer, serviceHostUrl);
-
+        this.addLabelLevelToServiceOffer(participant, serviceOffer, labelLevelVc);
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
+
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
+        }
+
         this.publishServiceComplianceToMessagingQueue(serviceOffer.getId(), complianceCredential.get(SERVICE_VC));
 
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
@@ -158,7 +159,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .build();
     }
 
-    private void addLabelLevel(Participant participant, CreateServiceOfferingRequest request, ServiceOffer serviceOffer, String serviceHostUrl) throws JsonProcessingException {
+    private Map<String, String> createServiceOfferLabelLevel(Participant participant, CreateServiceOfferingRequest request, String serviceHostUrl) {
         // todo sign label level vc
         Map<String, String> labelLevelVc = new HashMap<>();
 
@@ -171,6 +172,10 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             }
         }
 
+        return labelLevelVc;
+    }
+
+    private void addLabelLevelToServiceOffer(Participant participant, ServiceOffer serviceOffer, Map<String, String> labelLevelVc) throws JsonProcessingException {
         if (Objects.requireNonNull(labelLevelVc).containsKey(LABEL_LEVEL_VC)) {
             JsonNode descriptionCredential = this.objectMapper.readTree(labelLevelVc.get(LABEL_LEVEL_VC)).path(CREDENTIAL_SUBJECT);
             if (descriptionCredential != null) {
