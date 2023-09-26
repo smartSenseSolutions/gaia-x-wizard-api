@@ -199,14 +199,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), "invalid.parent.organization", null));
+            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), LABEL_PARENT_ORGANIZATION, "invalid.parent.organization", null));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), "invalid.sub.organization", null));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), LABEL_SUB_ORGANIZATION, "invalid.sub.organization", null));
         }
     }
 
@@ -216,7 +216,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;

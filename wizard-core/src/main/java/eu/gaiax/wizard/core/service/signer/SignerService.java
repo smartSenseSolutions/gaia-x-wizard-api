@@ -352,13 +352,13 @@ public class SignerService {
         }
     }
 
-    public void validateRequestUrl(List<String> urls, List<String> type, String message, List<String> policy) {
+    public void validateRequestUrl(List<String> urls, List<String> gxTypeList, String urlTypeLabel, String message, List<String> policy) {
         AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
         if (policy == null) {
             policy = this.policies;
         }
 
-        boolean checkType = !CollectionUtils.isEmpty(type);
+        boolean checkType = !CollectionUtils.isEmpty(gxTypeList);
         List<String> finalPolicy = policy;
         urls.parallelStream().forEach(url -> {
             ResponseEntity<JsonNode> signerResponse;
@@ -371,9 +371,10 @@ public class SignerService {
                 throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
             }
 
-            if (checkType && !type.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
-                String urlType = type.size() == 1 ? type.get(0) : "resource";
-                throw new BadDataException(this.messageSource.getMessage("invalid.url.type", new String[]{urlType}, LocaleContextHolder.getLocale()));
+            if (checkType && !gxTypeList.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
+                String urlType = gxTypeList.size() == 1 ? gxTypeList.get(0) : "resource";
+                String messageKey = StringUtils.hasText(urlTypeLabel) ? "invalid.url.type.with.label" : "invalid.url.type";
+                throw new BadDataException(this.messageSource.getMessage(messageKey, new String[]{urlType, urlTypeLabel}, LocaleContextHolder.getLocale()));
             }
         });
     }

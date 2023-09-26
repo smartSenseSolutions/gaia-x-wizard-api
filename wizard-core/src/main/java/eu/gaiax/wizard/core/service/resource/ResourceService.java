@@ -115,7 +115,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             this.addPrivateKey(participant, request);
 
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, true);
             participant = this.participantService.validateParticipant(participantValidatorRequest);
@@ -221,7 +221,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), "maintained.by.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_MAINTAINED_BY, "maintained.by.not.found", null);
         }
         if (request.getCredentialSubject().containsKey(OWNED_BY)) {
             JsonArray aggregationArray = jsonObject
@@ -234,7 +234,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), "owned.by.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_OWNED_BY, "owned.by.not.found", null);
         }
         if (request.getCredentialSubject().containsKey(MANUFACTURED_BY)) {
             JsonArray aggregationArray = jsonObject
@@ -247,7 +247,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), "manufactured.by.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_MANUFACTURED_BY, "manufactured.by.not.found", null);
         }
     }
 
@@ -263,7 +263,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), "manufactured.by.of.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_MANUFACTURED_BY, "manufactured.by.of.not.found", null);
         }
         if (request.getCredentialSubject().containsKey(PRODUCED_BY)) {
             JsonObject produceBy = jsonObject
@@ -272,7 +272,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
             String idValue = produceBy.get(ID).getAsString();
 
-            this.signerService.validateRequestUrl(List.of(idValue), List.of(GX_LEGAL_PARTICIPANT), "produced.by.not.found", null);
+            this.signerService.validateRequestUrl(List.of(idValue), List.of(GX_LEGAL_PARTICIPANT), LABEL_PRODUCED_BY, "produced.by.not.found", null);
         }
 
         if (request.getCredentialSubject().containsKey(CONTAINS_PII) && Boolean.parseBoolean(request.getCredentialSubject().get(CONTAINS_PII).toString())) {
@@ -299,7 +299,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+            this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), LABEL_AGGREGATION_OF, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
         }
     }
 
