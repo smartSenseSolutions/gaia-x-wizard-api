@@ -4,7 +4,6 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -28,6 +27,8 @@ import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.*;
+
+import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
 
 @Service
 @RequiredArgsConstructor
@@ -76,13 +77,12 @@ public class CertificateService {
 
     public void createSSLCertificate(UUID participantId, JobKey jobKey) {
         log.info("CertificateService(createSSLCertificate) -> Initiate process to create a SSL certificate for participant {}", participantId);
-        Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
 
-        File domainChainFile = new File("/tmp/" + participant.getDomain() + "_chain.crt");
-        File csrFile = new File("/tmp/" + participant.getDomain() + ".csr");
-        File keyfile = new File("/tmp/" + participant.getDomain() + ".key");
-        File pkcs8File = new File("/tmp/pkcs8_" + participant.getDomain() + ".key");
+        File domainChainFile = new File(TEMP_FOLDER + participant.getDomain() + "_chain.crt");
+        File csrFile = new File(TEMP_FOLDER + participant.getDomain() + ".csr");
+        File keyfile = new File(TEMP_FOLDER + participant.getDomain() + ".key");
+        File pkcs8File = new File(TEMP_FOLDER + "pkcs8_" + participant.getDomain() + ".key");
 
         try {
 
@@ -181,7 +181,7 @@ public class CertificateService {
             this.convertKeyFileInPKCS8(keyfile.getAbsolutePath(), pkcs8File.getAbsolutePath(), participant.getDid());
 
             //save files in vault
-            this.uploadCertificatesToVault(participant.getId().toString(), participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
+            this.uploadCertificatesToVault(participant.getId().toString(), domainChainFile, csrFile, keyfile, pkcs8File);
             participant.setKeyStored(true);
 
             //create Job tp create ingress and tls secret
@@ -353,7 +353,7 @@ public class CertificateService {
 
     }
 
-    private void uploadCertificatesToVault(String participantId, String secretName, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
+    private void uploadCertificatesToVault(String participantId, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
         this.uploadCertificatesToVault(participantId,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));

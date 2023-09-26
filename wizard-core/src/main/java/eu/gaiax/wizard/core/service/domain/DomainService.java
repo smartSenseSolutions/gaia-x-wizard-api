@@ -10,7 +10,6 @@ import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.model.RegistrationStatus;
 import eu.gaiax.wizard.api.model.setting.AWSSettings;
 import eu.gaiax.wizard.api.utils.StringPool;
-import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -101,8 +100,8 @@ public class DomainService {
 
     public void createSubDomain(UUID participantId) {
         log.info("DomainService(createSubDomain) -> Initiate process for creating sub domain for participant {}.", participantId);
-        Participant participant = this.participantRepository.findById(participantId).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(participantId).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+
         try {
             String domainName = participant.getDomain();
             log.info("DomainService(createSubDomain) -> Prepare domain {} for participant {}.", domainName, participantId);

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ActiveProfiles("test")
 @ContextConfiguration(initializers = {ContainerContextInitializer.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class DataMasterControllerTest {
+class DataMasterControllerTest {
 
     @Autowired
     private AccessTypeMasterRepository accessTypeMasterRepository;

@@ -4,6 +4,7 @@
 
 package eu.gaiax.wizard.api.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
 import eu.gaiax.wizard.api.model.ParticipantVerifyRequest;
 import eu.gaiax.wizard.api.model.did.CreateDidRequest;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(value = "Signerapi", url = "${wizard.host.signer}")
+@FeignClient(value = "SignerClient", url = "${wizard.host.signer}")
 public interface SignerClient {
 
     @PostMapping(path = "/v1/create-web-did", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -27,7 +28,7 @@ public interface SignerClient {
     ResponseEntity<Map<String, Object>> createVc(@RequestBody CreateVCRequest request);
 
     @PostMapping(path = "/v1/gaia-x/verify", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<Map<String, Object>> verify(@RequestBody ParticipantVerifyRequest request);
+    ResponseEntity<JsonNode> verify(@RequestBody ParticipantVerifyRequest request);
 
     @PostMapping(path = "/v1/gaia-x/service-offering", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Map<String, Object>> createServiceOfferVc(@RequestBody SignerServiceRequest request);

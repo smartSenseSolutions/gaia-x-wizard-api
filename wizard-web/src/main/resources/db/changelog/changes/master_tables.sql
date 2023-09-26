@@ -203,3 +203,8 @@ UPDATE label_level_question_master SET basic_conformity='MANDATORY_DECLARATION' 
 ALTER TABLE label_level_question_master ADD COLUMN highest_label_level VARCHAR(20) NULL;
 UPDATE label_level_question_master SET highest_label_level='L1' WHERE criterion_number IN ('Criterion P1.1.2', 'Criterion P2.1.1', 'Criterion P2.2.4', 'Criterion P2.3.1');
 UPDATE label_level_question_master SET highest_label_level='BC' WHERE criterion_number NOT IN ('Criterion P1.1.2', 'Criterion P2.1.1', 'Criterion P2.2.4', 'Criterion P2.3.1');
+
+
+--changeset Neha:9
+INSERT INTO request_type_master(type, active) VALUES
+('Registered Letter', true);

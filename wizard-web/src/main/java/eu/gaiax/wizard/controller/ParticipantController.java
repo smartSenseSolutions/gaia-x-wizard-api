@@ -1,15 +1,14 @@
 package eu.gaiax.wizard.controller;
 
 import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
-import eu.gaiax.wizard.core.service.participant.ParticipantAndKeyResponse;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantCreationRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -18,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -30,8 +30,10 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
 
+import static eu.gaiax.wizard.api.utils.StringPool.RESPONSE_MESSAGE;
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @RestController
 @RequiredArgsConstructor
@@ -609,7 +611,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_SUBDOMAIN, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createSubDomain(@PathVariable(name = "participantId") String participantId) {
         this.domainService.createSubDomain(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "Subdomain creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "Subdomain creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from SLL certificate creation, role = admin, (only used for manual step in case of failure)")
@@ -708,7 +710,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_INGRESS, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createIngress(@PathVariable(name = "participantId") String participantId) {
         this.k8SService.createIngress(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "Ingress creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "Ingress creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from did creation, role-=admin, (only used for manual step in case of failure)")
@@ -748,7 +750,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = PARTICIPANT_DID, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createDid(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createDid(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "did creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "did creation started"));
     }
 
     @Operation(summary = "Resume onboarding process from participant credential creation, role Admin, (only used for manual step in case of failure)")
@@ -788,7 +790,7 @@ public class ParticipantController extends BaseController {
     @GetMapping(path = CREATE_PARTICIPANT, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Map<String, String>> createParticipantJson(@PathVariable(name = "participantId") String participantId) {
         this.signerService.createParticipantJson(UUID.fromString(participantId));
-        return CommonResponse.of(Map.of("message", "participant json creation started"));
+        return CommonResponse.of(Map.of(RESPONSE_MESSAGE, "participant json creation started"));
     }
 
     @Operation(
@@ -851,6 +853,35 @@ public class ParticipantController extends BaseController {
     public CommonResponse<Object> sendRequiredActionsEmail(@RequestBody SendRegistrationEmailRequest sendRegistrationEmailRequest) {
         this.participantService.sendRegistrationLink(sendRegistrationEmailRequest.email());
         return CommonResponse.of(this.messageSource.getMessage("registration.mail.sent", null, LocaleContextHolder.getLocale()));
+    }
+
+    @Operation(
+            summary = "Participant profile",
+            description = "This endpoint returns logged in participant's profile."
+    )
+    @GetMapping(PARTICIPANT_PROFILE)
+    public CommonResponse<ParticipantProfileDto> getParticipantProfile(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
+        return CommonResponse.of(this.participantService.getParticipantProfile(participantId));
+    }
+
+    @Operation(
+            summary = "Update participant profile image",
+            description = "This endpoint updates participant's profile image."
+    )
+    @PutMapping(value = PARTICIPANT_PROFILE_IMAGE, consumes = MULTIPART_FORM_DATA_VALUE)
+    public CommonResponse<Map<String, Object>> updateParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId,
+                                                                             @Valid @ModelAttribute FileUploadRequest fileUploadRequest) {
+        return CommonResponse.of("imageUrl", this.participantService.updateParticipantProfileImage(participantId, fileUploadRequest.file()), this.messageSource.getMessage("profile.image.updated", null, LocaleContextHolder.getLocale()));
+    }
+
+    @Operation(
+            summary = "Delete participant profile image",
+            description = "This endpoint deletes participant's profile image."
+    )
+    @DeleteMapping(value = PARTICIPANT_PROFILE_IMAGE)
+    public CommonResponse<Object> deleteParticipantProfileImage(@PathVariable(StringPool.PARTICIPANT_ID) String participantId) {
+        this.participantService.deleteParticipantProfileImage(participantId);
+        return CommonResponse.of(this.messageSource.getMessage("profile.image.deleted", null, LocaleContextHolder.getLocale()));
     }
 
     @Operation(

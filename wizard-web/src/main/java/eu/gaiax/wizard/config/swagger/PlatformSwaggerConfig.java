@@ -26,7 +26,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class PlatformSwaggerConfig {
     private final SecurityConfigProperties properties;
-    private final ApplicationInfo info;
+    private final ApplicationInfo applicationInfo;
 
     /**
      * Spring identity open api.
@@ -45,13 +45,13 @@ public class PlatformSwaggerConfig {
 
     private Info apiInfo() {
         return new Info()
-                .title(this.info.name())
-                .description(this.info.description())
-                .version(this.info.version())
+                .title(this.applicationInfo.name())
+                .description(this.applicationInfo.description())
+                .version(this.applicationInfo.version())
                 .contact(new Contact()
-                        .name(this.info.contact().name())
-                        .email(this.info.contact().email())
-                        .url(this.info.contact().url())
+                        .name(this.applicationInfo.contact().name())
+                        .email(this.applicationInfo.contact().email())
+                        .url(this.applicationInfo.contact().url())
                 );
     }
 

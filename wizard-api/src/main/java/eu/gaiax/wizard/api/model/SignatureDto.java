@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.participant.model;
+package eu.gaiax.wizard.api.model;
 
 public record SignatureDto(String jws, String verificationMethod) {
 }

@@ -3,14 +3,18 @@ package eu.gaiax.wizard.core.service.participant;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.smartsensesolutions.java.commons.base.repository.BaseRepository;
 import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.model.CheckParticipantRegisteredResponse;
-import eu.gaiax.wizard.api.model.CredentialTypeEnum;
-import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
+import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
+import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
+import eu.gaiax.wizard.api.model.service_offer.CredentialDto;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
@@ -18,10 +22,6 @@ import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.keycloak.KeycloakService;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantCreationRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantOnboardRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantRegisterRequest;
-import eu.gaiax.wizard.core.service.participant.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
@@ -45,11 +45,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
+
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 @Service
 @Slf4j
@@ -81,8 +84,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         EntityTypeMaster entityType = null;
 
         if (StringUtils.hasText(onboardRequest.entityType())) {
-            entityType = this.entityTypeMasterRepository.findById(UUID.fromString(onboardRequest.entityType())).orElse(null);
-            Validate.isNull(entityType).launch("invalid.entity.type");
+            entityType = this.entityTypeMasterRepository.findById(UUID.fromString(onboardRequest.entityType())).orElseThrow(() -> new BadDataException("invalid.entity.type"));
         }
 
         Participant participant = this.participantRepository.getByEmail(request.email());
@@ -123,8 +125,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Participant initiateOnboardParticipantProcess(String participantId, ParticipantCreationRequest request) {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
         Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
         if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
             participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
@@ -198,14 +199,14 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> parentOrg = this.mapper.convertValue(parentOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.parent.organization", null));
+            parentOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), LABEL_PARENT_ORGANIZATION, "invalid.parent.organization", null));
         }
         Object subOrganization = credentials.get("gx:subOrganization");
         if (Objects.nonNull(subOrganization)) {
             TypeReference<List<Map<String, String>>> orgTypeReference = new TypeReference<>() {
             };
             List<String> subOrg = this.mapper.convertValue(subOrganization, orgTypeReference).stream().map(s -> s.get("id")).toList();
-            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), "invalid.sub.organization", null));
+            subOrg.parallelStream().forEach(url -> this.signerService.validateRequestUrl(Collections.singletonList(url), List.of(GX_LEGAL_PARTICIPANT), LABEL_SUB_ORGANIZATION, "invalid.sub.organization", null));
         }
     }
 
@@ -215,7 +216,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public Participant validateParticipant(ParticipantValidatorRequest request) {
-        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), "participant.url.not.found", null);
+        this.signerService.validateRequestUrl(Collections.singletonList(request.participantJsonUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
         String participantJson = InvokeService.executeRequest(request.participantJsonUrl(), HttpMethod.GET);
         JsonNode root = this.mapper.readTree(participantJson);
         String issuer = null;
@@ -255,7 +256,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
             Participant participant = this.participantRepository.getByDomain(host);
             Validate.isNull(participant).launch(new EntityNotFoundException("subdomain.not.found"));
-            if (fileName.equals("did.json")) {
+            if (fileName.equals(DID_JSON)) {
                 return this.getLegalParticipantJson(participant.getId().toString(), fileName);
             }
             Map<String, Object> certificates = this.vault.get(participant.getId().toString());
@@ -266,11 +267,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             //TODO need to remove
             log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
             Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
-            if (fileName.equals("did.json")) {
-                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension("did.json");
+            if (fileName.equals(DID_JSON)) {
+                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(DID_JSON);
                 File file = new File(fetchedFileName);
                 try {
-                    log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, "did.json");
+                    log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, DID_JSON);
                     file = this.s3Utils.getObject(host + "/did.json", fetchedFileName);
                     return FileUtils.readFileToString(file, Charset.defaultCharset());
                 } finally {
@@ -289,8 +290,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         File file = new File(fetchedFileName);
         try {
             log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
-            Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElse(null);
-            Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+            Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
             file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
             return FileUtils.readFileToString(file, Charset.defaultCharset());
         } finally {
@@ -326,8 +326,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED, readOnly = true)
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
 
         ParticipantConfigDTO participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         if (participant.isOwnDidSolution()) {
@@ -343,8 +342,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElse(null);
-        Validate.isNull(participant).launch(new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
         ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
 
         Credential legalParticipantCredential = this.credentialService.getLegalParticipantCredential(participant.getId());
@@ -367,4 +365,83 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.keycloakService.sendRequiredActionsEmail(email);
         log.info("registration email sent to email: {}", email);
     }
+
+    @SneakyThrows
+    public ParticipantProfileDto getParticipantProfile(String participantId) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+
+        ParticipantProfileDto participantProfileDto = this.mapper.convertValue(participant, ParticipantProfileDto.class);
+        JsonNode participantCredentialRequest = this.mapper.readTree(participant.getCredentialRequest());
+        participantProfileDto.setLegalRegistrationNumber(participantCredentialRequest.get(LEGAL_REGISTRATION_NUMBER));
+
+        Credential credential = this.credentialService.getLegalParticipantCredential(participant.getId());
+        if (credential != null) {
+            participantProfileDto.setCredential(this.mapper.convertValue(credential, CredentialDto.class));
+        }
+
+        JsonNode credentialSubject = participantCredentialRequest.get(LEGAL_PARTICIPANT).get(CREDENTIAL_SUBJECT);
+        participantProfileDto.setHeadquarterAddress(credentialSubject.get(HEADQUARTER_ADDRESS).get(SUBDIVISION_CODE).asText());
+        participantProfileDto.setLegalAddress(credentialSubject.get(LEGAL_ADDRESS).get(SUBDIVISION_CODE).asText());
+
+        if (StringUtils.hasText(participant.getProfileImage())) {
+            participantProfileDto.setProfileImage(this.s3Utils.getPreSignedUrl(participant.getProfileImage()));
+        }
+
+        List<String> organizationList;
+        if (credentialSubject.has(PARENT_ORGANIZATION)) {
+            organizationList = this.getParentOrSubOrganizationList((ArrayNode) credentialSubject.get(PARENT_ORGANIZATION));
+            participantProfileDto.setParentOrganization(organizationList);
+        }
+
+        if (credentialSubject.has(SUB_ORGANIZATION)) {
+            organizationList = this.getParentOrSubOrganizationList((ArrayNode) credentialSubject.get(SUB_ORGANIZATION));
+            participantProfileDto.setSubOrganization(organizationList);
+        }
+
+        return participantProfileDto;
+    }
+
+    private List<String> getParentOrSubOrganizationList(ArrayNode organizationArrayNode) {
+        List<Map<String, String>> organizationlist = this.mapper.convertValue(organizationArrayNode, new TypeReference<>() {
+        });
+        return organizationlist.stream().map(org -> org.get(ID)).sorted().toList();
+    }
+
+    public String updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+
+        if (StringUtils.hasText(participant.getProfileImage())) {
+            this.s3Utils.deleteFile(participant.getProfileImage());
+        }
+
+        String fileName = "participant/" + participantId + "_" + System.currentTimeMillis() + "." + FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+        File profileImage = new File(TEMP_FOLDER + fileName);
+        try {
+            FileUtils.copyToFile(multipartFile.getInputStream(), profileImage);
+            this.s3Utils.uploadFile(fileName, profileImage);
+        } catch (Exception e) {
+            log.error("Error while saving profile picture for participantId: {}", participant.getId(), e);
+            throw new BadDataException("invalid.file");
+        } finally {
+            FileUtils.deleteQuietly(profileImage);
+        }
+
+        participant.setProfileImage(fileName);
+        this.participantRepository.save(participant);
+
+        return this.s3Utils.getPreSignedUrl(fileName);
+    }
+
+    public void deleteParticipantProfileImage(String participantId) {
+        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+
+        if (!StringUtils.hasText(participant.getProfileImage())) {
+            throw new BadDataException("file.not.found");
+        }
+
+        participant.setProfileImage(null);
+        this.participantRepository.save(participant);
+    }
+
+
 }

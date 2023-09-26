@@ -53,4 +53,6 @@ public class Participant extends SuperEntity {
     @Column(name = "key_stored")
     private boolean keyStored;
 
+    @Column(name = "profile_image")
+    private String profileImage;
 }

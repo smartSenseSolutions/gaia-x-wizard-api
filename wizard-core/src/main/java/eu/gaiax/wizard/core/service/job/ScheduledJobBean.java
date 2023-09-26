@@ -4,13 +4,11 @@
 
 package eu.gaiax.wizard.core.service.job;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.k8s.K8SService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.core.service.ssl.CertificateService;
-import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -34,8 +32,6 @@ public class ScheduledJobBean extends QuartzJobBean {
     private final CertificateService certificateService;
     private final K8SService k8SService;
     private final SignerService signerService;
-    private final ParticipantRepository participantRepository;
-    private final ObjectMapper mapper;
 
     @SneakyThrows
     @Override
