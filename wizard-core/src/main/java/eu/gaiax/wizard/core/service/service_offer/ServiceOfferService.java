@@ -94,7 +94,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
 
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
@@ -368,7 +368,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), LABEL_AGGREGATION_OF, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -384,7 +384,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), "depends.on.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), LABEL_DEPENDS_ON, "depends.on.not.found", null);
         }
 
     }
