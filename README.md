@@ -4,8 +4,8 @@ This MVP showcases the capabilities of smartSense in contact with the Gaia-X eco
 This MVP covers below use cases:
 
 1. On-boarding in Gaia-x
-    1. Create a sub-domain for enterprise
-    2. Create SSL key-value pair for enterprise
+    1. Create a sub-domain for participant
+    2. Create SSL key-value pair for participant
     3. Create web did
     4. Create participant credentials and sign in using Gaia-x API
     5. Host public key, did.json, and participant files under the .well-known path
@@ -36,6 +36,7 @@ This MVP covers below use cases:
   email which will allow them to register a device which supports webAuthn.
 - After the device registration is successful, the user's legal participant generation will commence when they log in
   for the first time.
+- The Keycloak realm configuration has been explained in the accompanying keycloak repository's Readme.
 
 ## Create service offer flow
 
