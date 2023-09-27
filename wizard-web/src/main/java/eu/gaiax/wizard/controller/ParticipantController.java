@@ -895,7 +895,8 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Participant not found.")
     })
     @GetMapping(PARTICIPANT_EXPORT)
-    public CommonResponse<ParticipantAndKeyResponse> exportParticipantAndKey(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+    public CommonResponse<ParticipantAndKeyResponse> exportParticipantAndKey(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId, Principal principal) {
+        this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.participantService.exportParticipantAndKey(participantId));
     }
 }
