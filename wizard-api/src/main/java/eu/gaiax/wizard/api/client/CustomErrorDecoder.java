@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static eu.gaiax.wizard.api.utils.StringPool.ERROR;
+
 @Component
 public class CustomErrorDecoder implements ErrorDecoder {
 
@@ -22,15 +24,15 @@ public class CustomErrorDecoder implements ErrorDecoder {
         try (InputStream bodyIs = response.body().asInputStream()) {
             ObjectMapper mapper = new ObjectMapper();
             responseBody = mapper.readTree(bodyIs);
-            System.out.println(responseBody);
         } catch (IOException e) {
             return new Exception(e.getMessage());
         }
 
+        String errorMessage = responseBody.get(ERROR).asText();
         return switch (response.status()) {
-            case 400 -> new BadDataException(responseBody.get("error").asText());
-            case 409 -> new ConflictException(responseBody.get("error").asText());
-            default -> new RemoteServiceException(responseBody.get("error").asText());
+            case 400 -> new BadDataException(errorMessage);
+            case 409 -> new ConflictException(errorMessage);
+            default -> new RemoteServiceException(errorMessage);
         };
     }
 }
