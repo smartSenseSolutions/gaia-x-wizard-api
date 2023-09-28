@@ -9,7 +9,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * The type
@@ -21,8 +20,6 @@ public class CreateServiceOfferingRequest {
     @NotNull(message = "service name required")
     private String name;
     private String email;
-    private UUID id;
-    private String issuer;
     private String description;
     private String privateKey;
     private String participantJsonUrl;

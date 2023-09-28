@@ -1,6 +1,5 @@
 package eu.gaiax.wizard.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.gaiax.wizard.api.model.CommonResponse;
 import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;

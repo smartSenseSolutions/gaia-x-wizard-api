@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.exception.ConflictException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
@@ -346,19 +347,25 @@ public class SignerService {
                 this.hostJsonFile(signResource, id, name);
             }
             return signResource;
+        } catch (BadDataException be) {
+            log.debug("Bad Data Exception while signing label level VC. {}", be.getMessage());
+            throw new BadDataException(be.getMessage());
+        } catch (ConflictException be) {
+            log.debug("Conflict Exception while signing label level VC. {}", be.getMessage());
+            throw new ConflictException(be.getMessage());
         } catch (Exception e) {
-            log.debug("Error while signing label level VC. ", e.getMessage());
+            log.debug("Error while signing label level VC. {}", e.getMessage());
             throw new SignerException(e.getMessage());
         }
     }
 
-    public void validateRequestUrl(List<String> urls, List<String> type, String message, List<String> policy) {
+    public void validateRequestUrl(List<String> urls, List<String> gxTypeList, String urlTypeLabel, String message, List<String> policy) {
         AtomicReference<ParticipantVerifyRequest> participantValidatorRequest = new AtomicReference<>();
         if (policy == null) {
             policy = this.policies;
         }
 
-        boolean checkType = !CollectionUtils.isEmpty(type);
+        boolean checkType = !CollectionUtils.isEmpty(gxTypeList);
         List<String> finalPolicy = policy;
         urls.parallelStream().forEach(url -> {
             ResponseEntity<JsonNode> signerResponse;
@@ -371,9 +378,10 @@ public class SignerService {
                 throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
             }
 
-            if (checkType && !type.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
-                String urlType = type.size() == 1 ? type.get(0) : "resource";
-                throw new BadDataException(this.messageSource.getMessage("invalid.url.type", new String[]{urlType}, LocaleContextHolder.getLocale()));
+            if (checkType && !gxTypeList.contains(signerResponse.getBody().get(DATA).get(VERIFY_URL_TYPE).asText())) {
+                String urlType = gxTypeList.size() == 1 ? gxTypeList.get(0) : "resource";
+                String messageKey = StringUtils.hasText(urlTypeLabel) ? "invalid.url.type.with.label" : "invalid.url.type";
+                throw new BadDataException(this.messageSource.getMessage(messageKey, new String[]{urlType, urlTypeLabel}, LocaleContextHolder.getLocale()));
             }
         });
     }

@@ -36,7 +36,6 @@ import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
-import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +54,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
@@ -68,7 +68,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final CredentialService credentialService;
     private final ServiceOfferRepository serviceOfferRepository;
     private final ObjectMapper objectMapper;
-    private final ParticipantRepository participantRepository;
     private final ParticipantService participantService;
     private final SignerService signerService;
     private final PolicyService policyService;
@@ -80,7 +79,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final CertificateService certificateService;
     private final MessagingQueueClient messagingQueueClient;
     private final SubdivisionCodeMasterService subdivisionCodeMasterService;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -91,10 +90,10 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
         Participant participant;
         if (id != null) {
-            participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
+            participant = this.participantService.findParticipantById(UUID.fromString(id));
 
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
-            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), "participant.url.not.found", null);
+            this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
             request.setParticipantJsonUrl(participantCred.getVcUrl());
         } else {
             ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest(request.getParticipantJsonUrl(), request.getVerificationMethod(), request.getPrivateKey(), false, isOwnDid);
@@ -109,25 +108,22 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             participant.setKeyStored(true);
-            this.participantRepository.save(participant);
+            this.participantService.save(participant);
         }
 
         String serviceName = "service_" + this.getRandomString();
         String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
 
+        Map<String, String> labelLevelVc = this.createServiceOfferLabelLevel(participant, request, serviceHostUrl);
         Map<String, Object> credentialSubject = request.getCredentialSubject();
-        if (request.getCredentialSubject().containsKey(GX_POLICY)) {
+
+        if (credentialSubject.containsKey(GX_POLICY)) {
             this.generateServiceOfferPolicy(participant, serviceName, serviceHostUrl, credentialSubject);
         }
-
         this.createTermsConditionHash(credentialSubject);
         request.setCredentialSubject(credentialSubject);
 
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        if (!participant.isOwnDidSolution()) {
-            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
-        }
-
         Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get(SERVICE_VC), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential.get(SERVICE_VC));
 
@@ -140,9 +136,13 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .veracityData(complianceCredential.getOrDefault(TRUST_INDEX, null))
                 .build();
 
-        this.addLabelLevel(participant, request, serviceOffer, serviceHostUrl);
-
+        this.addLabelLevelToServiceOffer(participant, serviceOffer, labelLevelVc);
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
+
+        if (!participant.isOwnDidSolution()) {
+            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
+        }
+
         this.publishServiceComplianceToMessagingQueue(serviceOffer.getId(), complianceCredential.get(SERVICE_VC));
 
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
@@ -158,7 +158,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 .build();
     }
 
-    private void addLabelLevel(Participant participant, CreateServiceOfferingRequest request, ServiceOffer serviceOffer, String serviceHostUrl) throws JsonProcessingException {
+    private Map<String, String> createServiceOfferLabelLevel(Participant participant, CreateServiceOfferingRequest request, String serviceHostUrl) {
         // todo sign label level vc
         Map<String, String> labelLevelVc = new HashMap<>();
 
@@ -171,6 +171,10 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             }
         }
 
+        return labelLevelVc;
+    }
+
+    private void addLabelLevelToServiceOffer(Participant participant, ServiceOffer serviceOffer, Map<String, String> labelLevelVc) throws JsonProcessingException {
         if (Objects.requireNonNull(labelLevelVc).containsKey(LABEL_LEVEL_VC)) {
             JsonNode descriptionCredential = this.objectMapper.readTree(labelLevelVc.get(LABEL_LEVEL_VC)).path(CREDENTIAL_SUBJECT);
             if (descriptionCredential != null) {
@@ -192,8 +196,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void generateServiceOfferPolicy(Participant participant, String serviceName, String serviceHostUrl, Map<String, Object> credentialSubject) throws JsonProcessingException {
-        String policyId = participant.getId() + "/" + serviceName + "_policy";
-        String policyUrl = this.wizardHost + policyId + ".json";
+        String policyId = participant.getId() + "/" + serviceName + "_policy" + JSON_EXTENSION;
+        String policyUrl = this.wizardHost + policyId;
         ServiceOfferPolicyDto policy = this.objectMapper.convertValue(credentialSubject.get(GX_POLICY), ServiceOfferPolicyDto.class);
         ODRLPolicyRequest odrlPolicyRequest = new ODRLPolicyRequest(policy.location(), SPATIAL, serviceHostUrl, participant.getDid(), this.wizardHost, serviceName);
 
@@ -318,14 +322,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.validateAggregationOf(request);
         this.validateDependsOn(request);
         this.validateDataAccountExport(request);
+        this.validateTermsAndConditions(request);
         if (!request.getCredentialSubject().containsKey(GX_POLICY)) {
             throw new BadDataException("invalid.policy");
-        }
-    }
-
-    private void validateCredentialSubject(CreateServiceOfferingRequest request) {
-        if (CollectionUtils.isEmpty(request.getCredentialSubject())) {
-            throw new BadDataException("invalid.credential");
         }
     }
 
@@ -348,6 +347,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
+    private void validateCredentialSubject(CreateServiceOfferingRequest request) {
+        if (CollectionUtils.isEmpty(request.getCredentialSubject())) {
+            throw new BadDataException("invalid.credential");
+        }
+    }
+
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
         if (!request.getCredentialSubject().containsKey(AGGREGATION_OF) || !StringUtils.hasText(request.getCredentialSubject().get(AGGREGATION_OF).toString())) {
             throw new BadDataException("aggregation.of.not.found");
@@ -363,7 +368,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                 ids.add(id);
             }
         });
-        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), "aggregation.of.not.found", Collections.singletonList("holderSignature"));
+        this.signerService.validateRequestUrl(ids, new ArrayList<>(ResourceType.getValueSet()), LABEL_AGGREGATION_OF, "aggregation.of.not.found", Collections.singletonList("holderSignature"));
     }
 
     private void validateDependsOn(CreateServiceOfferingRequest request) throws JsonProcessingException {
@@ -379,7 +384,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
                     ids.add(id);
                 }
             });
-            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), "depends.on.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_SERVICE_OFFERING), LABEL_DEPENDS_ON, "depends.on.not.found", null);
         }
 
     }
@@ -436,25 +441,29 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         ArrayNode verifiableCredentialList = (ArrayNode) serviceOfferJson.get(SELF_DESCRIPTION_CREDENTIAL).get(VERIFIABLE_CREDENTIAL_CAMEL_CASE);
         JsonNode serviceOfferCredentialSubject = this.getServiceOfferCredentialSubject(verifiableCredentialList);
 
-        serviceDetailResponse.setDataAccountExport(this.getDataAccountExportDto(serviceOfferCredentialSubject));
-        serviceDetailResponse.setTnCUrl(serviceOfferCredentialSubject.get(GX_TERMS_AND_CONDITIONS).get(GX_URL_CAPS).asText());
-        serviceDetailResponse.setProtectionRegime(this.objectMapper.convertValue(serviceOfferCredentialSubject.get(GX_DATA_PROTECTION_REGIME), new TypeReference<>() {
-        }));
+        if (serviceOfferCredentialSubject != null) {
+            serviceDetailResponse.setDataAccountExport(this.getDataAccountExportDto(serviceOfferCredentialSubject));
+            serviceDetailResponse.setTnCUrl(serviceOfferCredentialSubject.get(GX_TERMS_AND_CONDITIONS).get(GX_URL_CAPS).asText());
 
-        serviceDetailResponse.setLocations(Set.of(this.policyService.getLocationByServiceOfferingId(serviceDetailResponse.getCredential().getVcUrl())));
+            serviceDetailResponse.setProtectionRegime(this.objectMapper.convertValue(serviceOfferCredentialSubject.get(GX_DATA_PROTECTION_REGIME), new TypeReference<>() {
+            }));
 
-        if (serviceOfferCredentialSubject.has(AGGREGATION_OF)) {
-            serviceDetailResponse.setResources(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(AGGREGATION_OF), false));
-        }
+            serviceDetailResponse.setLocations(Set.of(this.policyService.getLocationByServiceOfferingId(serviceDetailResponse.getCredential().getVcUrl())));
 
-        if (serviceOfferCredentialSubject.has(DEPENDS_ON)) {
-            serviceDetailResponse.setDependedServices(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(DEPENDS_ON), true));
+            if (serviceOfferCredentialSubject.has(AGGREGATION_OF)) {
+                serviceDetailResponse.setResources(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(AGGREGATION_OF), false));
+            }
+
+            if (serviceOfferCredentialSubject.has(DEPENDS_ON)) {
+                serviceDetailResponse.setDependedServices(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(DEPENDS_ON), true));
+            }
         }
 
         return serviceDetailResponse;
     }
 
     private DataAccountExportDto getDataAccountExportDto(JsonNode credentialSubject) {
+
         return DataAccountExportDto.builder()
                 .requestType(credentialSubject.get(GX_DATA_ACCOUNT_EXPORT).get(GX_REQUEST_TYPE).asText())
                 .accessType(credentialSubject.get(GX_DATA_ACCOUNT_EXPORT).get(GX_ACCESS_TYPE).asText())

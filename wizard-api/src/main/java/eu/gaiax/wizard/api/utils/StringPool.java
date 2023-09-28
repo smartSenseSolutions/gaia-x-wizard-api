@@ -176,6 +176,24 @@ public class StringPool {
 
     public static final String COMPLETE_SD = "completeSD";
 
+    public static final String LABEL_PARENT_ORGANIZATION = "parent organization";
+
+    public static final String LABEL_SUB_ORGANIZATION = "sub organization";
+
+    public static final String LABEL_AGGREGATION_OF = "aggregation of";
+
+    public static final String LABEL_DEPENDS_ON = "depends on";
+
+    public static final String LABEL_MAINTAINED_BY = "maintained by";
+
+    public static final String LABEL_OWNED_BY = "owned by";
+
+    public static final String LABEL_MANUFACTURED_BY = "manufactured by";
+
+    public static final String LABEL_PRODUCED_BY = "produced by";
+
+    public static final String ERROR = "error";
+
     private StringPool() {
     }
 }
