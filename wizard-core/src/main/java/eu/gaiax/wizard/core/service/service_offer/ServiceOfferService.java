@@ -36,7 +36,6 @@ import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
-import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
 import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
@@ -69,7 +68,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final CredentialService credentialService;
     private final ServiceOfferRepository serviceOfferRepository;
     private final ObjectMapper objectMapper;
-    private final ParticipantRepository participantRepository;
     private final ParticipantService participantService;
     private final SignerService signerService;
     private final PolicyService policyService;
@@ -92,7 +90,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
         Participant participant;
         if (id != null) {
-            participant = this.participantRepository.findById(UUID.fromString(id)).orElseThrow(() -> new BadDataException("participant.not.found"));
+            participant = this.participantService.findParticipantById(UUID.fromString(id));
 
             Credential participantCred = this.credentialService.getByParticipantWithCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
             this.signerService.validateRequestUrl(Collections.singletonList(participantCred.getVcUrl()), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
@@ -110,7 +108,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         if (request.isStoreVault() && !participant.isKeyStored()) {
             this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             participant.setKeyStored(true);
-            this.participantRepository.save(participant);
+            this.participantService.save(participant);
         }
 
         String serviceName = "service_" + this.getRandomString();
@@ -324,8 +322,28 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         this.validateAggregationOf(request);
         this.validateDependsOn(request);
         this.validateDataAccountExport(request);
+        this.validateTermsAndConditions(request);
         if (!request.getCredentialSubject().containsKey(GX_POLICY)) {
             throw new BadDataException("invalid.policy");
+        }
+    }
+
+    private void validateTermsAndConditions(CreateServiceOfferingRequest request) {
+        Map<String, Object> credentialSubject = request.getCredentialSubject();
+        if (!credentialSubject.containsKey("gx:termsAndConditions")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
+
+        if (!termsCondition.containsKey("gx:URL")) {
+            throw new BadDataException("term.condition.not.found");
+        }
+
+        try {
+            HashingService.fetchJsonContent(termsCondition.get("gx:URL").toString());
+        } catch (Exception e) {
+            throw new BadDataException("invalid.tnc.url");
         }
     }
 
