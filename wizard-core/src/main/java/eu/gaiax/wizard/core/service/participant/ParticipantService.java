@@ -77,7 +77,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @SneakyThrows
     public Participant registerParticipant(ParticipantRegisterRequest request) {
         log.debug("ParticipantService(registerParticipant) -> Participant registration with email {}", request.email());
-        Validate.isFalse(StringUtils.hasText(request.email())).launch("email.required");
+        Validate.isFalse(StringUtils.hasText(request.email().toLowerCase())).launch("email.required");
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
 
@@ -93,9 +93,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNotNull(this.participantRepository.getByShortName(request.onboardRequest().shortName().toLowerCase())).launch("short.name.already.registered");
 
         participant = this.create(Participant.builder()
-                .email(request.email())
+                .email(request.email().toLowerCase())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName() != null ? onboardRequest.shortName().toLowerCase() : null)
+                .shortName(onboardRequest.shortName().toLowerCase())
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName().toLowerCase() + "." + this.domain)
                 .participantType("REGISTERED")
@@ -300,7 +300,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
-        boolean participantExists = this.participantRepository.existsByEmail(email);
+        boolean participantExists = this.participantRepository.existsByEmail(email.toString());
 
         return new CheckParticipantRegisteredResponse(
                 participantExists,
