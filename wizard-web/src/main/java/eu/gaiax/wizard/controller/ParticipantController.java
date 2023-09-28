@@ -189,7 +189,7 @@ public class ParticipantController extends BaseController {
                     }),
     })
     @PostMapping(value = REGISTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Participant> registerParticipant(@RequestBody ParticipantRegisterRequest request) {
+    public CommonResponse<Participant> registerParticipant(@Valid @RequestBody ParticipantRegisterRequest request) {
         return CommonResponse.of(this.participantService.registerParticipant(request));
     }
 
