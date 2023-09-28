@@ -55,6 +55,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.StreamSupport;
 
@@ -80,7 +81,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final CertificateService certificateService;
     private final MessagingQueueClient messagingQueueClient;
     private final SubdivisionCodeMasterService subdivisionCodeMasterService;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
 
     @Value("${wizard.host.wizard}")
     private String wizardHost;
@@ -334,25 +335,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
-    private void validateTermsAndConditions(CreateServiceOfferingRequest request) {
-        Map<String, Object> credentialSubject = request.getCredentialSubject();
-        if (!credentialSubject.containsKey("gx:termsAndConditions")) {
-            throw new BadDataException("term.condition.not.found");
-        }
-
-        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
-
-        if (!termsCondition.containsKey("gx:URL")) {
-            throw new BadDataException("term.condition.not.found");
-        }
-
-        try {
-            HashingService.fetchJsonContent(termsCondition.get("gx:URL").toString());
-        } catch (Exception e) {
-            throw new BadDataException("invalid.tnc.url");
-        }
-    }
-
     private void validateAggregationOf(CreateServiceOfferingRequest request) throws JsonProcessingException {
         if (!request.getCredentialSubject().containsKey(AGGREGATION_OF) || !StringUtils.hasText(request.getCredentialSubject().get(AGGREGATION_OF).toString())) {
             throw new BadDataException("aggregation.of.not.found");
@@ -441,25 +423,29 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         ArrayNode verifiableCredentialList = (ArrayNode) serviceOfferJson.get(SELF_DESCRIPTION_CREDENTIAL).get(VERIFIABLE_CREDENTIAL_CAMEL_CASE);
         JsonNode serviceOfferCredentialSubject = this.getServiceOfferCredentialSubject(verifiableCredentialList);
 
-        serviceDetailResponse.setDataAccountExport(this.getDataAccountExportDto(serviceOfferCredentialSubject));
-        serviceDetailResponse.setTnCUrl(serviceOfferCredentialSubject.get(GX_TERMS_AND_CONDITIONS).get(GX_URL_CAPS).asText());
-        serviceDetailResponse.setProtectionRegime(this.objectMapper.convertValue(serviceOfferCredentialSubject.get(GX_DATA_PROTECTION_REGIME), new TypeReference<>() {
-        }));
+        if (serviceOfferCredentialSubject != null) {
+            serviceDetailResponse.setDataAccountExport(this.getDataAccountExportDto(serviceOfferCredentialSubject));
+            serviceDetailResponse.setTnCUrl(serviceOfferCredentialSubject.get(GX_TERMS_AND_CONDITIONS).get(GX_URL_CAPS).asText());
 
-        serviceDetailResponse.setLocations(Set.of(this.policyService.getLocationByServiceOfferingId(serviceDetailResponse.getCredential().getVcUrl())));
+            serviceDetailResponse.setProtectionRegime(this.objectMapper.convertValue(serviceOfferCredentialSubject.get(GX_DATA_PROTECTION_REGIME), new TypeReference<>() {
+            }));
 
-        if (serviceOfferCredentialSubject.has(AGGREGATION_OF)) {
-            serviceDetailResponse.setResources(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(AGGREGATION_OF), false));
-        }
+            serviceDetailResponse.setLocations(Set.of(this.policyService.getLocationByServiceOfferingId(serviceDetailResponse.getCredential().getVcUrl())));
 
-        if (serviceOfferCredentialSubject.has(DEPENDS_ON)) {
-            serviceDetailResponse.setDependedServices(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(DEPENDS_ON), true));
+            if (serviceOfferCredentialSubject.has(AGGREGATION_OF)) {
+                serviceDetailResponse.setResources(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(AGGREGATION_OF), false));
+            }
+
+            if (serviceOfferCredentialSubject.has(DEPENDS_ON)) {
+                serviceDetailResponse.setDependedServices(this.getAggregationOrDependentDtoSet((ArrayNode) serviceOfferCredentialSubject.get(DEPENDS_ON), true));
+            }
         }
 
         return serviceDetailResponse;
     }
 
     private DataAccountExportDto getDataAccountExportDto(JsonNode credentialSubject) {
+
         return DataAccountExportDto.builder()
                 .requestType(credentialSubject.get(GX_DATA_ACCOUNT_EXPORT).get(GX_REQUEST_TYPE).asText())
                 .accessType(credentialSubject.get(GX_DATA_ACCOUNT_EXPORT).get(GX_ACCESS_TYPE).asText())

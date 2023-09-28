@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.exception.ConflictException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
@@ -346,8 +347,14 @@ public class SignerService {
                 this.hostJsonFile(signResource, id, name);
             }
             return signResource;
+        } catch (BadDataException be) {
+            log.debug("Bad Data Exception while signing label level VC. {}", be.getMessage());
+            throw new BadDataException(be.getMessage());
+        } catch (ConflictException be) {
+            log.debug("Conflict Exception while signing label level VC. {}", be.getMessage());
+            throw new ConflictException(be.getMessage());
         } catch (Exception e) {
-            log.debug("Error while signing label level VC. ", e.getMessage());
+            log.debug("Error while signing label level VC. {}", e.getMessage());
             throw new SignerException(e.getMessage());
         }
     }
