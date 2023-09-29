@@ -374,7 +374,7 @@ public class SignerService {
                 signerResponse = this.signerClient.verify(participantValidatorRequest.get());
                 log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").asText());
             } catch (Exception e) {
-                log.error("An error occurred for URL: " + url, e);
+                log.error("An error occurred for URL:{}, policies: {}", url, finalPolicy, e);
                 throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
             }
 
