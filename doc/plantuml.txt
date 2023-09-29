@@ -1,49 +1,97 @@
+Onboarding flow for tech user(who has did and private key)
+
 @startuml
-User -> "API server": Onboarding request with needed fields
-"API server" -> "AWS route53": create Subdomain
-"API server" <-- "AWS route53": Subdomain created
-"API server" -> "let's encrypt": Create let's encrypt certificate for a subdomain
-"API server" -> "AWS route53": Add txt record  to verify DNS challenge
-"API server" <-- "let's encrypt": SSL certificate created
-"API server" -> "AWS S3": Upload private key and public key\n host public key under.wellknown path
-"API server" -> "K8S API": Create tls secret
-"API server" -> "K8S API": Create ingress for subdomain using tls secret
-"API server" -> "Signer API": Create did
-"API server" <-- "Signer API": did.json
-"API server" -> "AWS S3": Upload did.json \n Host did.json under .well-known path
-"API server" -> "Signer API": Create participant credentials
-"Signer API"  -> "Gaia-X API": register/sign participant credentials
-"Signer API"  <-- "Gaia-X API": Signed participant.json
-"API server" <-- "Signer API": participant.json
-"API server" -> "AWS S3": Upload partipant.json \n Host participant.json in .well-known path
-User  <- "API server": Onboarding completed
+"Wizard UI" -> "Wizard API": Participant Onboarding request\n with private key and verification method
+"Wizard API" -> "Wizard API": Validate the onboard request
+"Wizard API" -> "Wizard API": Validate did web and save in database
+"Wizard API" -> "Signer Tool": Initiate Request to generate VC of Registration Number
+"Signer Tool" -> "Signer Tool": Create VC of Registration Number
+"Wizard API" <- "Signer Tool": Return VC of Registration Number
+"Wizard API" -> "Wizard API": Host Registration number vc
+"Wizard API" -> "Wizard API": Save the Registration number vc to the Database
+"Wizard API" -> "Wizard API": Attach hosted Registration number to participant SD
+"Wizard API" -> "Signer Tool": Initiate request to generate VC of participant SD
+"Signer Tool" -> "Signer Tool": Create VC of legal participant
+"Signer Tool" -> "Signer Tool": Create ComplianceCredentials for participant
+"Signer Tool" -> "Signer Tool": Add ComplianceCredentials in Participant SD
+"Wizard API" <- "Signer Tool": Return VC of participant with compliance credentials
+"Wizard API" -> "Wizard API": Host participant json
+"Wizard API" -> "Wizard API": Save participant json
+"Wizard API" -> "Keycloak": Save participant
+"Wizard API" -> "Wizard UI": Return with participant json
 @enduml
 
+----------
+
+Onboarding flow for non-tech user
+
+@startuml
+"Wizard UI" -> "Wizard API": Participant Onboarding request
+"Wizard API" -> "Wizard API": Validate the onboard request
+"Wizard API" -> "Wizard API": Create subdomain
+"Wizard API" -> "Wizard API": Create certificates(key pair)  using let's encrypt
+"Wizard API" -> "Wizard API": Save certificates on S3
+"Wizard API" -> "Wizard API": Create ingress in k8s
+"Wizard API" -> "Signer Tool": Create DID document API
+"Wizard API" <- "Signer Tool": Return DID document
+"Wizard API" -> "Wizard API": Save did:web in s3 and the host did document in public domain
+"Wizard API" -> "Signer Tool": Initiate Request to generate VC of Registration Number
+"Signer Tool" -> "Signer Tool": Create VC of Registration Number
+"Wizard API" <- "Signer Tool": Return VC of Registration Number
+"Wizard API" -> "Wizard API": Host Registration number vc
+"Wizard API" -> "Wizard API": Save the Registration number vc to the Database
+"Wizard API" -> "Wizard API": Attach hosted Registration number to participant SD
+"Wizard API" -> "Signer Tool": Initiate request to generate VC of participant SD
+"Signer Tool" -> "Signer Tool": Create VC of legal participant
+"Signer Tool" -> "Signer Tool": Create ComplianceCredentials for participant
+"Signer Tool" -> "Signer Tool": Add ComplianceCredentials in Participant SD
+"Wizard API" <- "Signer Tool": Return VC of participant with compliance credentials
+"Wizard API" -> "Wizard API": Host participant son
+"Wizard API" -> "Wizard API": Save participant json
+"Wizard API" -> "Keycloak": Save participant
+"Wizard API" -> "Wizard UI": Return with participant json
+@enduml
+
+----------
+
+WebAuthn flow
+@startuml
+"User" -> "Wizard": Request to register
+"Wizard" -> "Wizard": Validate registration request
+"Wizard" -> "Keycloak": Add participant
+"Wizard" -> "User": Send email to setup webAuthn
+"User" -> "Keycloak": Begin device registration through the link in email
+"Keycloak" -> "User": Prompt confirmation to add a new device for webAuthN
+"User" -> "Keycloak": Confirm add device
+"Keycloak" -> "User": Display options to add a new device:\n use a different device (Scan QR), use the same device
+"User" -> "Keycloak": Add device
+"Keycloak" -> Keycloak: Validate device data\n and store credentials
+"User" -> "Wizard": Enter email
+"Wizard" -> "Keycloak": Validate email
+"Keycloak" -> "User": Display prompt for webAuthn login
+"User" -> "Keycloak": Complete webAuthN process through the device added initially
+"Keycloak" -> "Wizard": Redirect user after successful login
+@enduml
+
+----------
 
 Create Service offer
-
 @startuml
-User -> "API server": Create service offer with data
-"API server" -> "Signer tool": Create service offer credentials
-"Signer tool" -> "Signer tool": Sign service offer credential using the private key
-"Signer tool" -> "Gaia-X API": Sign service offer credential
-"API server" <-- "Signer tool": service offers json
-"API server"  -> "AWS S3": Upload json and host json under.well-known path
-User <-- "API server": Offer created
-@enduml
-
-
-Service offering flow
-
-@startuml
-User -> "API server": Browse catalog
-User  <-- "API server": List of service offerings by other enterprise
-User -> "API server": Create verifiable presentation of participant credentials
-"API server" -> "Signer tool": Create VP
-"API server" <-- "Signer tool": Return VP
-"User"  <-- "API server": Return VP
-"User"  -> "API server": Present VP of Gaia-x participant and request for details(data) of service offering
-"API server"  -> "Signer tool": Verify VP
-"API server"  <-- "Signer tool": Verification results
-"User" <-- "API server": Return details(data) of service offering
+"Wizard UI" -> "Wizard API": Validate input fields
+"Wizard UI" -> "Wizard API": Create Service offer API with all fields
+"Wizard API" -> "Wizard API": Create ODRL policy based on location selection
+"Wizard API" -> "Wizard API": Host ODRL policy in public domain
+"Wizard API" -> "Wizard API": Hash for terms and condition
+"Wizard API" -> "Wizard API": Create Request for signer tool which includes\nVC subject of label level and service offer
+"Wizard API" -> "Signer Tool": Call API to create service offer VC with compliance VC
+"Signer Tool" -> "Signer Tool": Calculate veracity and transparency
+"Signer Tool" -> "Signer Tool": Calculate label level**
+"Signer Tool" -> "Signer Tool": Create VC of label level**
+"Signer Tool" -> "Signer Tool": Create service offer VC
+"Signer Tool" -> "Signer Tool": Create compliance VC of Service offer
+"Signer Tool" -> "Signer Tool": Publish service offer ID and web did to kafka
+"Wizard API" <- "Signer Tool": Return label level VC, registration VC, veracity and transparency VC\nand service offer VC with compliance VC
+"Wizard API" -> "Wizard API": Save details in the database in the VC table
+"Wizard API" -> "Wizard API": Host service offer json in public domain
+"Wizard UI" <- "Wizard API": Return service offer
 @enduml
