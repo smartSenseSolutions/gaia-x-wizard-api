@@ -94,12 +94,16 @@ public class RestExceptionHandler {
         } catch (NoSuchMessageException e) {
             message = exception.getMessage();
         }
-        message = "Signer service says \"" + message + "\"";
 
-        //send email to admin and save in database
+        log.error("Signer service says \"" + message + "\"", exception);
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ErrorResponse(message, HttpStatus.valueOf(exception.getStatus()).value()));
-        return ResponseEntity.status(HttpStatus.valueOf(exception.getStatus())).body(CommonResponse.builder(map).message(message).status(HttpStatus.valueOf(exception.getStatus()).value()).build());
+        return ResponseEntity.status(HttpStatus.valueOf(exception.getStatus())).body(
+                CommonResponse.builder(map)
+                        .message(message)
+                        .status(HttpStatus.valueOf(exception.getStatus()).value())
+                        .build()
+        );
     }
 
     /**
@@ -150,6 +154,22 @@ public class RestExceptionHandler {
         Map<String, Object> map = new HashMap<>();
         map.put(ERROR, new ErrorResponse(msg, HttpStatus.BAD_REQUEST.value()));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder(map).message(msg).status(HttpStatus.BAD_REQUEST.value()).build());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({ConflictException.class})
+    public ResponseEntity<CommonResponse<Map<String, Object>>> handleEntityException(ConflictException exception) {
+        log.error("Conflict Exception", exception.getMessage());
+        String msg;
+        try {
+            msg = this.messageSource.getMessage(exception.getMessage(), null, LocaleContextHolder.getLocale());
+        } catch (NoSuchMessageException e) {
+            msg = exception.getMessage();
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        map.put(ERROR, new ErrorResponse(msg, HttpStatus.BAD_REQUEST.value()));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder(map).message(msg).status(HttpStatus.CONFLICT.value()).build());
     }
 
     /**

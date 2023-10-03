@@ -192,6 +192,8 @@ public class StringPool {
 
     public static final String LABEL_PRODUCED_BY = "produced by";
 
+    public static final String ERROR = "error";
+
     private StringPool() {
     }
 }

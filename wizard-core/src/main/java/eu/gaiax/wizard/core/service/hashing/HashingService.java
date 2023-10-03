@@ -1,16 +1,14 @@
 package eu.gaiax.wizard.core.service.hashing;
 
+import eu.gaiax.wizard.core.service.participant.InvokeService;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Hex;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -39,17 +37,8 @@ public class HashingService {
         return Hex.encodeHexString(hash);
     }
 
-    public static String fetchJsonContent(String url) throws IOException {
-        URL jsonUrl = new URL(url);
-        StringBuilder content = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(jsonUrl.openStream(), StandardCharsets.UTF_8))) {
-            String inputLine;
-            while ((inputLine = reader.readLine()) != null) {
-                content.append(inputLine);
-            }
-        }
-        return content.toString();
+    public static String fetchJsonContent(String url) {
+        return InvokeService.executeRequest(url, HttpMethod.GET);
     }
 
 }

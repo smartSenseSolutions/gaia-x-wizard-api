@@ -70,7 +70,7 @@ public class ParticipantController extends BaseController {
     })
     @GetMapping(value = CHECK_REGISTRATION, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<CheckParticipantRegisteredResponse> checkIfParticipantRegistered(@RequestParam(name = "email") String email) {
-        CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email);
+        CheckParticipantRegisteredResponse checkParticipantRegisteredResponse = this.participantService.checkIfParticipantRegistered(email.toLowerCase());
 
         String message = checkParticipantRegisteredResponse.userRegistered() ? "user.registered" : "user.not.registered";
         return CommonResponse.of(checkParticipantRegisteredResponse, this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()));
@@ -189,7 +189,7 @@ public class ParticipantController extends BaseController {
                     }),
     })
     @PostMapping(value = REGISTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
-    public CommonResponse<Participant> registerParticipant(@RequestBody ParticipantRegisterRequest request) {
+    public CommonResponse<Participant> registerParticipant(@Valid @RequestBody ParticipantRegisterRequest request) {
         return CommonResponse.of(this.participantService.registerParticipant(request));
     }
 
@@ -895,7 +895,8 @@ public class ParticipantController extends BaseController {
             @ApiResponse(responseCode = "404", description = "Participant not found.")
     })
     @GetMapping(PARTICIPANT_EXPORT)
-    public CommonResponse<ParticipantAndKeyResponse> exportParticipantAndKey(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId) {
+    public CommonResponse<ParticipantAndKeyResponse> exportParticipantAndKey(@PathVariable(name = StringPool.PARTICIPANT_ID) String participantId, Principal principal) {
+        this.validateParticipantId(participantId, principal);
         return CommonResponse.of(this.participantService.exportParticipantAndKey(participantId));
     }
 }

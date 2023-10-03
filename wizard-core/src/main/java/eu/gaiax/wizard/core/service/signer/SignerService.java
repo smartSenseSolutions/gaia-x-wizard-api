@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.exception.ConflictException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
@@ -346,8 +347,14 @@ public class SignerService {
                 this.hostJsonFile(signResource, id, name);
             }
             return signResource;
+        } catch (BadDataException be) {
+            log.debug("Bad Data Exception while signing label level VC. {}", be.getMessage());
+            throw new BadDataException(be.getMessage());
+        } catch (ConflictException be) {
+            log.debug("Conflict Exception while signing label level VC. {}", be.getMessage());
+            throw new ConflictException(be.getMessage());
         } catch (Exception e) {
-            log.debug("Error while signing label level VC. ", e.getMessage());
+            log.debug("Error while signing label level VC. {}", e.getMessage());
             throw new SignerException(e.getMessage());
         }
     }
@@ -367,7 +374,7 @@ public class SignerService {
                 signerResponse = this.signerClient.verify(participantValidatorRequest.get());
                 log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").asText());
             } catch (Exception e) {
-                log.error("An error occurred for URL: " + url, e);
+                log.error("An error occurred for URL:{}, policies: {}", url, finalPolicy, e);
                 throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
             }
 

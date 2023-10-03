@@ -32,10 +32,7 @@ import java.rmi.RemoteException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
 
@@ -81,8 +78,11 @@ public class ServiceLabelLevelService extends BaseService<ServiceLabelLevel, UUI
 
     public String uploadLabelLevelFile(LabelLevelFileUpload labelLevelFileUpload) throws IOException {
         File file = new File(TEMP_FOLDER + labelLevelFileUpload.file().getOriginalFilename());
-        String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + labelLevelFileUpload.file().getOriginalFilename().replace(" ", "_");
-
+        String originalFileName = Optional.ofNullable(labelLevelFileUpload.file().getOriginalFilename())
+                .map(originalName -> originalName.replace(" ", "_"))
+                .orElse(UUID.randomUUID().toString());
+        
+        String fileName = "public/label-level/" + labelLevelFileUpload.fileType() + "/" + originalFileName;
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(labelLevelFileUpload.file().getBytes());
 

@@ -77,7 +77,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @SneakyThrows
     public Participant registerParticipant(ParticipantRegisterRequest request) {
         log.debug("ParticipantService(registerParticipant) -> Participant registration with email {}", request.email());
-        Validate.isFalse(StringUtils.hasText(request.email())).launch("email.required");
+        Validate.isFalse(StringUtils.hasText(request.email().toLowerCase())).launch("email.required");
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
 
@@ -93,9 +93,9 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         Validate.isNotNull(this.participantRepository.getByShortName(request.onboardRequest().shortName().toLowerCase())).launch("short.name.already.registered");
 
         participant = this.create(Participant.builder()
-                .email(request.email())
+                .email(request.email().toLowerCase())
                 .legalName(onboardRequest.legalName())
-                .shortName(onboardRequest.shortName() != null ? onboardRequest.shortName().toLowerCase() : null)
+                .shortName(onboardRequest.shortName().toLowerCase())
                 .entityType(entityType)
                 .domain(onboardRequest.ownDid() ? null : onboardRequest.shortName().toLowerCase() + "." + this.domain)
                 .participantType("REGISTERED")
@@ -125,7 +125,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public Participant initiateOnboardParticipantProcess(String participantId, ParticipantCreationRequest request) {
         log.debug("ParticipantService(initiateOnboardParticipantProcess) -> Prepare legal participant json with participant {}", participantId);
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(participantId));
         Validate.isFalse(StringUtils.hasText(participant.getShortName())).launch("required.shortname");
         if (Objects.nonNull(request.ownDid()) && participant.isOwnDidSolution() != request.ownDid()) {
             participant.setDomain(request.ownDid() ? null : participant.getShortName().toLowerCase() + "." + this.domain);
@@ -140,8 +140,8 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             Validate.isFalse(StringUtils.hasText(request.verificationMethod())).launch("invalid.verification.method");
             Validate.isFalse(this.validateDidWithPrivateKey(request.issuer(), request.verificationMethod(), request.privateKey())).launch("invalid.did.or.private.key");
             Participant participantFromDid = this.participantRepository.getByDid(request.issuer());
-            if (Objects.nonNull(participantFromDid)) {
-                throw new BadDataException(this.messageSource.getMessage("did.already.registered", new String[]{participantFromDid.getEmail()}, LocaleContextHolder.getLocale()));
+            if (Objects.nonNull(participantFromDid) && participantFromDid.getId().toString().equals(participantId)) {
+                throw new BadDataException(this.messageSource.getMessage("did.already.registered", new String[]{}, LocaleContextHolder.getLocale()));
             }
         }
 
@@ -290,7 +290,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         File file = new File(fetchedFileName);
         try {
             log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", participantId, filename);
-            Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+            Participant participant = this.findParticipantById(UUID.fromString(participantId));
             file = this.s3Utils.getObject(participantId + "/" + filename, fetchedFileName);
             return FileUtils.readFileToString(file, Charset.defaultCharset());
         } finally {
@@ -300,7 +300,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED)
     public CheckParticipantRegisteredResponse checkIfParticipantRegistered(String email) {
-        boolean participantExists = this.participantRepository.existsByEmail(email);
+        boolean participantExists = this.participantRepository.existsByEmail(email.toString());
 
         return new CheckParticipantRegisteredResponse(
                 participantExists,
@@ -309,7 +309,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public Participant changeStatus(UUID participantId, int status) {
-        Participant participant = this.participantRepository.findById(participantId).orElseThrow(EntityNotFoundException::new);
+        Participant participant = this.findParticipantById(participantId);
         participant.setStatus(status);
         return this.create(participant);
     }
@@ -326,7 +326,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED, readOnly = true)
     public ParticipantConfigDTO getParticipantConfig(String uuid) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(uuid));
 
         ParticipantConfigDTO participantConfigDTO = this.mapper.convertValue(participant, ParticipantConfigDTO.class);
         if (participant.isOwnDidSolution()) {
@@ -342,7 +342,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public ParticipantAndKeyResponse exportParticipantAndKey(String uuid) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(uuid)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(uuid));
         ParticipantAndKeyResponse participantAndKeyResponse = new ParticipantAndKeyResponse();
 
         Credential legalParticipantCredential = this.credentialService.getLegalParticipantCredential(participant.getId());
@@ -368,7 +368,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
 
     @SneakyThrows
     public ParticipantProfileDto getParticipantProfile(String participantId) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(participantId));
 
         ParticipantProfileDto participantProfileDto = this.mapper.convertValue(participant, ParticipantProfileDto.class);
         JsonNode participantCredentialRequest = this.mapper.readTree(participant.getCredentialRequest());
@@ -408,7 +408,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public String updateParticipantProfileImage(String participantId, MultipartFile multipartFile) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(participantId));
 
         if (StringUtils.hasText(participant.getProfileImage())) {
             this.s3Utils.deleteFile(participant.getProfileImage());
@@ -433,7 +433,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     public void deleteParticipantProfileImage(String participantId) {
-        Participant participant = this.participantRepository.findById(UUID.fromString(participantId)).orElseThrow(() -> new EntityNotFoundException("participant.not.found"));
+        Participant participant = this.findParticipantById(UUID.fromString(participantId));
 
         if (!StringUtils.hasText(participant.getProfileImage())) {
             throw new BadDataException("file.not.found");
@@ -443,5 +443,11 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         this.participantRepository.save(participant);
     }
 
+    public Participant findParticipantById(UUID id) {
+        return this.participantRepository.findById(id).orElseThrow(() -> new BadDataException("participant.not.found"));
+    }
 
+    public Participant save(Participant participant) {
+        return this.participantRepository.save(participant);
+    }
 }
