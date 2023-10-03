@@ -134,7 +134,7 @@ public class SignerService {
         Map<String, Object> tncVc = new TreeMap<>();
         tncVc.put(CONTEXT, this.contextConfig.tnc());
         tncVc.put(TYPE, List.of(VERIFIABLE_CREDENTIAL));
-        tncVc.put(ID, participant.getDid());
+        tncVc.put(ID, participantJsonUrl + "#2");
         tncVc.put(ISSUER, participant.getDid());
         tncVc.put(ISSUANCE_DATE, issuanceDate);
 
@@ -279,7 +279,7 @@ public class SignerService {
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
                         .context(this.contextConfig.serviceOffer())
                         .type(StringPool.VERIFIABLE_CREDENTIAL)
-                        .id(participant.getDid())
+                        .id(id)
                         .issuer(participant.getDid())
                         .issuanceDate(issuanceDate)
                         .credentialSubject(request.getCredentialSubject())
