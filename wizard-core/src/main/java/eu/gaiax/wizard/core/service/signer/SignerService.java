@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.api.VerifiableCredential;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.exception.ConflictException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
 import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.CreateVCRequest;
@@ -111,14 +112,15 @@ public class SignerService {
         Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get(LEGAL_REGISTRATION_NUMBER), typeReference);
         //Add @context in the credential
         legalParticipant.put(CONTEXT, this.contextConfig.participant());
+        String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
+
         legalParticipant.put(TYPE, List.of(VERIFIABLE_CREDENTIAL));
-        legalParticipant.put(ID, participant.getDid());
+        legalParticipant.put(ID, participantJsonUrl + "#0");
         legalParticipant.put(ISSUER, participant.getDid());
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         legalParticipant.put(ISSUANCE_DATE, issuanceDate);
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get(CREDENTIAL_SUBJECT), typeReference);
-        String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
         participantCredentialSubject.put(ID, participantJsonUrl + "#0");
         participantCredentialSubject.put(TYPE, GX_LEGAL_PARTICIPANT);
         String registrationId = participantJsonUrl + "#1";
@@ -133,7 +135,7 @@ public class SignerService {
         Map<String, Object> tncVc = new TreeMap<>();
         tncVc.put(CONTEXT, this.contextConfig.tnc());
         tncVc.put(TYPE, List.of(VERIFIABLE_CREDENTIAL));
-        tncVc.put(ID, participant.getDid());
+        tncVc.put(ID, participantJsonUrl + "#2");
         tncVc.put(ISSUER, participant.getDid());
         tncVc.put(ISSUANCE_DATE, issuanceDate);
 
@@ -278,7 +280,7 @@ public class SignerService {
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
                         .context(this.contextConfig.serviceOffer())
                         .type(StringPool.VERIFIABLE_CREDENTIAL)
-                        .id(participant.getDid())
+                        .id(id)
                         .issuer(participant.getDid())
                         .issuanceDate(issuanceDate)
                         .credentialSubject(request.getCredentialSubject())
@@ -346,8 +348,14 @@ public class SignerService {
                 this.hostJsonFile(signResource, id, name);
             }
             return signResource;
+        } catch (BadDataException be) {
+            log.debug("Bad Data Exception while signing label level VC. {}", be.getMessage());
+            throw new BadDataException(be.getMessage());
+        } catch (ConflictException be) {
+            log.debug("Conflict Exception while signing label level VC. {}", be.getMessage());
+            throw new ConflictException(be.getMessage());
         } catch (Exception e) {
-            log.debug("Error while signing label level VC. ", e.getMessage());
+            log.debug("Error while signing label level VC. {}", e.getMessage());
             throw new SignerException(e.getMessage());
         }
     }
@@ -367,7 +375,7 @@ public class SignerService {
                 signerResponse = this.signerClient.verify(participantValidatorRequest.get());
                 log.debug("signer validation response: {}", Objects.requireNonNull(signerResponse.getBody()).get("message").asText());
             } catch (Exception e) {
-                log.error("An error occurred for URL: " + url, e);
+                log.error("An error occurred for URL:{}, policies: {}", url, finalPolicy, e);
                 throw new BadDataException(this.messageSource.getMessage(message, null, LocaleContextHolder.getLocale()) + " URL=" + url);
             }
 

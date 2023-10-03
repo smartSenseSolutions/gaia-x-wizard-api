@@ -1,4 +1,8 @@
 package eu.gaiax.wizard.api.model.request;
 
-public record ParticipantRegisterRequest(String email, ParticipantOnboardRequest onboardRequest) {
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
+
+public record ParticipantRegisterRequest(@Email(message = "email.required") String email,
+                                         @Valid ParticipantOnboardRequest onboardRequest) {
 }
