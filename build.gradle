@@ -54,6 +54,7 @@ subprojects {
         testImplementation 'org.testcontainers:vault'
         testImplementation "com.github.dasniko:testcontainers-keycloak:${keycloakTestContainerVersion}"
         testImplementation "com.github.curious-odd-man:rgxgen:${regexGeneratorVersion}"
+        testImplementation 'org.mockito:mockito-inline'
     }
 
     dependencyManagement {
