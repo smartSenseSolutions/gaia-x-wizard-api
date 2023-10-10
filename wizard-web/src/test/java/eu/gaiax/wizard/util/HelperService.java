@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HelperService {
+
     public static Map<String, Object> prepareDefaultCredential(String legalName, String headQuarterAddress, String legalAddress) {
         Map<String, Object> legalParticipantCredential = new HashMap<>();
         legalParticipantCredential.put("gx:legalName", legalName);

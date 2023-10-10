@@ -21,8 +21,6 @@ import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
-import eu.gaiax.wizard.api.utils.CommonUtils;
-import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -40,7 +38,6 @@ import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -50,8 +47,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -65,7 +60,7 @@ import static eu.gaiax.wizard.api.utils.StringPool.*;
 @RequiredArgsConstructor
 public class ResourceService extends BaseService<Resource, UUID> {
 
-    private final ResourceRepository repository;
+    private final ResourceRepository resourceRepository;
 
     private final ParticipantService participantService;
 
@@ -76,8 +71,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
     private final ContextConfig contextConfig;
 
     private final ObjectMapper objectMapper;
-
-    private final S3Utils s3Utils;
 
     private final CredentialService credentialService;
 
@@ -124,7 +117,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         Validate.isNull(participant).launch(new BadDataException("participant.not.found"));
         this.validateResourceRequest(request);
         String name = "resource_" + UUID.randomUUID();
-        String json = this.resourceVc(request, participant, name);
+        String json = this.generateResourceVc(request, participant, name);
         String hostUrl = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
 
         if (!participant.isOwnDidSolution()) {
@@ -151,12 +144,13 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 }
             }
 
-            return this.repository.save(resource);
+            if (StringUtils.hasText(id) && request.isStoreVault() && !participant.isKeyStored()) {
+                this.storePrivateKeyToVault(participant, request.getPrivateKey());
+            }
+
+            return this.resourceRepository.save(resource);
         }
 
-        if (StringUtils.hasText(id) && request.isStoreVault() && !participant.isKeyStored()) {
-            this.storePrivateKeyToVault(participant, request.getPrivateKey());
-        }
         return null;
     }
 
@@ -303,7 +297,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
     }
 
-    public String resourceVc(CreateResourceRequest request, Participant participant, String name) throws
+    protected String generateResourceVc(CreateResourceRequest request, Participant participant, String name) throws
             JsonProcessingException {
         String id = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
@@ -350,18 +344,6 @@ public class ResourceService extends BaseService<Resource, UUID> {
         return this.signerService.signResource(resourceMap, participant.getId(), name);
     }
 
-    public void hostResourceJson(String resourceJson, String hostedPath) {
-        File file = new File(TEMP_FOLDER + hostedPath);
-        try {
-            FileUtils.writeStringToFile(file, resourceJson, Charset.defaultCharset());
-            this.s3Utils.uploadFile(hostedPath, file);
-        } catch (Exception e) {
-            log.error("Error while hosting service offer json for participant:{},error:{}", hostedPath, e.getMessage());
-        } finally {
-            CommonUtils.deleteFile(file);
-        }
-    }
-
     public PageResponse<ResourceFilterResponse> filterResource(FilterRequest filterRequest, String participantId) {
 
         if (StringUtils.hasText(participantId)) {
@@ -380,7 +362,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
 
     @Override
     protected BaseRepository<Resource, UUID> getRepository() {
-        return this.repository;
+        return this.resourceRepository;
     }
 
     @Override
