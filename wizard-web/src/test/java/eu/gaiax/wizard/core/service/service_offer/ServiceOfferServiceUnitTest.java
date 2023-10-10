@@ -96,6 +96,8 @@ class ServiceOfferServiceUnitTest {
         this.createServiceOfferingRequest = null;
         this.credential = null;
         this.serviceOffer = null;
+        this.objectMapper = null;
+        this.serviceOfferService = null;
     }
 
     @Test
@@ -129,10 +131,6 @@ class ServiceOfferServiceUnitTest {
         List<String> locationListFromService = this.serviceOfferService.getLocationFromService(new ServiceIdRequest(this.randomUUID));
         assertThat(locationListFromService.get(0)).isEqualTo(subdivisionName.name());
     }
-
-   /* @Test
-    void testValidateServiceOfferMainRequest() {
-    }*/
 
     @Test
     void testFilterServiceOffering() {

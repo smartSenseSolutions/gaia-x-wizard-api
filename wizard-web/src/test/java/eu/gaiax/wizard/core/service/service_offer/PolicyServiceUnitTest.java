@@ -11,6 +11,7 @@ import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -43,6 +44,12 @@ class PolicyServiceUnitTest {
         this.policyService = Mockito.spy(new PolicyService(this.objectMapper, this.s3Utils, contextConfig));
     }
 
+    @AfterEach
+    void tearDown() {
+        this.objectMapper = null;
+        this.policyService = null;
+    }
+
     private ObjectMapper configureObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -69,7 +76,7 @@ class PolicyServiceUnitTest {
 
     @Test
     void testGetLocationByServiceOfferingId() {
-        doReturn(this.getServiceOfferVc()).when(this.policyService).getServiceOffering(anyString(), "invalid.service.offer.url");
+        doReturn(this.getServiceOfferVc()).when(this.policyService).getServiceOffering(anyString(), anyString());
 
         try (MockedStatic<InvokeService> invokeServiceMockedStatic = Mockito.mockStatic(InvokeService.class)) {
             invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.getPolicyJsonString());
