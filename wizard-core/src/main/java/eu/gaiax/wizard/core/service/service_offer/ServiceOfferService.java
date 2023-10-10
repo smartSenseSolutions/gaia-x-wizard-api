@@ -13,10 +13,12 @@ import com.smartsensesolutions.java.commons.base.service.BaseService;
 import com.smartsensesolutions.java.commons.filter.FilterCriteria;
 import com.smartsensesolutions.java.commons.operator.Operator;
 import com.smartsensesolutions.java.commons.specification.SpecificationUtil;
-import eu.gaiax.wizard.api.client.MessagingQueueClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.exception.EntityNotFoundException;
-import eu.gaiax.wizard.api.model.*;
+import eu.gaiax.wizard.api.model.CredentialTypeEnum;
+import eu.gaiax.wizard.api.model.PageResponse;
+import eu.gaiax.wizard.api.model.ResourceType;
+import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.policy.ServiceOfferPolicyDto;
 import eu.gaiax.wizard.api.model.policy.SubdivisionName;
@@ -44,8 +46,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -77,7 +77,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final ServiceLabelLevelService labelLevelService;
     private final Vault vault;
     private final CertificateService certificateService;
-    private final MessagingQueueClient messagingQueueClient;
+    private final PublishService publishService;
     private final SubdivisionCodeMasterService subdivisionCodeMasterService;
     private final SecureRandom random = new SecureRandom();
 
@@ -143,7 +143,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
             this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
         }
 
-        this.publishServiceComplianceToMessagingQueue(serviceOffer.getId(), complianceCredential.get(SERVICE_VC));
+        this.publishService.publishServiceComplianceToMessagingQueue(serviceOffer.getId(), complianceCredential.get(SERVICE_VC));
 
         TypeReference<List<Map<String, Object>>> typeReference = new TypeReference<>() {
         };
@@ -213,30 +213,6 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
     }
 
-    private void publishServiceComplianceToMessagingQueue(UUID serviceOfferId, String complianceCredential) throws JsonProcessingException {
-        PublishToQueueRequest publishToQueueRequest = new PublishToQueueRequest();
-        publishToQueueRequest.setSource(this.wizardHost);
-        publishToQueueRequest.setData((Map<String, Object>) this.objectMapper.readValue(complianceCredential, Map.class).get("complianceCredential"));
-
-        try {
-            ResponseEntity<Object> publishServiceComplianceResponse = this.messagingQueueClient.publishServiceCompliance(publishToQueueRequest);
-            if (publishServiceComplianceResponse.getStatusCode().equals(HttpStatus.CREATED)) {
-                if (publishServiceComplianceResponse.getHeaders().containsKey("location")) {
-                    String rawMessageId = publishServiceComplianceResponse.getHeaders().get("location").get(0);
-                    String messageReferenceId = rawMessageId.substring(rawMessageId.lastIndexOf("/") + 1);
-
-                    this.serviceOfferRepository.updateMessageReferenceId(serviceOfferId, messageReferenceId);
-                    log.info("Service offer published to messaging queue. Message Reference ID: {}", messageReferenceId);
-                } else {
-                    log.info("Location header not found for service offer ID: {}", serviceOfferId);
-                }
-            } else {
-                log.info("Error while publishing service offer with ID {} to messaging queue. Response status: {}", serviceOfferId, publishServiceComplianceResponse.getStatusCode());
-            }
-        } catch (Exception e) {
-            log.error("Error encountered while publishing service to message queue", e);
-        }
-    }
 
     @SneakyThrows
     private List<StandardTypeMaster> getSupportedStandardList(String serviceJsonString) {
@@ -330,11 +306,11 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
     private void validateTermsAndConditions(CreateServiceOfferingRequest request) {
         Map<String, Object> credentialSubject = request.getCredentialSubject();
-        if (!credentialSubject.containsKey("gx:termsAndConditions")) {
+        if (!credentialSubject.containsKey(GX_TERMS_AND_CONDITIONS)) {
             throw new BadDataException("term.condition.not.found");
         }
 
-        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get("gx:termsAndConditions"), Map.class);
+        Map termsCondition = this.objectMapper.convertValue(credentialSubject.get(GX_TERMS_AND_CONDITIONS), Map.class);
 
         if (!termsCondition.containsKey("gx:URL")) {
             throw new BadDataException("term.condition.not.found");
@@ -401,9 +377,9 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
 
         Map<String, Object> export = this.objectMapper.convertValue(credentialSubject.get(GX_DATA_ACCOUNT_EXPORT), typeReference);
 
-        this.validateExportField(export, "gx:requestType", "requestType.of.not.found");
-        this.validateExportField(export, "gx:accessType", "accessType.of.not.found");
-        this.validateExportField(export, "gx:formatType", "formatType.of.not.found");
+        this.validateExportField(export, GX_REQUEST_TYPE, "requestType.of.not.found");
+        this.validateExportField(export, GX_ACCESS_TYPE, "accessType.of.not.found");
+        this.validateExportField(export, GX_FORMAT_TYPE, "formatType.of.not.found");
     }
 
     private void validateExportField(Map<String, Object> export, String fieldName, String errorMessage) {
@@ -422,10 +398,10 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         Page<ServiceOffer> serviceOfferPage = this.filter(filterRequest);
-        List<ServiceFilterResponse> resourceList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
+        List<ServiceFilterResponse> serviceOfferList = this.objectMapper.convertValue(serviceOfferPage.getContent(), new TypeReference<>() {
         });
 
-        return PageResponse.of(resourceList, serviceOfferPage, filterRequest.getSort());
+        return PageResponse.of(serviceOfferList, serviceOfferPage, filterRequest.getSort());
     }
 
     @SneakyThrows

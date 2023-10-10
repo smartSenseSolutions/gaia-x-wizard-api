@@ -1,7 +1,5 @@
 package eu.gaiax.wizard.util.constant;
 
-import java.util.UUID;
-
 public class TestConstant {
     //Configuration Constant
     public static final String VAULT_TOKEN = "vault-token";
@@ -18,6 +16,6 @@ public class TestConstant {
 
     //Other Constant
     public static final String EMAIL = "test@gaia-x.com";
-    public static final String LEGAL_NAME = UUID.randomUUID().toString();
+    public static final String LEGAL_NAME = "Legal Name Ltd.";
     public static final String SHORT_NAME = "shortname";
 }
