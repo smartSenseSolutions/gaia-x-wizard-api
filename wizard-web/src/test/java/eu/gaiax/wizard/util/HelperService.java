@@ -3,12 +3,9 @@ package eu.gaiax.wizard.util;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
-import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.util.constant.TestConstant;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class HelperService {
@@ -38,28 +35,6 @@ public class HelperService {
         return new ParticipantRegisterRequest(TestConstant.EMAIL, onboardRequest);
     }
 
-    public CreateServiceOfferingRequest addServiceOfferRequest(List<String> labelLevelCriteriaList) {
-        Map<String, Object> credentialSubject = new HashMap<>();
-        credentialSubject.put("gx:termsAndConditions", Map.of("gx:URL", "https://aws.amazon.com/service-terms/"));
-        credentialSubject.put("gx:policy", Map.of("gx:location", Collections.singletonList("BE-BRU")));
-        credentialSubject.put("gx:dataProtectionRegime", "GDPR2016");
-        credentialSubject.put("type", "gx:ServiceOffering");
-
-        Map<String, Object> dataAccountExport = new HashMap<>();
-        dataAccountExport.put("gx:requestType", "API");
-        dataAccountExport.put("gx:accessType", "physical");
-        dataAccountExport.put("gx:formatType", "pdf");
-
-        credentialSubject.put("gx:dataAccountExport", dataAccountExport);
-        credentialSubject.put("gx:criteria", prepareLabelLevelMap(labelLevelCriteriaList));
-
-        CreateServiceOfferingRequest createServiceOfferingRequest = new CreateServiceOfferingRequest();
-        createServiceOfferingRequest.setName(TestConstant.SERVICE_OFFER_NAME);
-        createServiceOfferingRequest.setCredentialSubject(credentialSubject);
-
-        return createServiceOfferingRequest;
-    }
-
     public static FilterRequest prepareDefaultFilterRequest() {
         return prepareFilterRequest(0, 10);
     }
@@ -69,16 +44,5 @@ public class HelperService {
         request.setPage(page);
         request.setSize(size);
         return request;
-    }
-
-    private static Map<String, Object> prepareLabelLevelMap(List<String> labelLevelCriteriaList) {
-        Map<String, Object> criteriaMap = new HashMap<>();
-
-        labelLevelCriteriaList.parallelStream().forEach(criterion -> {
-            Map<String, Object> criterionMap = Map.of("response", "Confirm");
-            criteriaMap.put(criterion, criterionMap);
-        });
-
-        return criteriaMap;
     }
 }
