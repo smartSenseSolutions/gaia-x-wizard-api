@@ -257,7 +257,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                 String idValue = aggregationObject.get(ID).getAsString();
                 ids.add(idValue);
             }
-            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_MANUFACTURED_BY, "manufactured.by.of.not.found", null);
+            this.signerService.validateRequestUrl(ids, List.of(GX_LEGAL_PARTICIPANT), LABEL_MANUFACTURED_BY, "manufactured.by.not.found", null);
         }
         if (request.getCredentialSubject().containsKey(PRODUCED_BY)) {
             JsonObject produceBy = jsonObject

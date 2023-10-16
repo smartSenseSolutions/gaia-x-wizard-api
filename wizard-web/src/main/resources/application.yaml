@@ -23,6 +23,7 @@ wizard:
     baseDomain:
     bucket:
     region:
+    s3Endpoint:
   database:
     postgres:
       host:
@@ -72,8 +73,8 @@ wizard:
   management:
     port: 8090
   multipart:
-    max-file-size:
-    max-request-size:
+    max-file-size: 1MB
+    max-request-size: 1MB
   signer-policies:
   vault:
     host:

@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smartsensesolutions.java.commons.FilterRequest;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ResourceFilterResponse;
 import eu.gaiax.wizard.api.model.ResourceType;
+import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.CreateResourceRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
@@ -32,7 +34,9 @@ import java.util.*;
 
 import static eu.gaiax.wizard.api.utils.StringPool.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,8 +66,9 @@ class ResourceServiceTest {
     void setUp() {
         this.objectMapper = this.configureObjectMapper();
         ContextConfig contextConfig = new ContextConfig(null, null, null, null, null, List.of("http://www.w3.org/ns/odrl.jsonld", "https://www.w3.org/ns/odrl/2/ODRL22.json"), List.of("https://www.w3.org/2018/credentials/v1", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#"));
+        ServiceEndpointConfig serviceEndpointConfig = new ServiceEndpointConfig(this.randomUUID, this.randomUUID, this.randomUUID);
         this.resourceService = Mockito.spy(new ResourceService(this.resourceRepository, this.participantService, null, this.participantRepository, contextConfig,
-                this.objectMapper, this.credentialService, null, this.signerService, null, null, this.policyService));
+                this.objectMapper, this.credentialService, null, this.signerService, null, serviceEndpointConfig, this.policyService));
         this.credential = this.generateMockCredential();
         this.resource = this.generateMockResource();
     }
@@ -86,14 +91,19 @@ class ResourceServiceTest {
     }
 
     @Test
-    void testCreateResource() {
+    void testCreateResource_physical() {
+        Participant participant = this.generateMockParticipant();
+        participant.setOwnDidSolution(false);
+
         doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
-        doReturn(Optional.of(this.generateMockParticipant())).when(this.participantRepository).findById(UUID.fromString(this.randomUUID));
-        Mockito.doNothing().when(this.signerService).validateRequestUrl(Collections.singletonList(this.randomUUID), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
+        doReturn(participant).when(this.participantService).validateParticipant(any());
         doReturn(this.resource).when(this.resourceRepository).save(any());
-        doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
         doReturn(this.getResourceCredentialMock()).when(this.signerService).signResource(anyMap(), any(), anyString());
-        Resource resourceActual = this.resourceService.createResource(this.generateMockCreateResourceRequest(), this.randomUUID);
+
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+        doNothing().when(this.signerService).addServiceEndpoint(any(), anyString(), anyString(), anyString());
+
+        Resource resourceActual = this.resourceService.createResource(this.generateMockCreatePhysicalResourceRequest(), null);
 
         assertThat(resourceActual.getName()).isEqualTo(this.resource.getName());
     }
@@ -125,7 +135,7 @@ class ResourceServiceTest {
         return participant;
     }
 
-    private CreateResourceRequest generateMockCreateResourceRequest() {
+    private CreateResourceRequest generateMockCreatePhysicalResourceRequest() {
         CreateResourceRequest createResourceRequest = new CreateResourceRequest();
         createResourceRequest.setStoreVault(false);
         createResourceRequest.setPrivateKey(this.randomUUID);
@@ -133,6 +143,48 @@ class ResourceServiceTest {
         Map<String, Object> credentialSubject = new HashMap<>();
         credentialSubject.put(TYPE, ResourceType.PHYSICAL_RESOURCE.getValue());
         credentialSubject.put(NAME, this.randomUUID);
+        credentialSubject.put(MAINTAINED_BY, Collections.singletonList(Map.of(ID, this.randomUUID)));
+        credentialSubject.put(OWNED_BY, Collections.singletonList(Map.of(ID, this.randomUUID)));
+        credentialSubject.put(MANUFACTURED_BY, Collections.singletonList(Map.of(ID, this.randomUUID)));
+
+        createResourceRequest.setCredentialSubject(credentialSubject);
+        return createResourceRequest;
+    }
+
+    private CreateResourceRequest generateMockCreateVirtualDataResourceRequest() {
+        CreateResourceRequest createResourceRequest = new CreateResourceRequest();
+        createResourceRequest.setStoreVault(false);
+        createResourceRequest.setPrivateKey(this.randomUUID);
+
+        Map<String, Object> credentialSubject = new HashMap<>();
+        credentialSubject.put(TYPE, "VirtualResource");
+        credentialSubject.put(SUBTYPE, "VirtualDataResource");
+        credentialSubject.put(NAME, this.randomUUID);
+        credentialSubject.put("gx:description", this.randomUUID);
+        credentialSubject.put("gx:license", "http://localhost");
+        credentialSubject.put("gx:containsPII", true);
+        credentialSubject.put(LEGAL_BASIS, this.randomUUID);
+        credentialSubject.put(GX_EMAIL, this.randomUUID);
+        credentialSubject.put(PRODUCED_BY, Map.of(ID, this.randomUUID));
+
+        createResourceRequest.setCredentialSubject(credentialSubject);
+        return createResourceRequest;
+    }
+
+    private CreateResourceRequest generateMockCreateVirtualSoftwareResourceRequest() {
+        CreateResourceRequest createResourceRequest = new CreateResourceRequest();
+        createResourceRequest.setStoreVault(false);
+        createResourceRequest.setPrivateKey(this.randomUUID);
+
+        Map<String, Object> credentialSubject = new HashMap<>();
+        credentialSubject.put(TYPE, "VirtualResource");
+        credentialSubject.put(SUBTYPE, "VirtualSoftwareResource");
+        credentialSubject.put(NAME, this.randomUUID);
+        credentialSubject.put("gx:description", this.randomUUID);
+        credentialSubject.put("gx:license", "http://localhost");
+        credentialSubject.put(COPYRIGHT_OWNED_BY, Collections.singletonList(Map.of(ID, this.randomUUID)));
+        credentialSubject.put(AGGREGATION_OF, Collections.singletonList(Map.of(ID, this.randomUUID)));
+        credentialSubject.put(GX_POLICY, Map.of(CUSTOM_ATTRIBUTE, this.randomUUID));
 
         createResourceRequest.setCredentialSubject(credentialSubject);
         return createResourceRequest;
@@ -158,6 +210,65 @@ class ResourceServiceTest {
 
         }
         return null;
+    }
+
+    @Test
+    void testCreateResource_VirtualData() {
+
+        doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
+        doReturn(Optional.of(this.generateMockParticipant())).when(this.participantRepository).findById(UUID.fromString(this.randomUUID));
+        doNothing().when(this.signerService).validateRequestUrl(Collections.singletonList(this.randomUUID), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
+        doReturn(this.resource).when(this.resourceRepository).save(any());
+        doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
+        doReturn(this.getResourceCredentialMock()).when(this.signerService).signResource(anyMap(), any(), anyString());
+        Resource resourceActual = this.resourceService.createResource(this.generateMockCreateVirtualDataResourceRequest(), this.randomUUID);
+
+        assertThat(resourceActual.getName()).isEqualTo(this.resource.getName());
+
+    }
+
+    @Test
+    void testCreateResource_VirtualSoftware() {
+
+        doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
+        doReturn(Optional.of(this.generateMockParticipant())).when(this.participantRepository).findById(UUID.fromString(this.randomUUID));
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+        doReturn(this.resource).when(this.resourceRepository).save(any());
+        doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
+        doReturn(this.getResourceCredentialMock()).when(this.signerService).signResource(anyMap(), any(), anyString());
+
+        Resource resourceActual = this.resourceService.createResource(this.generateMockCreateVirtualSoftwareResourceRequest(), this.randomUUID);
+
+        assertThat(resourceActual.getName()).isEqualTo(this.resource.getName());
+
+    }
+
+    @Test
+    void testCreateResource_virtualData_legalBasis_400() {
+
+        doReturn(Optional.of(this.generateMockParticipant())).when(this.participantRepository).findById(UUID.fromString(this.randomUUID));
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+        doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
+
+        CreateResourceRequest createVirtualDataResourceRequest = this.generateMockCreateVirtualDataResourceRequest();
+        createVirtualDataResourceRequest.getCredentialSubject().remove(LEGAL_BASIS);
+
+        assertThrows(BadDataException.class, () -> this.resourceService.createResource(createVirtualDataResourceRequest, this.randomUUID));
+
+    }
+
+    @Test
+    void testCreateResource_virtualData_piiEmail_400() {
+
+        doReturn(Optional.of(this.generateMockParticipant())).when(this.participantRepository).findById(UUID.fromString(this.randomUUID));
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+        doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
+
+        CreateResourceRequest createVirtualDataResourceRequest = this.generateMockCreateVirtualDataResourceRequest();
+        createVirtualDataResourceRequest.getCredentialSubject().remove(GX_EMAIL);
+
+        assertThrows(BadDataException.class, () -> this.resourceService.createResource(createVirtualDataResourceRequest, this.randomUUID));
+
     }
 
 }

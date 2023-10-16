@@ -19,6 +19,7 @@ public record AWSSettings(String bucket,
                           String secretKey,
                           String hostedZoneId,
                           String serverIp,
-                          String baseDomain) {
+                          String baseDomain,
+                          String s3Endpoint) {
 
 }

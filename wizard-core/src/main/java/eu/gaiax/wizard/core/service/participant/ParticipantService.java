@@ -77,7 +77,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     @SneakyThrows
     public Participant registerParticipant(ParticipantRegisterRequest request) {
         log.debug("ParticipantService(registerParticipant) -> Participant registration with email {}", request.email());
-        Validate.isFalse(StringUtils.hasText(request.email().toLowerCase())).launch("email.required");
+        Validate.isFalse(StringUtils.hasText(request.email())).launch("email.required");
         ParticipantOnboardRequest onboardRequest = request.onboardRequest();
         this.validateParticipantOnboardRequest(onboardRequest);
 
@@ -253,7 +253,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     public String getWellKnownFiles(String host, String fileName) throws IOException {
         try {
             log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
-            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
+            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Cannot find file -> " + fileName));
             Participant participant = this.participantRepository.getByDomain(host);
             Validate.isNull(participant).launch(new EntityNotFoundException("subdomain.not.found"));
             if (fileName.equals(DID_JSON)) {
@@ -266,7 +266,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
         } catch (Exception ex) {
             //TODO need to remove
             log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
-            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Can find file -> " + fileName));
+            Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Cannot find file -> " + fileName));
             if (fileName.equals(DID_JSON)) {
                 String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(DID_JSON);
                 File file = new File(fetchedFileName);

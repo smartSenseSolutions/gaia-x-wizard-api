@@ -5,8 +5,12 @@ import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.util.constant.TestConstant;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 public class HelperService {
 
@@ -15,6 +19,8 @@ public class HelperService {
         legalParticipantCredential.put("gx:legalName", legalName);
         legalParticipantCredential.put("gx:headquarterAddress", Map.of("gx:countrySubdivisionCode", headQuarterAddress));
         legalParticipantCredential.put("gx:legalAddress", Map.of("gx:countrySubdivisionCode", legalAddress));
+        legalParticipantCredential.put(PARENT_ORGANIZATION, Collections.singletonList(Map.of(ID, "http://localhost/" + UUID.randomUUID())));
+        legalParticipantCredential.put(SUB_ORGANIZATION, Collections.singletonList(Map.of(ID, "http://localhost/" + UUID.randomUUID())));
 
         Map<String, Object> lpCredential = new HashMap<>();
         lpCredential.put("credentialSubject", legalParticipantCredential);

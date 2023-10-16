@@ -34,7 +34,6 @@ import eu.gaiax.wizard.core.service.job.ScheduleService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -69,7 +68,6 @@ import static eu.gaiax.wizard.api.utils.StringPool.*;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class SignerService {
 
     private final ContextConfig contextConfig;
@@ -81,13 +79,28 @@ public class SignerService {
     private final ScheduleService scheduleService;
     private final ServiceEndpointConfig serviceEndpointConfig;
     private final MessageSource messageSource;
+    private final List<String> policies;
+    private final String wizardHost;
+    private final String tnc;
 
-    @Value("${wizard.signer-policies}")
-    private List<String> policies;
-    @Value("${wizard.host.wizard}")
-    private String wizardHost;
-    @Value("${wizard.gaiax.tnc}")
-    private String tnc;
+    public SignerService(ContextConfig contextConfig, CredentialService credentialService,
+                         ParticipantRepository participantRepository, SignerClient signerClient,
+                         S3Utils s3Utils, ObjectMapper mapper, ScheduleService scheduleService,
+                         ServiceEndpointConfig serviceEndpointConfig, MessageSource messageSource,
+                         @Value("${wizard.signer-policies}") List<String> policies, @Value("${wizard.host.wizard}") String wizardHost, @Value("${wizard.gaiax.tnc}") String tnc) {
+        this.contextConfig = contextConfig;
+        this.credentialService = credentialService;
+        this.participantRepository = participantRepository;
+        this.signerClient = signerClient;
+        this.s3Utils = s3Utils;
+        this.mapper = mapper;
+        this.scheduleService = scheduleService;
+        this.serviceEndpointConfig = serviceEndpointConfig;
+        this.messageSource = messageSource;
+        this.policies = policies;
+        this.wizardHost = wizardHost;
+        this.tnc = tnc;
+    }
 
     @Transactional(isolation = Isolation.READ_UNCOMMITTED, propagation = Propagation.REQUIRED)
     public void createParticipantJson(UUID participantId) {
@@ -99,7 +112,7 @@ public class SignerService {
             return;
         }
 
-        this.createParticipantJson(participant, participant.getId().toString(), participant.isOwnDidSolution());
+        this.createParticipantJson(participant, participant.getDid(), participant.getDid(), participant.getId().toString(), participant.isOwnDidSolution());
     }
 
     @SneakyThrows
@@ -158,10 +171,6 @@ public class SignerService {
             return "https://" + domain + "/" + participantId.toString() + "/" + PARTICIPANT_JSON;
         }
         return this.wizardHost + participantId.toString() + "/" + PARTICIPANT_JSON;
-    }
-
-    public void createParticipantJson(Participant participant, String key, boolean ownDid) {
-        this.createParticipantJson(participant, participant.getDid(), participant.getDid(), key, ownDid);
     }
 
     public void createParticipantJson(Participant participant, String issuer, String verificationMethod, String key, boolean ownDid) {
@@ -242,7 +251,7 @@ public class SignerService {
         }
     }
 
-    private boolean fetchX509Certificate(String domain) {
+    protected boolean fetchX509Certificate(String domain) {
         try {
             String x509Certificate = InvokeService.executeRequest("https://" + domain + "/.well-known/x509CertificateChain.pem", HttpMethod.GET);
             Validate.isFalse(StringUtils.hasText(x509Certificate)).launch("x509certificate.not.resolved");
@@ -342,11 +351,11 @@ public class SignerService {
     public String signLabelLevel(Map<String, Object> labelLevelRequest, UUID id, String name) {
         try {
             ResponseEntity<Map<String, Object>> signerResponse = this.signerClient.signLabelLevel(labelLevelRequest);
-            String signResource = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get(DATA)).get("selfDescriptionCredential"));
-            if (signResource != null) {
-                this.hostJsonFile(signResource, id, name);
+            String signLabelLevel = this.mapper.writeValueAsString(((Map<String, Object>) Objects.requireNonNull(signerResponse.getBody()).get(DATA)).get("selfDescriptionCredential"));
+            if (signLabelLevel != null) {
+                this.hostJsonFile(signLabelLevel, id, name);
             }
-            return signResource;
+            return signLabelLevel;
         } catch (BadDataException be) {
             log.debug("Bad Data Exception while signing label level VC. {}", be.getMessage());
             throw new BadDataException(be.getMessage());
