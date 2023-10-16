@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.GaiaXWizardApplication;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.model.CommonResponse;
+import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
 import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
@@ -12,6 +13,8 @@ import eu.gaiax.wizard.controller.ParticipantController;
 import eu.gaiax.wizard.core.service.data_master.EntityTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.dao.entity.participant.Participant;
+import eu.gaiax.wizard.dao.repository.CredentialRepository;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
 import eu.gaiax.wizard.util.ContainerContextInitializer;
 import eu.gaiax.wizard.util.HelperService;
@@ -27,10 +30,12 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.BeforeTransaction;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +44,7 @@ import java.util.UUID;
 import static eu.gaiax.wizard.api.utils.StringPool.*;
 import static eu.gaiax.wizard.util.constant.TestConstant.*;
 import static eu.gaiax.wizard.utils.WizardRestConstant.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doReturn;
@@ -68,12 +74,20 @@ class ParticipantControllerTest {
     @Autowired
     private ParticipantController participantController;
 
+    @Autowired
+    private CredentialRepository credentialRepository;
+
     private final String randomUUID = UUID.randomUUID().toString();
 
     @BeforeEach
     @BeforeTransaction
-    public final void before() {
-        this.participantRepository.deleteAll();
+    public final void setUp() {
+        try {
+            this.credentialRepository.deleteAll();
+            this.participantRepository.deleteAll();
+        } catch (Exception ignored) {
+
+        }
     }
 
     @Test
@@ -156,12 +170,11 @@ class ParticipantControllerTest {
         validateDidResponse.put(DATA, Map.of(IS_VALID, true));
         doReturn(ResponseEntity.ok(validateDidResponse)).when(this.signerClient).validateDid(any());
 
-
         Map<String, Object> vcMap = new HashMap<>();
-        vcMap.put(DATA, Map.of(this.randomUUID, this.randomUUID));
-        doReturn(ResponseEntity.ok(vcMap)).when(this.signerClient).createVc(any());
+        vcMap.put(COMPLETE_SD, Map.of(this.randomUUID, this.randomUUID));
+        doReturn(ResponseEntity.ok(Map.of(DATA, vcMap))).when(this.signerClient).createVc(any());
 
-        ParticipantCreationRequest participantCreationRequest = new ParticipantCreationRequest(true, this.randomUUID, this.randomUUID, this.randomUUID, true);
+        ParticipantCreationRequest participantCreationRequest = new ParticipantCreationRequest(true, "did:web:" + this.randomUUID, "did:web:" + this.randomUUID, this.randomUUID, false);
         ResponseEntity<CommonResponse> response = this.restTemplate.exchange(ONBOARD_PARTICIPANT.replace("{participantId}", participantId), POST, new HttpEntity<>(participantCreationRequest), CommonResponse.class);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> payload = (Map<String, Object>) response.getBody().getPayload();
@@ -186,9 +199,26 @@ class ParticipantControllerTest {
     }
 
     @Test
-    void get_wellKnown_files_200() {
+    void get_wellKnown_files_200() throws IOException {
         this.initiate_onboarding_participant_200();
-        this.participantRepository.findAll().get(0);
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        String legalParticipantJson = this.participantController.getLegalParticipantJson(participant.getId().toString(), "participant.json");
+        assertThat(legalParticipantJson).isEqualTo(this.mapper.writeValueAsString(Map.of(this.randomUUID, this.randomUUID)));
+    }
+
+    @Test
+    void get_config_200() {
+        this.initiate_onboarding_participant_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        JwtAuthenticationToken mockPrincipal = Mockito.mock(JwtAuthenticationToken.class);
+        Mockito.when(mockPrincipal.getTokenAttributes()).thenReturn(Map.of(ID, participant.getId().toString()));
+
+        CommonResponse<ParticipantConfigDTO> participantConfigResponse = this.participantController.getConfig(mockPrincipal);
+        assertThat(participantConfigResponse.getPayload().getId()).isEqualTo(participant.getId());
+        assertThat(participantConfigResponse.getPayload().getDid()).isEqualTo("did:web:" + this.randomUUID);
+        assertThat(participantConfigResponse.getPayload().getEmail()).isEqualTo(EMAIL);
     }
 
     String generateLegalParticipantMock() {

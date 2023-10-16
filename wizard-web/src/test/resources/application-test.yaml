@@ -50,9 +50,9 @@ wizard:
     corsOrigins: "*"
   signer-policies: integrityCheck,holderSignature,complianceSignature,complianceCheck
   host:
-    signer: localhost:8080
-    wizard: localhost:8080
-    messagingQueue: localhost:8080
+    signer: http://localhost:8080/
+    wizard: http://localhost:8080/
+    messagingQueue: http://localhost:8080/
   server:
     port: 8080
   quartz:

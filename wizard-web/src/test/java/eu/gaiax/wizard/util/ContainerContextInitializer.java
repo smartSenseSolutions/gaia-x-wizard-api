@@ -24,7 +24,7 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
 
     public static final String MAILHOG = "mailhog"; //Do not change
     public static final String S3 = "s3"; //Do not change
-    public static final String S3_BUCKET = "s3Bucket"; //Do not change
+    public static final String S3_BUCKET = "test-bucket"; //Do not change
     private final Network network = Network.newNetwork();
 
     private final PostgreSQLContainer postgreSQL = new PostgreSQLContainer("postgres:15.3");
@@ -55,6 +55,8 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         this.mailHog.start();
         this.localStackContainer.start();
 
+        LOGGER.info("keycloak user {}, password: {}", this.keycloak.getAdminUsername(), this.keycloak.getAdminPassword());
+
         Map<String, String> properties = new HashMap<>();
         properties.put("spring.datasource.url", this.postgreSQL.getJdbcUrl());
         properties.put("spring.datasource.username", this.postgreSQL.getUsername());
@@ -77,10 +79,7 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
 
         try {
             //Create S3 bucket
-//            this.localStackContainer.execInContainer("awslocal", "s3", "mb", "s3://" + S3_BUCKET);
             this.localStackContainer.execInContainer("awslocal", "s3api", "create-bucket", "--bucket", S3_BUCKET);
-            LOGGER.info("S3 buckets: {}", this.localStackContainer.execInContainer("awslocal", "s3api", "list-buckets").getStdout());
-
             properties.put("wizard.aws.bucket", S3_BUCKET);
         } catch (Exception e) {
             LOGGER.error("Error while creating S3 bucket: {}", e.getMessage(), e);
