@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.wizard.GaiaXWizardApplication;
 import eu.gaiax.wizard.api.client.SignerClient;
-import eu.gaiax.wizard.api.model.CommonResponse;
-import eu.gaiax.wizard.api.model.ParticipantConfigDTO;
+import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.model.*;
 import eu.gaiax.wizard.api.model.request.ParticipantCreationRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
@@ -13,6 +13,7 @@ import eu.gaiax.wizard.controller.ParticipantController;
 import eu.gaiax.wizard.core.service.data_master.EntityTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.CredentialRepository;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -191,7 +192,7 @@ class ParticipantControllerTest {
         ParticipantValidatorRequest participantValidatorRequest = new ParticipantValidatorRequest("http://localhost/" + this.randomUUID, "did:web:" + this.randomUUID, this.randomUUID, false, false);
 
         try (MockedStatic<InvokeService> invokeServiceMockedStatic = Mockito.mockStatic(InvokeService.class)) {
-            invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.generateLegalParticipantMock());
+            invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(HelperService.generateLegalParticipantMock(this.randomUUID));
             String response = this.participantController.validateParticipant(participantValidatorRequest);
             assertEquals("Success", response);
         }
@@ -221,7 +222,66 @@ class ParticipantControllerTest {
         assertThat(participantConfigResponse.getPayload().getEmail()).isEqualTo(EMAIL);
     }
 
-    String generateLegalParticipantMock() {
-        return "{\"selfDescriptionCredential\":{\"verifiableCredential\":[{\"issuer\":\"did:web:" + this.randomUUID + "\"}]}}";
+    @Test
+    void get_participant_profile_200() {
+        this.initiate_onboarding_participant_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        CommonResponse<ParticipantProfileDto> participantConfigResponse = this.participantController.getParticipantProfile(participant.getId().toString());
+        assertThat(participantConfigResponse.getPayload().getId()).isEqualTo(participant.getId().toString());
+        assertThat(participantConfigResponse.getPayload().getLegalName()).isEqualTo(participant.getLegalName());
+        assertThat(participantConfigResponse.getPayload().getEmail()).isEqualTo(participant.getEmail());
+        assertThat(participantConfigResponse.getPayload().getShortName()).isEqualTo(participant.getShortName());
     }
+
+    @Test
+    void update_participant_profile_image_200() {
+        this.initiate_onboarding_participant_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        CommonResponse<Map<String, Object>> participantImageUploadResponse = this.participantController.updateParticipantProfileImage(participant.getId().toString(), HelperService.getValidUpdateProfileImageRequest());
+        assertThat(participantImageUploadResponse.getPayload().get("imageUrl")).isNotNull();
+    }
+
+    @Test
+    void update_participant_profile_image_existing_image_200() {
+        this.initiate_onboarding_participant_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+        this.participantController.updateParticipantProfileImage(participant.getId().toString(), HelperService.getValidUpdateProfileImageRequest());
+
+//       Update picture with deleting existing picture
+        CommonResponse<Map<String, Object>> participantImageUploadResponse = this.participantController.updateParticipantProfileImage(participant.getId().toString(), HelperService.getValidUpdateProfileImageRequest());
+        assertThat(participantImageUploadResponse.getPayload().get("imageUrl")).isNotNull();
+    }
+
+    @Test
+    void delete_participant_profile_image_200() {
+        this.update_participant_profile_image_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        assertDoesNotThrow(() -> this.participantController.deleteParticipantProfileImage(participant.getId().toString()));
+    }
+
+    @Test
+    void delete_participant_profile_image_400() {
+        this.initiate_onboarding_participant_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        assertThrowsExactly(BadDataException.class, () -> this.participantController.deleteParticipantProfileImage(participant.getId().toString()));
+    }
+
+    @Test
+    void export_participant_and_key_200() {
+        this.update_participant_profile_image_200();
+        Participant participant = this.participantRepository.findAll().get(0);
+
+        JwtAuthenticationToken mockPrincipal = Mockito.mock(JwtAuthenticationToken.class);
+        Mockito.when(mockPrincipal.getTokenAttributes()).thenReturn(Map.of(ID, participant.getId().toString()));
+        CommonResponse<ParticipantAndKeyResponse> participantAndKeyResponse = this.participantController.exportParticipantAndKey(participant.getId().toString(), mockPrincipal);
+        Credential legalParticipantCredential = this.credentialRepository.findByParticipantIdAndCredentialType(participant.getId(), CredentialTypeEnum.LEGAL_PARTICIPANT.getCredentialType());
+
+        assertThat(participantAndKeyResponse.getPayload().getParticipantJson()).isEqualTo(legalParticipantCredential.getVcUrl());
+    }
+
+
 }

@@ -268,7 +268,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
             log.info("ParticipantService(getWellKnownFiles) -> Fetch wellKnown file for host {} and filename {}", host, fileName);
             Validate.isTrue(fileName.endsWith("key") || fileName.endsWith("csr")).launch(new EntityNotFoundException("Cannot find file -> " + fileName));
             if (fileName.equals(DID_JSON)) {
-                String fetchedFileName = UUID.randomUUID().toString() + "." + FilenameUtils.getExtension(DID_JSON);
+                String fetchedFileName = UUID.randomUUID() + "." + FilenameUtils.getExtension(DID_JSON);
                 File file = new File(fetchedFileName);
                 try {
                     log.info("ParticipantService(getParticipantFile) -> Fetch files from s3 bucket with Id {} and filename {}", host, DID_JSON);
@@ -367,6 +367,7 @@ public class ParticipantService extends BaseService<Participant, UUID> {
     }
 
     @SneakyThrows
+    @Transactional(propagation = Propagation.REQUIRED)
     public ParticipantProfileDto getParticipantProfile(String participantId) {
         Participant participant = this.findParticipantById(UUID.fromString(participantId));
 
