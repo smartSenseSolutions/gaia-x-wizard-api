@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.smartsensesolutions.java.commons.FilterRequest;
+import eu.gaiax.wizard.api.exception.BadDataException;
 import eu.gaiax.wizard.api.model.PageResponse;
 import eu.gaiax.wizard.api.model.ServiceFilterResponse;
 import eu.gaiax.wizard.api.model.policy.SubdivisionName;
@@ -12,11 +13,12 @@ import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceDetailResponse;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.core.service.InvokeService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
+import eu.gaiax.wizard.core.service.participant.VaultService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -26,24 +28,22 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.IOException;
 import java.util.*;
 
 import static eu.gaiax.wizard.api.utils.StringPool.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 
-@RunWith(SpringRunner.class)
 @ExtendWith(MockitoExtension.class)
 class ServiceOfferServiceUnitTest {
 
@@ -63,6 +63,8 @@ class ServiceOfferServiceUnitTest {
     private PublishService publishService;
     @Mock
     private SubdivisionCodeMasterService subdivisionCodeMasterService;
+    @Mock
+    private VaultService vaultService;
     private ServiceOfferService serviceOfferService;
     private final String randomUUID = UUID.randomUUID().toString();
 
@@ -76,7 +78,7 @@ class ServiceOfferServiceUnitTest {
         this.objectMapper = this.configureObjectMapper();
         this.serviceOfferService = Mockito.spy(new ServiceOfferService(this.credentialService, this.serviceOfferRepository, this.objectMapper,
                 this.participantService, this.signerService, this.policyService, null, null, null, this.serviceLabelLevelService,
-                null, null, this.publishService, this.subdivisionCodeMasterService));
+                this.vaultService, this.publishService, this.subdivisionCodeMasterService));
         this.createServiceOfferingRequest = this.generateMockServiceOfferRequest();
         this.credential = this.generateMockCredential();
         this.serviceOffer = this.generateMockServiceOffer();
@@ -104,20 +106,46 @@ class ServiceOfferServiceUnitTest {
     void testCreateServiceOffering() throws IOException {
         Participant participant = this.generateMockParticipant();
 
-        Mockito.doNothing().when(this.serviceOfferService).validateServiceOfferMainRequest(any());
         doReturn(this.credential).when(this.credentialService).getByParticipantWithCredentialType(any(), anyString());
         doReturn(participant).when(this.participantService).findParticipantById(any());
-        Mockito.doNothing().when(this.signerService).validateRequestUrl(Collections.singletonList(this.randomUUID), List.of(GX_LEGAL_PARTICIPANT), null, "participant.url.not.found", null);
-        Mockito.doNothing().when(this.policyService).hostPolicy(anyString(), anyString());
-        Mockito.doNothing().when(this.publishService).publishServiceComplianceToMessagingQueue(any(), anyString());
-        Mockito.doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
-        Mockito.doReturn(this.getServiceCredentialMock()).when(this.signerService).signService(any(), any(), anyString());
-        Mockito.doReturn(this.serviceOffer).when(this.serviceOfferRepository).save(any());
 
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+        doNothing().when(this.policyService).hostPolicy(anyString(), anyString());
+        doNothing().when(this.publishService).publishServiceComplianceToMessagingQueue(any(), anyString());
+
+        doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
+        doReturn(this.getServiceCredentialMock()).when(this.signerService).signService(any(), any(), anyString());
+        doReturn(this.serviceOffer).when(this.serviceOfferRepository).save(any());
+
+        Map<String, Object> gxLabelLevelMap = new HashMap<>();
+        gxLabelLevelMap.put(GX_LABEL_LEVEL, this.randomUUID);
+        Map<String, Object> credentialSubjectMap = new HashMap<>();
+        credentialSubjectMap.put(CREDENTIAL_SUBJECT, gxLabelLevelMap);
+        Map<String, Object> labelLevelMap = new HashMap<>();
+        labelLevelMap.put("vcUrl", this.randomUUID);
+        labelLevelMap.put(LABEL_LEVEL_VC, this.objectMapper.writeValueAsString(credentialSubjectMap));
+        doReturn(labelLevelMap).when(this.serviceLabelLevelService).createLabelLevelVc(any(), any(), anyString());
+
+        doReturn(this.randomUUID).when(this.vaultService).getParticipantPrivateKeySecret(anyString());
+        doReturn(null).when(this.serviceLabelLevelService).saveServiceLabelLevelLink(anyString(), anyString(), any(), any());
         try (MockedStatic<HashingService> hashingServiceMockedStatic = Mockito.mockStatic(HashingService.class)) {
             hashingServiceMockedStatic.when(() -> HashingService.fetchJsonContent(anyString())).thenReturn(this.randomUUID);
             ServiceOfferResponse responseServiceOffer = this.serviceOfferService.createServiceOffering(this.createServiceOfferingRequest, UUID.randomUUID().toString(), false);
             assertThat(responseServiceOffer.getName()).isEqualTo(this.createServiceOfferingRequest.getName());
+        }
+
+    }
+
+    @Test
+    void testCreateServiceOffering_400() {
+        doReturn(null).when(this.participantService).validateParticipant(any());
+        doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
+
+        try (MockedStatic<HashingService> hashingServiceMockedStatic = Mockito.mockStatic(HashingService.class)) {
+            hashingServiceMockedStatic.when(() -> HashingService.fetchJsonContent(anyString())).thenReturn(this.randomUUID);
+            assertThatThrownBy(() -> this.serviceOfferService.createServiceOffering(this.createServiceOfferingRequest, null, true))
+                    .isInstanceOf(BadDataException.class)
+                    .hasMessage("participant.not.found");
         }
 
     }
@@ -138,7 +166,7 @@ class ServiceOfferServiceUnitTest {
         FilterRequest filterRequest = new FilterRequest();
         filterRequest.setPage(0);
         filterRequest.setSize(1);
-        PageResponse<ServiceFilterResponse> serviceOfferFilterResponse = this.serviceOfferService.filterServiceOffering(filterRequest, null);
+        PageResponse<ServiceFilterResponse> serviceOfferFilterResponse = this.serviceOfferService.filterServiceOffering(filterRequest, this.randomUUID);
 
         assertThat(serviceOfferFilterResponse.getContent().iterator().next().getName()).isEqualTo(this.serviceOffer.getName());
     }
@@ -152,6 +180,10 @@ class ServiceOfferServiceUnitTest {
             invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.getServiceOfferVc());
             ServiceDetailResponse serviceOfferingById = this.serviceOfferService.getServiceOfferingById(UUID.fromString(this.randomUUID));
             assertThat(serviceOfferingById.getName()).isEqualTo(this.serviceOffer.getName());
+            assertThat(serviceOfferingById.getResources()).isNotNull();
+            assertThat(serviceOfferingById.getLocations()).contains("BE-BRU");
+            assertThat(serviceOfferingById.getProtectionRegime()).contains("GDPR2016");
+            assertThat(serviceOfferingById.getDataAccountExport().getAccessType()).contains("Digital");
         }
     }
 
@@ -161,7 +193,8 @@ class ServiceOfferServiceUnitTest {
 
         Map<String, Object> credentialSubject = new HashMap<>();
         credentialSubject.put(GX_POLICY, Map.of("gx:location", Collections.singletonList(this.randomUUID)));
-        credentialSubject.put(AGGREGATION_OF, this.randomUUID);
+        credentialSubject.put(AGGREGATION_OF, Collections.singletonList(Map.of(ID, this.randomUUID)));
+        credentialSubject.put(DEPENDS_ON, Collections.singletonList(Map.of(ID, this.randomUUID)));
         credentialSubject.put(GX_TERMS_AND_CONDITIONS, Map.of("gx:URL", this.randomUUID));
 
         Map<String, Object> dataExport = new HashMap<>();
@@ -170,6 +203,7 @@ class ServiceOfferServiceUnitTest {
         dataExport.put(GX_FORMAT_TYPE, this.randomUUID);
 
         credentialSubject.put(GX_DATA_ACCOUNT_EXPORT, dataExport);
+        credentialSubject.put(GX_CRITERIA, Map.of(this.randomUUID, this.randomUUID));
         createServiceOfferingRequest.setCredentialSubject(credentialSubject);
 
         return createServiceOfferingRequest;
@@ -186,6 +220,7 @@ class ServiceOfferServiceUnitTest {
     private Participant generateMockParticipant() {
         Participant participant = new Participant();
         participant.setId(UUID.fromString(this.randomUUID));
+        participant.setKeyStored(true);
         participant.setOwnDidSolution(true);
         return participant;
     }

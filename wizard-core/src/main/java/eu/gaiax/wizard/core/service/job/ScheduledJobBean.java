@@ -45,7 +45,8 @@ public class ScheduledJobBean extends QuartzJobBean {
                     this.certificateService.createSSLCertificate(participantId, jobDetail.getKey());
             case StringPool.JOB_TYPE_CREATE_INGRESS -> this.k8SService.createIngress(participantId);
             case StringPool.JOB_TYPE_CREATE_DID -> this.signerService.createDid(participantId);
-            case StringPool.JOB_TYPE_CREATE_PARTICIPANT -> this.signerService.createParticipantJson(participantId);
+            case StringPool.JOB_TYPE_CREATE_PARTICIPANT ->
+                    this.signerService.createSignedLegalParticipant(participantId);
             default -> log.error("ScheduledJobBean(executeInternal) -> JobType {} is invalid.", jobType);
         }
         log.info("ScheduledJobBean(executeInternal) -> Job {} has been executed.", jobType);

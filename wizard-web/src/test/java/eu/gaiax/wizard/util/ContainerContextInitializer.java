@@ -2,12 +2,15 @@ package eu.gaiax.wizard.util;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import org.keycloak.admin.client.KeycloakBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.util.TestPropertyValues;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.vault.VaultContainer;
 
 import java.util.HashMap;
@@ -17,7 +20,11 @@ import static eu.gaiax.wizard.util.constant.TestConstant.*;
 
 public class ContainerContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ContainerContextInitializer.class);
+
     public static final String MAILHOG = "mailhog"; //Do not change
+    public static final String S3 = "s3"; //Do not change
+    public static final String S3_BUCKET = "test-bucket"; //Do not change
     private final Network network = Network.newNetwork();
 
     private final PostgreSQLContainer postgreSQL = new PostgreSQLContainer("postgres:15.3");
@@ -35,12 +42,21 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
             .withNetworkAliases(MAILHOG)
             .withExposedPorts(1025, 8025);
 
+    private final LocalStackContainer localStackContainer = new LocalStackContainer("2.0")
+            .withNetwork(this.network)
+            .withNetworkAliases(S3) // the last alias is used for HOSTNAME_EXTERNAL
+            .withServices(LocalStackContainer.Service.S3, LocalStackContainer.Service.ROUTE53);
+
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         this.postgreSQL.start();
         this.keycloak.start();
         this.vault.start();
         this.mailHog.start();
+        this.localStackContainer.start();
+
+        LOGGER.info("keycloak user {}, password: {}", this.keycloak.getAdminUsername(), this.keycloak.getAdminPassword());
+
         Map<String, String> properties = new HashMap<>();
         properties.put("spring.datasource.url", this.postgreSQL.getJdbcUrl());
         properties.put("spring.datasource.username", this.postgreSQL.getUsername());
@@ -50,10 +66,26 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         properties.put("wizard.keycloak.clientId", KEYCLOAK_PRIVATE_CLIENT);
         properties.put("wizard.keycloak.clientSecret", KEYCLOAK_PRIVATE_CLIENT_SECRET);
         properties.put("wizard.keycloak.publicClientId", KEYCLOAK_PUBLIC_CLIENT);
-        properties.put("wizard.keycloak.publicClientId", KEYCLOAK_PUBLIC_CLIENT);
-        properties.put("wizard.keycloak.publicClientId", KEYCLOAK_PUBLIC_CLIENT);
+        properties.put("wizard.security.enabled", "false");
+
+        properties.put("wizard.aws.access_key", this.localStackContainer.getAccessKey());
+        properties.put("wizard.aws.hostedZoneId", this.localStackContainer.getHost());
+        properties.put("wizard.aws.secretKey", this.localStackContainer.getSecretKey());
+        properties.put("wizard.aws.s3Endpoint", this.localStackContainer.getEndpointOverride(LocalStackContainer.Service.S3).toString());
+        properties.put("wizard.aws.region", this.localStackContainer.getRegion());
 
         properties.put("wizard.vault.host", this.vault.getHttpHostAddress());
+
+
+        try {
+            //Create S3 bucket
+            this.localStackContainer.execInContainer("awslocal", "s3api", "create-bucket", "--bucket", S3_BUCKET);
+            properties.put("wizard.aws.bucket", S3_BUCKET);
+        } catch (Exception e) {
+            LOGGER.error("Error while creating S3 bucket: {}", e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+
         try {
             //Enable vault approle, create wizard-role and read role-id
             this.vault.execInContainer("vault", "auth", "enable", "approle");

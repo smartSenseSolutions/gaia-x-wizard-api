@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.core.service.participant;
+package eu.gaiax.wizard.core.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;

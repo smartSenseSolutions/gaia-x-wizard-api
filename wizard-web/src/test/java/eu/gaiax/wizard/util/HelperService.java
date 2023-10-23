@@ -1,20 +1,39 @@
 package eu.gaiax.wizard.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.FilterRequest;
+import eu.gaiax.wizard.api.model.FileUploadRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantRegisterRequest;
 import eu.gaiax.wizard.util.constant.TestConstant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.util.ResourceUtils;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+
+import static eu.gaiax.wizard.api.utils.StringPool.*;
 
 public class HelperService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(HelperService.class);
 
     public static Map<String, Object> prepareDefaultCredential(String legalName, String headQuarterAddress, String legalAddress) {
         Map<String, Object> legalParticipantCredential = new HashMap<>();
         legalParticipantCredential.put("gx:legalName", legalName);
         legalParticipantCredential.put("gx:headquarterAddress", Map.of("gx:countrySubdivisionCode", headQuarterAddress));
         legalParticipantCredential.put("gx:legalAddress", Map.of("gx:countrySubdivisionCode", legalAddress));
+        legalParticipantCredential.put(PARENT_ORGANIZATION, Collections.singletonList(Map.of(ID, "http://localhost/" + UUID.randomUUID())));
+        legalParticipantCredential.put(SUB_ORGANIZATION, Collections.singletonList(Map.of(ID, "http://localhost/" + UUID.randomUUID())));
 
         Map<String, Object> lpCredential = new HashMap<>();
         lpCredential.put("credentialSubject", legalParticipantCredential);
@@ -44,5 +63,33 @@ public class HelperService {
         request.setPage(page);
         request.setSize(size);
         return request;
+    }
+
+    public static FileUploadRequest getValidUpdateProfileImageRequest() {
+        try {
+            InputStream stream = new FileInputStream(ResourceUtils.getFile("classpath:update_profile.jpg"));
+            return new FileUploadRequest(new MockMultipartFile("image", "update_profile.jpg", MediaType.IMAGE_JPEG_VALUE, stream));
+        } catch (Exception e) {
+            LOGGER.error("Error while getting upload file mock. ", e);
+        }
+        return new FileUploadRequest(new MockMultipartFile("image", (byte[]) null));
+    }
+
+    public static String generateLegalParticipantMock(String randomUUID) {
+        return "{\"selfDescriptionCredential\":{\"verifiableCredential\":[{\"issuer\":\"did:web:" + randomUUID + "\"}]}}";
+    }
+
+    public static ResponseEntity<Map<String, Object>> getValidateRegistrationNumberResponse() {
+        Map<String, Object> validateRegistrationResponseMap = new HashMap<>();
+        validateRegistrationResponseMap.put(DATA, Map.of(IS_VALID, true));
+        return ResponseEntity.ok(validateRegistrationResponseMap);
+    }
+
+    public static ResponseEntity<JsonNode> getVerifyUrlResponseMock(ObjectMapper mapper) {
+        Map<String, Object> signerResponseMap = new HashMap<>();
+        String randomUUID = UUID.randomUUID().toString();
+        signerResponseMap.put(DATA, Map.of(VERIFY_URL_TYPE, GX_LEGAL_PARTICIPANT));
+        signerResponseMap.put("message", randomUUID);
+        return ResponseEntity.ok(mapper.valueToTree(signerResponseMap));
     }
 }

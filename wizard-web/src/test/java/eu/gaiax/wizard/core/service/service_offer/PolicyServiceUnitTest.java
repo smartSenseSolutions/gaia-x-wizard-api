@@ -10,13 +10,15 @@ import eu.gaiax.wizard.api.model.service_offer.ODRLPolicyRequest;
 import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.core.service.InvokeService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+@ExtendWith(MockitoExtension.class)
 class PolicyServiceUnitTest {
 
     private ObjectMapper objectMapper;
@@ -67,11 +70,6 @@ class PolicyServiceUnitTest {
         assertThat(serviceOfferPolicy).isNotNull()
                 .hasFieldOrPropertyWithValue(TYPE, "policy")
                 .hasFieldOrPropertyWithValue(ID, this.randomUUID);
-        try {
-            System.out.println(this.objectMapper.writeValueAsString(serviceOfferPolicy));
-        } catch (Exception ignored) {
-
-        }
     }
 
     @Test
