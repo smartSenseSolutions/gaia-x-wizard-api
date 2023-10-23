@@ -1,5 +1,7 @@
 package eu.gaiax.wizard.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsensesolutions.java.commons.FilterRequest;
 import eu.gaiax.wizard.api.model.FileUploadRequest;
 import eu.gaiax.wizard.api.model.request.ParticipantOnboardRequest;
@@ -8,6 +10,7 @@ import eu.gaiax.wizard.util.constant.TestConstant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.util.ResourceUtils;
 
@@ -72,8 +75,21 @@ public class HelperService {
         return new FileUploadRequest(new MockMultipartFile("image", (byte[]) null));
     }
 
-
     public static String generateLegalParticipantMock(String randomUUID) {
         return "{\"selfDescriptionCredential\":{\"verifiableCredential\":[{\"issuer\":\"did:web:" + randomUUID + "\"}]}}";
+    }
+
+    public static ResponseEntity<Map<String, Object>> getValidateRegistrationNumberResponse() {
+        Map<String, Object> validateRegistrationResponseMap = new HashMap<>();
+        validateRegistrationResponseMap.put(DATA, Map.of(IS_VALID, true));
+        return ResponseEntity.ok(validateRegistrationResponseMap);
+    }
+
+    public static ResponseEntity<JsonNode> getVerifyUrlResponseMock(ObjectMapper mapper) {
+        Map<String, Object> signerResponseMap = new HashMap<>();
+        String randomUUID = UUID.randomUUID().toString();
+        signerResponseMap.put(DATA, Map.of(VERIFY_URL_TYPE, GX_LEGAL_PARTICIPANT));
+        signerResponseMap.put("message", randomUUID);
+        return ResponseEntity.ok(mapper.valueToTree(signerResponseMap));
     }
 }

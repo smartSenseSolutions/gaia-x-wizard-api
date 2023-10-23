@@ -31,8 +31,8 @@ public class DomainService {
     private final ParticipantRepository participantRepository;
     private final ScheduleService scheduleService;
 
-    public void updateTxtRecords(String domainName, String value, ChangeAction action) {
-        log.info("DomainService(updateTxtRecords) -> Txt update process initiated for domain {} with value {} and action {} ", domainName, value, action.name());
+    public void updateTxtRecords(String domainName, String value, String action) {
+        log.info("DomainService(updateTxtRecords) -> Txt update process initiated for domain {} with value {} and action {} ", domainName, value, action);
         ResourceRecord resourceRecord = new ResourceRecord();
         resourceRecord.setValue("\"" + value + "\"");
 
@@ -42,7 +42,7 @@ public class DomainService {
         recordsSet.setTTL(900L);
         recordsSet.setName(domainName);
 
-        Change change = new Change(action, recordsSet);
+        Change change = new Change(ChangeAction.fromValue(action), recordsSet);
 
         ChangeBatch batch = new ChangeBatch(List.of(change));
 
@@ -53,7 +53,7 @@ public class DomainService {
         request.setHostedZoneId(this.awsSettings.hostedZoneId());
         ChangeResourceRecordSetsResult result = this.amazonRoute53.changeResourceRecordSets(request);
 
-        if (action.name().equalsIgnoreCase("CREATE")) {
+        if (action.equalsIgnoreCase(StringPool.CREATE)) {
             String status = result.getChangeInfo().getStatus();
             String changeId = result.getChangeInfo().getId();
             int count = 0;
@@ -75,27 +75,6 @@ public class DomainService {
         }
 
         log.info("DomainService(updateTxtRecords) -> Txt record has been updated for {} with result {}", domainName, result);
-    }
-
-    public void deleteTxtRecordForSSLCertificate(String domainName, String value) {
-        try {
-            this.updateTxtRecords(domainName, value, ChangeAction.DELETE);
-            log.info("DomainService(createSubDomain) -> Txt record has been deleted for {}", domainName);
-        } catch (Exception e) {
-            log.error("DomainService(createSubDomain) -> Txt record has not been deleted for {}", domainName, e);
-            //TODO need to check if record is already exist
-        }
-    }
-
-
-    public void createTxtRecordForSSLCertificate(String domainName, String value) {
-        try {
-            this.updateTxtRecords(domainName, value, ChangeAction.CREATE);
-            log.info("DomainService(createSubDomain) -> Txt record has been created for {}", domainName);
-        } catch (Exception e) {
-            log.error("DomainService(createSubDomain) -> Txt record has not been created for {}", domainName, e);
-            //TODO need to check if record is already created
-        }
     }
 
     public void createSubDomain(UUID participantId) {

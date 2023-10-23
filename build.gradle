@@ -72,19 +72,4 @@ subprojects {
         enabled = false
     }
 
-    jacocoTestReport {
-        dependsOn test
-    }
-
-    jacoco {
-        toolVersion = "${jacocoVersion}"
-    }
-
-    jacocoTestReport {
-        reports {
-            xml.required = false
-            csv.required = false
-            html.required = true
-        }
-    }
 }

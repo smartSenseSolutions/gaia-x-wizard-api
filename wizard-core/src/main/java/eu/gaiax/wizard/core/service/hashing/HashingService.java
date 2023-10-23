@@ -1,6 +1,6 @@
 package eu.gaiax.wizard.core.service.hashing;
 
-import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.core.service.InvokeService;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;

@@ -1,4 +1,4 @@
-package eu.gaiax.wizard.api;
+package eu.gaiax.wizard.api.model.service_offer;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

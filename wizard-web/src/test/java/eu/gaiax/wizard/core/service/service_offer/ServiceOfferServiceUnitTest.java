@@ -13,11 +13,12 @@ import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceDetailResponse;
 import eu.gaiax.wizard.api.model.service_offer.ServiceIdRequest;
 import eu.gaiax.wizard.api.model.service_offer.ServiceOfferResponse;
+import eu.gaiax.wizard.core.service.InvokeService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
+import eu.gaiax.wizard.core.service.participant.VaultService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
@@ -62,6 +63,8 @@ class ServiceOfferServiceUnitTest {
     private PublishService publishService;
     @Mock
     private SubdivisionCodeMasterService subdivisionCodeMasterService;
+    @Mock
+    private VaultService vaultService;
     private ServiceOfferService serviceOfferService;
     private final String randomUUID = UUID.randomUUID().toString();
 
@@ -75,7 +78,7 @@ class ServiceOfferServiceUnitTest {
         this.objectMapper = this.configureObjectMapper();
         this.serviceOfferService = Mockito.spy(new ServiceOfferService(this.credentialService, this.serviceOfferRepository, this.objectMapper,
                 this.participantService, this.signerService, this.policyService, null, null, null, this.serviceLabelLevelService,
-                null, null, this.publishService, this.subdivisionCodeMasterService));
+                this.vaultService, this.publishService, this.subdivisionCodeMasterService));
         this.createServiceOfferingRequest = this.generateMockServiceOfferRequest();
         this.credential = this.generateMockCredential();
         this.serviceOffer = this.generateMockServiceOffer();
@@ -123,6 +126,7 @@ class ServiceOfferServiceUnitTest {
         labelLevelMap.put(LABEL_LEVEL_VC, this.objectMapper.writeValueAsString(credentialSubjectMap));
         doReturn(labelLevelMap).when(this.serviceLabelLevelService).createLabelLevelVc(any(), any(), anyString());
 
+        doReturn(this.randomUUID).when(this.vaultService).getParticipantPrivateKeySecret(anyString());
         doReturn(null).when(this.serviceLabelLevelService).saveServiceLabelLevelLink(anyString(), anyString(), any(), any());
         try (MockedStatic<HashingService> hashingServiceMockedStatic = Mockito.mockStatic(HashingService.class)) {
             hashingServiceMockedStatic.when(() -> HashingService.fetchJsonContent(anyString())).thenReturn(this.randomUUID);
@@ -176,6 +180,10 @@ class ServiceOfferServiceUnitTest {
             invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.getServiceOfferVc());
             ServiceDetailResponse serviceOfferingById = this.serviceOfferService.getServiceOfferingById(UUID.fromString(this.randomUUID));
             assertThat(serviceOfferingById.getName()).isEqualTo(this.serviceOffer.getName());
+            assertThat(serviceOfferingById.getResources()).isNotNull();
+            assertThat(serviceOfferingById.getLocations()).contains("BE-BRU");
+            assertThat(serviceOfferingById.getProtectionRegime()).contains("GDPR2016");
+            assertThat(serviceOfferingById.getDataAccountExport().getAccessType()).contains("Digital");
         }
     }
 
@@ -212,6 +220,7 @@ class ServiceOfferServiceUnitTest {
     private Participant generateMockParticipant() {
         Participant participant = new Participant();
         participant.setId(UUID.fromString(this.randomUUID));
+        participant.setKeyStored(true);
         participant.setOwnDidSolution(true);
         return participant;
     }

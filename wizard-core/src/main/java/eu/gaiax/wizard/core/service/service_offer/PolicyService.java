@@ -16,7 +16,7 @@ import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.core.service.InvokeService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

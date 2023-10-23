@@ -6,14 +6,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import eu.gaiax.wizard.api.client.SignerClient;
 import eu.gaiax.wizard.api.exception.BadDataException;
+import eu.gaiax.wizard.api.exception.ConflictException;
 import eu.gaiax.wizard.api.exception.RemoteServiceException;
+import eu.gaiax.wizard.api.exception.SignerException;
 import eu.gaiax.wizard.api.model.did.ServiceEndpointConfig;
 import eu.gaiax.wizard.api.model.service_offer.CreateServiceOfferingRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.S3Utils;
+import eu.gaiax.wizard.core.service.InvokeService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
@@ -45,7 +47,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({OutputCaptureExtension.class, MockitoExtension.class})
-class SignerServiceTest {
+class SignerServiceUnitTest {
 
     private ContextConfig contextConfig;
     @Mock
@@ -110,13 +112,27 @@ class SignerServiceTest {
     void testCreateParticipantJson_credentialExists(CapturedOutput output) {
         doReturn(Optional.of(this.participant)).when(this.participantRepository).findById(any());
         doReturn(Credential.builder().vcJson(this.randomUUID).vcUrl(this.randomUUID).build()).when(this.credentialService).getLegalParticipantCredential(any());
-        this.signerService.createParticipantJson(UUID.fromString(this.randomUUID));
+        this.signerService.createSignedLegalParticipant(UUID.fromString(this.randomUUID));
 
         assertThat(output.getOut()).contains("Legal Participant exists");
     }
 
     @Test
-    void testCreateParticipantJson_credentialDoesNotExist() {
+    void testCreateParticipantJson_credentialDoesNotExist(CapturedOutput output) {
+        doReturn(Optional.of(this.generateMockParticipantWithDid())).when(this.participantRepository).findById(any());
+        doReturn(null).when(this.credentialService).getLegalParticipantCredential(any());
+        doNothing().when(this.signerService).addServiceEndpoint(any(), anyString(), anyString(), anyString());
+
+        Map<String, Object> vcMap = new HashMap<>();
+        vcMap.put(DATA, Map.of(this.randomUUID, this.randomUUID));
+        doReturn(ResponseEntity.ok(vcMap)).when(this.signerClient).createVc(any());
+
+        this.signerService.createSignedLegalParticipant(UUID.fromString(this.randomUUID));
+        assertThat(output.getOut()).contains("Receive success response from signer tool");
+    }
+
+    @Test
+    void testCreateSignedLegalParticipant_credentialDoesNotExist() {
         Map<String, Object> vcMap = new HashMap<>();
         vcMap.put(DATA, Map.of(this.randomUUID, this.randomUUID));
         doReturn(ResponseEntity.ok(vcMap)).when(this.signerClient).createVc(any());
@@ -125,7 +141,41 @@ class SignerServiceTest {
         doReturn(this.participant).when(this.participantRepository).save(any());
         doNothing().when(this.s3Utils).uploadFile(anyString(), any());
 
-        assertDoesNotThrow(() -> this.signerService.createParticipantJson(this.participant, this.randomUUID, this.randomUUID, this.randomUUID, true));
+        assertDoesNotThrow(() -> this.signerService.createSignedLegalParticipant(this.participant, this.randomUUID, this.randomUUID, this.randomUUID, true));
+    }
+
+    @Test
+    void testCreateSignedLegalParticipant_exception(CapturedOutput output) {
+        Map<String, Object> vcMap = new HashMap<>();
+        vcMap.put(DATA, Map.of(this.randomUUID, this.randomUUID));
+        doThrow(new BadDataException()).when(this.signerClient).createVc(any());
+        doReturn(this.participant).when(this.participantRepository).save(any());
+
+        assertDoesNotThrow(() -> this.signerService.createSignedLegalParticipant(this.participant, this.randomUUID, this.randomUUID, this.randomUUID, true));
+        assertThat(output.getOut()).contains("Error while creating participant json for participant");
+    }
+
+    @Test
+    void testCreateDid_didExists(CapturedOutput output) {
+        doReturn(Optional.of(this.generateMockParticipantWithDid())).when(this.participantRepository).findById(any());
+
+        try (MockedStatic<InvokeService> invokeServiceMockedStatic = Mockito.mockStatic(InvokeService.class)) {
+            invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.randomUUID);
+            assertDoesNotThrow(() -> this.signerService.createDid(UUID.fromString(this.randomUUID)));
+            assertThat(output).contains("DID exists for participantId " + this.randomUUID);
+        }
+    }
+
+    @Test
+    void testCreateDid_exception(CapturedOutput output) throws SchedulerException {
+        doReturn(Optional.of(this.participant)).when(this.participantRepository).findById(any());
+        doThrow(new BadDataException()).when(this.signerClient).createDid(any());
+
+        try (MockedStatic<InvokeService> invokeServiceMockedStatic = Mockito.mockStatic(InvokeService.class)) {
+            invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenReturn(this.randomUUID);
+            assertDoesNotThrow(() -> this.signerService.createDid(UUID.fromString(this.randomUUID)));
+            assertThat(output).contains("SignerService(createDid) -> Error while creating did json for participantID -" + this.randomUUID);
+        }
     }
 
     @Test
@@ -156,6 +206,17 @@ class SignerServiceTest {
     }
 
     @Test
+    void testCreateDid_fetchCertificateException(CapturedOutput output) throws SchedulerException {
+        doReturn(Optional.of(this.participant)).when(this.participantRepository).findById(any());
+
+        try (MockedStatic<InvokeService> invokeServiceMockedStatic = Mockito.mockStatic(InvokeService.class)) {
+            invokeServiceMockedStatic.when(() -> InvokeService.executeRequest(anyString(), any())).thenThrow(new BadDataException());
+            assertDoesNotThrow(() -> this.signerService.createDid(UUID.fromString(this.randomUUID)));
+            assertThat(output.getOut()).contains("Not able to fetch x509 certificate");
+        }
+    }
+
+    @Test
     void testSignResource() {
         doNothing().when(this.s3Utils).uploadFile(anyString(), any());
 
@@ -163,11 +224,24 @@ class SignerServiceTest {
         signerResponse.put(DATA, Map.of(COMPLETE_SD, Map.of(this.randomUUID, this.randomUUID)));
         doReturn(ResponseEntity.ok(signerResponse)).when(this.signerClient).signResource(any());
 
-        assertThat(this.signerService.signResource(Map.of(this.randomUUID, this.randomUUID), UUID.fromString(this.randomUUID), this.randomUUID)).isEqualTo("{\"" + this.randomUUID + "\":\"" + this.randomUUID + "\"}");
+        assertThat(this.signerService.signResource(Map.of(this.randomUUID, this.randomUUID), UUID.fromString(this.randomUUID), this.randomUUID))
+                .isEqualTo("{\"" + this.randomUUID + "\":\"" + this.randomUUID + "\"}");
     }
 
     @Test
-    void testSignLabelLevel() {
+    void testSignResource_exception() {
+        Map<String, Object> resourceRequest = Map.of(this.randomUUID, this.randomUUID);
+        UUID participantId = UUID.fromString(this.randomUUID);
+
+        try (MockedStatic<FileUtils> fileUtilsMockedStatic = Mockito.mockStatic(FileUtils.class)) {
+            fileUtilsMockedStatic.when(() -> FileUtils.writeStringToFile(any(), anyString(), (Charset) any()))
+                    .thenThrow(new IOException());
+            assertThrows(SignerException.class, () -> this.signerService.signResource(resourceRequest, participantId, this.randomUUID));
+        }
+    }
+
+    @Test
+    void testSignLabelLevel_200() {
         doNothing().when(this.s3Utils).uploadFile(anyString(), any());
 
         Map<String, Object> signerResponse = new HashMap<>();
@@ -175,6 +249,30 @@ class SignerServiceTest {
         doReturn(ResponseEntity.ok(signerResponse)).when(this.signerClient).signLabelLevel(any());
 
         assertThat(this.signerService.signLabelLevel(Map.of(this.randomUUID, this.randomUUID), UUID.fromString(this.randomUUID), this.randomUUID)).isEqualTo("{\"" + this.randomUUID + "\":\"" + this.randomUUID + "\"}");
+    }
+
+    @Test
+    void testSignLabelLevel_400() {
+        UUID participantId = UUID.fromString(this.randomUUID);
+        Map<String, Object> labelLevelRequest = Map.of(this.randomUUID, this.randomUUID);
+        doThrow(new BadDataException()).when(this.signerClient).signLabelLevel(any());
+        assertThrows(BadDataException.class, () -> this.signerService.signLabelLevel(labelLevelRequest, participantId, this.randomUUID));
+    }
+
+    @Test
+    void testSignLabelLevel_409() {
+        UUID participantId = UUID.fromString(this.randomUUID);
+        Map<String, Object> labelLevelRequest = Map.of(this.randomUUID, this.randomUUID);
+        doThrow(new ConflictException()).when(this.signerClient).signLabelLevel(any());
+        assertThrows(ConflictException.class, () -> this.signerService.signLabelLevel(labelLevelRequest, participantId, this.randomUUID));
+    }
+
+    @Test
+    void testSignLabelLevel_500() {
+        UUID participantId = UUID.fromString(this.randomUUID);
+        Map<String, Object> labelLevelRequest = Map.of(this.randomUUID, this.randomUUID);
+        doThrow(new RuntimeException()).when(this.signerClient).signLabelLevel(any());
+        assertThrows(SignerException.class, () -> this.signerService.signLabelLevel(labelLevelRequest, participantId, this.randomUUID));
     }
 
     @Test
@@ -219,13 +317,25 @@ class SignerServiceTest {
         serviceOfferVc.put(TRUST_INDEX, new HashMap<>());
         doReturn(ResponseEntity.ok(Map.of(DATA, serviceOfferVc))).when(this.signerClient).createServiceOfferVc(any());
 
-        Participant participantWithDid = this.generateMockParticipant();
-        participantWithDid.setDid("did:web:" + this.randomUUID);
-        Map<String, String> signedService = this.signerService.signService(participantWithDid, this.generateMockServiceOfferRequest(), this.randomUUID);
+        Map<String, String> signedService = this.signerService.signService(this.generateMockParticipantWithDid(), this.generateMockServiceOfferRequest(), this.randomUUID);
 
         assertThat(signedService)
                 .containsKey(SERVICE_VC)
                 .containsKey(TRUST_INDEX);
+    }
+
+    @Test
+    void testSignService_exception() {
+        doThrow(new BadDataException()).when(this.signerClient).createServiceOfferVc(any());
+        Participant participantWithoutKeyStored = this.generateMockParticipant();
+        participantWithoutKeyStored.setKeyStored(false);
+
+        CreateServiceOfferingRequest createServiceOfferingRequest = this.generateMockServiceOfferRequest();
+        createServiceOfferingRequest.setVerificationMethod("did:web:" + this.randomUUID);
+        createServiceOfferingRequest.setPrivateKey(this.randomUUID);
+        createServiceOfferingRequest.setParticipantJsonUrl(this.randomUUID);
+
+        assertThrows(SignerException.class, () -> this.signerService.signService(participantWithoutKeyStored, createServiceOfferingRequest, this.randomUUID));
     }
 
     @Test
@@ -290,6 +400,18 @@ class SignerServiceTest {
         participant.setId(UUID.fromString(this.randomUUID));
         participant.setOwnDidSolution(false);
         participant.setDomain(this.randomUUID);
+        participant.setKeyStored(true);
+        participant.setCredentialRequest("{\"legalParticipant\":{\"credentialSubject\":{\"gx:legalName\":\"Participant Example\",\"gx:headquarterAddress\":{\"gx:countrySubdivisionCode\":\"BE-BRU\"},\"gx:legalAddress\":{\"gx:countrySubdivisionCode\":\"BE-BRU\"}}},\"legalRegistrationNumber\":{\"gx:leiCode\":\"9695007586XZAKPYJ703\"}}");
+        return participant;
+    }
+
+    private Participant generateMockParticipantWithDid() {
+        Participant participant = new Participant();
+        participant.setId(UUID.fromString(this.randomUUID));
+        participant.setOwnDidSolution(false);
+        participant.setDomain(this.randomUUID);
+        participant.setDid("did:web:" + this.randomUUID);
+        participant.setKeyStored(true);
         participant.setCredentialRequest("{\"legalParticipant\":{\"credentialSubject\":{\"gx:legalName\":\"Participant Example\",\"gx:headquarterAddress\":{\"gx:countrySubdivisionCode\":\"BE-BRU\"},\"gx:legalAddress\":{\"gx:countrySubdivisionCode\":\"BE-BRU\"}}},\"legalRegistrationNumber\":{\"gx:leiCode\":\"9695007586XZAKPYJ703\"}}");
         return participant;
     }
@@ -297,6 +419,7 @@ class SignerServiceTest {
     private CreateServiceOfferingRequest generateMockServiceOfferRequest() {
         CreateServiceOfferingRequest createServiceOfferingRequest = new CreateServiceOfferingRequest();
         createServiceOfferingRequest.setName(this.randomUUID);
+        createServiceOfferingRequest.setDescription(this.randomUUID);
 
         Map<String, Object> credentialSubject = new HashMap<>();
         credentialSubject.put(GX_POLICY, Map.of("gx:location", Collections.singletonList(this.randomUUID)));
