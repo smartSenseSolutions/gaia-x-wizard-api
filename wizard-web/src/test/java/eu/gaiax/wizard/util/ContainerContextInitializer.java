@@ -100,7 +100,6 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
             throw new RuntimeException(e);
         }
         
-        properties.put("server.port", "8080");
         properties.put("server.compression.enabled", "true");
         properties.put("wizard.application.name", "gaia-x-wizard");
         properties.put("wizard.database.postgres.connection-timeout", "120000");
@@ -108,14 +107,12 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         properties.put("wizard.keycloak.webAuthRedirectUrl", "http://localhost:8189/*");
         properties.put("wizard.keycloak.actionTokenLifespan", "300");
         properties.put("wizard.keycloak.requiredActionsEmailRedirectionUrl", "http://localhost:8189");
-        properties.put("wizard.security.enabled", "true");
         
         properties.put("wizard.security.corsOrigins", "*");
         properties.put("wizard.signer-policies", "integrityCheck,holderSignature,complianceSignature,complianceCheck");
         properties.put("wizard.host.signer", "http://localhost:8080/");
         properties.put("wizard.host.wizard", "http://localhost:8080/");
         properties.put("wizard.host.messagingQueue", "http://localhost:8080/");
-        properties.put("wizard.server.port", "8080");
         properties.put("wizard.quartz.scheduler.instanceName", "smartSense");
         properties.put("wizard.quartz.scheduler.instanceId", "AUTO");
         properties.put("wizard.quartz.scheduler.batchTriggerAcquisitionMaxCount", "10");
