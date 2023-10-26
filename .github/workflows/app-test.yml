@@ -45,8 +45,5 @@ jobs:
           dotnet-version: 6.x
           dotnet-quality: 'ga'
 
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
-
       - name: Test app
-        run: ./gradlew test
+        run: gradle test
