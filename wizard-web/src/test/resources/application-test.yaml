@@ -48,9 +48,11 @@ wizard:
     tokenUrl: ${wizard.security.auth-server-url}/realms/${wizard.security.realm}/protocol/openid-connect/token
     refreshTokenUrl: ${wizard.security.token-url}
     corsOrigins: "*"
+  signer-policies: integrityCheck,holderSignature,complianceSignature,complianceCheck
   host:
-    signer: localhost:8080
-    wizard: localhost:8080
+    signer: http://localhost:8080/
+    wizard: http://localhost:8080/
+    messagingQueue: http://localhost:8080/
   server:
     port: 8080
   quartz:
@@ -73,14 +75,16 @@ wizard:
   gaia-x:
     registryService: https://registry.gaia-x.eu/v1
   context:
-    participant:
-    registrationNumber:
-    tnc:
-    serviceOffer:
-    ODRLPolicy:
+    participant: https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#
+    registrationNumber: https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/participant
+    tnc: https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#
+    serviceOffer: https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1
+    ODRLPolicy: http://www.w3.org/ns/odrl.jsonld,https://www.w3.org/ns/odrl/2/ODRL22.json
+    labelLevel: https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#
+    resource: https://www.w3.org/2018/credentials/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#
   domain:
   gaiax:
-    tnc:
+    tnc: In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content.
   service-endpoint:
     linkDomainType:
     pdpType:

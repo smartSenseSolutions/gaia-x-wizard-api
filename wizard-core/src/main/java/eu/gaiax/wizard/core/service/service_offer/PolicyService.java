@@ -16,7 +16,7 @@ import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
+import eu.gaiax.wizard.core.service.InvokeService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +88,7 @@ public class PolicyService {
     }
 
     public String[] getLocationByServiceOfferingId(String serviceOfferingId) {
-        JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId);
+        JsonNode serviceOffer = this.getServiceOffering(serviceOfferingId, "invalid.service.offer.url");
         JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
         if (policyArray != null && policyArray.has(0)) {
@@ -125,17 +125,10 @@ public class PolicyService {
     }
 
     @SneakyThrows
-    private JsonNode getCatalogueDescription(String catalogueUrl) {
+    protected JsonNode getServiceOffering(String catalogueUrl, String errorMessage) {
         String catalogue = InvokeService.executeRequest(catalogueUrl, HttpMethod.GET);
-        Validate.isNull(catalogue).launch(new BadDataException("Invalid Catalogue URL"));
+        Validate.isNull(catalogue).launch(new BadDataException(errorMessage));
         return this.objectMapper.readTree(catalogue);
-    }
-
-    @SneakyThrows
-    private JsonNode getServiceOffering(String serviceOfferingUrl) {
-        String serviceOffering = InvokeService.executeRequest(serviceOfferingUrl, HttpMethod.GET);
-        Validate.isNull(serviceOffering).launch(new BadDataException("Invalid Service Offering ID"));
-        return this.objectMapper.readValue(serviceOffering, JsonNode.class);
     }
 
     private Policy getPolicyForServiceOffer(String policyUrl) {
@@ -230,28 +223,28 @@ public class PolicyService {
     }
 
     public boolean evaluatePolicy(PolicyEvaluationRequest policyEvaluationRequest) {
-        JsonNode catalogueDescription = this.getCatalogueDescription(policyEvaluationRequest.catalogueUrl());
-        List<String> countryCode;
+        JsonNode catalogueDescription = this.getServiceOffering(policyEvaluationRequest.catalogueUrl(), "invalid.catalogue.url");
+        List<String> catalogueSubdivisionCodeList;
 
         try {
-            countryCode = this.getCountryCodeFromSelfDescription(catalogueDescription);
+            catalogueSubdivisionCodeList = this.getCountryCodeFromSelfDescription(catalogueDescription);
         } catch (Exception e) {
             throw new BadDataException("catalogue.location.invalid");
         }
 
-        if (CollectionUtils.isEmpty(countryCode)) {
+        if (CollectionUtils.isEmpty(catalogueSubdivisionCodeList)) {
             throw new BadDataException("catalogue.location.invalid");
         }
 
-        JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId());
-        JsonNode policyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
+        JsonNode serviceOffer = this.getServiceOffering(policyEvaluationRequest.serviceOfferId(), "invalid.service.offer.url");
+        JsonNode servicePolicyArray = this.getPolicyArrayFromServiceOffer(serviceOffer);
 
-        if (policyArray != null && policyArray.has(0)) {
-            for (JsonNode policyUrlJsonNode : policyArray) {
+        if (servicePolicyArray != null && servicePolicyArray.has(0)) {
+            for (JsonNode policyUrlJsonNode : servicePolicyArray) {
                 String policyUrl = policyUrlJsonNode.asText();
                 if (policyUrl.endsWith(JSON_EXTENSION)) {
-                    Constraint constraint = this.getLocationConstraintFromPolicy(policyUrl);
-                    return this.isCountryInPermittedRegion(countryCode, constraint);
+                    Constraint serviceOfferSpatialConstraint = this.getLocationConstraintFromPolicy(policyUrl);
+                    return this.isCountryInPermittedRegion(catalogueSubdivisionCodeList, serviceOfferSpatialConstraint);
                 }
             }
         }

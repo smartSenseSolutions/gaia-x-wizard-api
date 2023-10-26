@@ -194,6 +194,10 @@ public class StringPool {
 
     public static final String ERROR = "error";
 
+    public static final String CREATE = "CREATE";
+
+    public static final String DELETE = "DELETE";
+
     private StringPool() {
     }
 }

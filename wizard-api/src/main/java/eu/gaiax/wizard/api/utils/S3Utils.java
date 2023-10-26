@@ -34,6 +34,7 @@ public class S3Utils {
      * @param file       the file
      */
     public void uploadFile(String objectName, File file) {
+        this.s3Client.listBuckets();
         this.s3Client.putObject(this.awsSettings.bucket(), objectName, file);
     }
 
