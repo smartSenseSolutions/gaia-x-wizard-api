@@ -1,7 +1,6 @@
 package eu.gaiax.wizard.util;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.keycloak.admin.client.KeycloakBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.util.TestPropertyValues;
@@ -19,34 +18,34 @@ import java.util.Map;
 import static eu.gaiax.wizard.util.constant.TestConstant.*;
 
 public class ContainerContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
-
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerContextInitializer.class);
-
+    
     public static final String MAILHOG = "mailhog"; //Do not change
     public static final String S3 = "s3"; //Do not change
     public static final String S3_BUCKET = "test-bucket"; //Do not change
     private final Network network = Network.newNetwork();
-
+    
     private final PostgreSQLContainer postgreSQL = new PostgreSQLContainer("postgres:15.3");
     private final KeycloakContainer keycloak = new KeycloakContainer()
             .withNetwork(this.network)
             .withRealmImportFile(REAL_FILE_PATH)
             .withAdminPassword(KEYCLOAK_ADMIN_USERNAME)
             .withAdminPassword(PASSWORD);
-
+    
     private final VaultContainer vault = new VaultContainer("hashicorp/vault:1.14.0")
             .withVaultToken(VAULT_TOKEN);
-
+    
     private final GenericContainer mailHog = new GenericContainer("mailhog/mailhog")
             .withNetwork(this.network)
             .withNetworkAliases(MAILHOG)
             .withExposedPorts(1025, 8025);
-
+    
     private final LocalStackContainer localStackContainer = new LocalStackContainer("2.0")
             .withNetwork(this.network)
             .withNetworkAliases(S3) // the last alias is used for HOSTNAME_EXTERNAL
             .withServices(LocalStackContainer.Service.S3, LocalStackContainer.Service.ROUTE53);
-
+    
     @Override
     public void initialize(ConfigurableApplicationContext applicationContext) {
         this.postgreSQL.start();
@@ -54,9 +53,7 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         this.vault.start();
         this.mailHog.start();
         this.localStackContainer.start();
-
-        LOGGER.info("keycloak user {}, password: {}", this.keycloak.getAdminUsername(), this.keycloak.getAdminPassword());
-
+        
         Map<String, String> properties = new HashMap<>();
         properties.put("spring.datasource.url", this.postgreSQL.getJdbcUrl());
         properties.put("spring.datasource.username", this.postgreSQL.getUsername());
@@ -67,16 +64,16 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         properties.put("wizard.keycloak.clientSecret", KEYCLOAK_PRIVATE_CLIENT_SECRET);
         properties.put("wizard.keycloak.publicClientId", KEYCLOAK_PUBLIC_CLIENT);
         properties.put("wizard.security.enabled", "false");
-
+        
         properties.put("wizard.aws.access_key", this.localStackContainer.getAccessKey());
         properties.put("wizard.aws.hostedZoneId", this.localStackContainer.getHost());
         properties.put("wizard.aws.secretKey", this.localStackContainer.getSecretKey());
         properties.put("wizard.aws.s3Endpoint", this.localStackContainer.getEndpointOverride(LocalStackContainer.Service.S3).toString());
         properties.put("wizard.aws.region", this.localStackContainer.getRegion());
-
+        
         properties.put("wizard.vault.host", this.vault.getHttpHostAddress());
-
-
+        
+        
         try {
             //Create S3 bucket
             this.localStackContainer.execInContainer("awslocal", "s3api", "create-bucket", "--bucket", S3_BUCKET);
@@ -85,7 +82,7 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
             LOGGER.error("Error while creating S3 bucket: {}", e.getMessage(), e);
             throw new RuntimeException(e);
         }
-
+        
         try {
             //Enable vault approle, create wizard-role and read role-id
             this.vault.execInContainer("vault", "auth", "enable", "approle");
@@ -104,19 +101,5 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         }
         TestPropertyValues testProperties = TestPropertyValues.empty();
         testProperties.and(properties).applyTo(applicationContext.getEnvironment());
-    }
-
-    public String createToken(boolean validUser) {
-        KeycloakBuilder keycloakBuilder = KeycloakBuilder.builder()
-                .serverUrl(this.keycloak.getAuthServerUrl())
-                .realm(KEYCLOAK_REALM)
-                .clientId(KEYCLOAK_PUBLIC_CLIENT)
-                .username(INVALID_USER_NAME)
-                .password(PASSWORD);
-        if (validUser) {
-            keycloakBuilder.username(VALID_USER_NAME);
-        }
-        String access_token = keycloakBuilder.build().tokenManager().getAccessToken().getToken();
-        return BEARER + access_token;
     }
 }
