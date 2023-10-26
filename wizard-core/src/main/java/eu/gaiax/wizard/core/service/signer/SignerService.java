@@ -125,15 +125,14 @@ public class SignerService {
         Map<String, Object> legalRegistrationNumber = this.mapper.convertValue(credential.get(LEGAL_REGISTRATION_NUMBER), typeReference);
         //Add @context in the credential
         legalParticipant.put(CONTEXT, this.contextConfig.participant());
-        String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
-
         legalParticipant.put(TYPE, List.of(VERIFIABLE_CREDENTIAL));
-        legalParticipant.put(ID, participantJsonUrl + "#0");
+        legalParticipant.put(ID, participant.getDid());
         legalParticipant.put(ISSUER, participant.getDid());
         String issuanceDate = LocalDateTime.now().atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
         legalParticipant.put(ISSUANCE_DATE, issuanceDate);
 
         Map<String, Object> participantCredentialSubject = this.mapper.convertValue(legalParticipant.get(CREDENTIAL_SUBJECT), typeReference);
+        String participantJsonUrl = this.formParticipantJsonUrl(participant.getDomain(), participant.getId());
         participantCredentialSubject.put(ID, participantJsonUrl + "#0");
         participantCredentialSubject.put(TYPE, GX_LEGAL_PARTICIPANT);
         String registrationId = participantJsonUrl + "#1";
@@ -148,7 +147,7 @@ public class SignerService {
         Map<String, Object> tncVc = new TreeMap<>();
         tncVc.put(CONTEXT, this.contextConfig.tnc());
         tncVc.put(TYPE, List.of(VERIFIABLE_CREDENTIAL));
-        tncVc.put(ID, participantJsonUrl + "#2");
+        tncVc.put(ID, participant.getDid());
         tncVc.put(ISSUER, participant.getDid());
         tncVc.put(ISSUANCE_DATE, issuanceDate);
 
@@ -289,7 +288,7 @@ public class SignerService {
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
                         .context(this.contextConfig.serviceOffer())
                         .type(StringPool.VERIFIABLE_CREDENTIAL)
-                        .id(id)
+                        .id(participant.getDid())
                         .issuer(participant.getDid())
                         .issuanceDate(issuanceDate)
                         .credentialSubject(request.getCredentialSubject())
