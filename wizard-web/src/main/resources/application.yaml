@@ -100,7 +100,7 @@ wizard:
     linkDomainType:
     pdpType:
     pdpUrl:
-  sslProvider:
+  sslProvider: acme://letsencrypt.org
 
 spring:
   liquibase:
