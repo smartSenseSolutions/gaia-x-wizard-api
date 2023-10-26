@@ -1,10 +1,19 @@
-name: App test
+name: Test application (test + coverage)
 
 on:
-  push:
-    branches: [ master ]
+  workflow_dispatch:
   pull_request:
-    branches: [ master ]
+    paths:
+      - 'src/**'
+
+permissions:
+  id-token: write
+  statuses: write
+  checks: write
+  # may also be read
+  contents: write
+  pull-requests: write
+  actions: write
 
 jobs:
   test-app:
@@ -22,15 +31,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Setup .NET Core # Required to execute ReportGenerator
         uses: actions/setup-dotnet@v3
         if: success() || failure()
         with:
           dotnet-version: 6.x
           dotnet-quality: 'ga'
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
 
       - name: Test app
         run: ./gradlew test
