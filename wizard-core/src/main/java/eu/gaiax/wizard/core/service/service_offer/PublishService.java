@@ -30,7 +30,6 @@ public class PublishService {
         PublishToQueueRequest publishToQueueRequest = new PublishToQueueRequest();
         publishToQueueRequest.setSource(this.wizardHost);
         publishToQueueRequest.setData((Map<String, Object>) this.objectMapper.readValue(complianceCredential, Map.class).get("complianceCredential"));
-        System.out.println("Wizard Host:: " + this.wizardHost);
         
         try {
             ResponseEntity<Object> publishServiceComplianceResponse = this.messagingQueueClient.publishServiceCompliance(publishToQueueRequest);

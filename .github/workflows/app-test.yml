@@ -1,0 +1,35 @@
+name: Test application
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  id-token: write
+  statuses: write
+  checks: write
+  # may also be read
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  test-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Test app
+        run: gradle test
