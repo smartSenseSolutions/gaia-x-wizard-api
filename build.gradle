@@ -55,6 +55,7 @@ subprojects {
         testImplementation "com.github.dasniko:testcontainers-keycloak:${keycloakTestContainerVersion}"
         testImplementation "com.github.curious-odd-man:rgxgen:${regexGeneratorVersion}"
         testImplementation 'org.mockito:mockito-inline'
+        testImplementation "org.testcontainers:localstack:1.19.1"
     }
 
     dependencyManagement {
@@ -71,19 +72,4 @@ subprojects {
         enabled = false
     }
 
-    jacocoTestReport {
-        dependsOn test
-    }
-
-    jacoco {
-        toolVersion = "${jacocoVersion}"
-    }
-
-    jacocoTestReport {
-        reports {
-            xml.required = false
-            csv.required = false
-            html.required = true
-        }
-    }
 }

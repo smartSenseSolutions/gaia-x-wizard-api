@@ -6,6 +6,7 @@ package eu.gaiax.wizard.config;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.route53.AmazonRoute53;
 import com.amazonaws.services.route53.AmazonRoute53ClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.validation.beanvalidation.MessageSourceResourceBundleLocator;
@@ -117,29 +119,57 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Bean
     public AmazonS3 amazonS3() {
-        return AmazonS3ClientBuilder.standard().
-                withRegion(this.awsSettings.region()).
-                withCredentials(new AWSCredentialsProvider() {
-                    @Override
-                    public AWSCredentials getCredentials() {
-                        return new AWSCredentials() {
-                            @Override
-                            public String getAWSAccessKeyId() {
-                                return ApplicationConfig.this.awsSettings.accessKey();
-                            }
 
-                            @Override
-                            public String getAWSSecretKey() {
-                                return ApplicationConfig.this.awsSettings.secretKey();
-                            }
-                        };
-                    }
+        if (StringUtils.hasText(this.awsSettings.s3Endpoint())) {
+            return AmazonS3ClientBuilder.standard()
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(this.awsSettings.s3Endpoint(), this.awsSettings.region()))
+                    .withCredentials(new AWSCredentialsProvider() {
+                        @Override
+                        public AWSCredentials getCredentials() {
+                            return new AWSCredentials() {
+                                @Override
+                                public String getAWSAccessKeyId() {
+                                    return ApplicationConfig.this.awsSettings.accessKey();
+                                }
 
-                    @Override
-                    public void refresh() {
-                        //Do nothing
-                    }
-                }).build();
+                                @Override
+                                public String getAWSSecretKey() {
+                                    return ApplicationConfig.this.awsSettings.secretKey();
+                                }
+                            };
+                        }
+
+                        @Override
+                        public void refresh() {
+                            //Do nothing
+                        }
+                    }).build();
+        } else {
+            return AmazonS3ClientBuilder.standard().
+                    withRegion(this.awsSettings.region()).
+                    withCredentials(new AWSCredentialsProvider() {
+                        @Override
+                        public AWSCredentials getCredentials() {
+                            return new AWSCredentials() {
+                                @Override
+                                public String getAWSAccessKeyId() {
+                                    return ApplicationConfig.this.awsSettings.accessKey();
+                                }
+
+                                @Override
+                                public String getAWSSecretKey() {
+                                    return ApplicationConfig.this.awsSettings.secretKey();
+                                }
+                            };
+                        }
+
+                        @Override
+                        public void refresh() {
+                            //Do nothing
+                        }
+                    }).build();
+        }
+
     }
 
     @Bean

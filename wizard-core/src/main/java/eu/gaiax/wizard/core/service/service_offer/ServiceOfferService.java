@@ -26,20 +26,19 @@ import eu.gaiax.wizard.api.model.request.ParticipantValidatorRequest;
 import eu.gaiax.wizard.api.model.service_offer.*;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
+import eu.gaiax.wizard.core.service.InvokeService;
 import eu.gaiax.wizard.core.service.credential.CredentialService;
 import eu.gaiax.wizard.core.service.data_master.StandardTypeMasterService;
 import eu.gaiax.wizard.core.service.data_master.SubdivisionCodeMasterService;
 import eu.gaiax.wizard.core.service.hashing.HashingService;
-import eu.gaiax.wizard.core.service.participant.InvokeService;
 import eu.gaiax.wizard.core.service.participant.ParticipantService;
+import eu.gaiax.wizard.core.service.participant.VaultService;
 import eu.gaiax.wizard.core.service.signer.SignerService;
-import eu.gaiax.wizard.core.service.ssl.CertificateService;
 import eu.gaiax.wizard.dao.entity.Credential;
 import eu.gaiax.wizard.dao.entity.data_master.StandardTypeMaster;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.entity.service_offer.ServiceOffer;
 import eu.gaiax.wizard.dao.repository.service_offer.ServiceOfferRepository;
-import eu.gaiax.wizard.vault.Vault;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -75,8 +74,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     private final ServiceEndpointConfig serviceEndpointConfig;
     private final StandardTypeMasterService standardTypeMasterService;
     private final ServiceLabelLevelService labelLevelService;
-    private final Vault vault;
-    private final CertificateService certificateService;
+    private final VaultService vaultService;
     private final PublishService publishService;
     private final SubdivisionCodeMasterService subdivisionCodeMasterService;
     private final SecureRandom random = new SecureRandom();
@@ -106,7 +104,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         if (request.isStoreVault() && !participant.isKeyStored()) {
-            this.certificateService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
+            this.vaultService.uploadCertificatesToVault(participant.getId().toString(), null, null, null, request.getPrivateKey());
             participant.setKeyStored(true);
             this.participantService.save(participant);
         }
@@ -188,10 +186,12 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
     }
 
     private void addParticipantPrivateKey(String participantId, String did, CreateServiceOfferingRequest request) {
-        if (!this.vault.get(participantId).containsKey("pkcs8.key")) {
+        String privateKeySecret = this.vaultService.getParticipantPrivateKeySecret(participantId);
+        if (!StringUtils.hasText(privateKeySecret)) {
             throw new BadDataException("private.key.not.found");
         }
-        request.setPrivateKey(this.vault.get(participantId).get("pkcs8.key").toString());
+
+        request.setPrivateKey(privateKeySecret);
         request.setVerificationMethod(did);
     }
 

@@ -6,10 +6,9 @@ import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.core.service.domain.DomainService;
 import eu.gaiax.wizard.core.service.job.ScheduleService;
+import eu.gaiax.wizard.core.service.participant.VaultService;
 import eu.gaiax.wizard.dao.entity.participant.Participant;
 import eu.gaiax.wizard.dao.repository.participant.ParticipantRepository;
-import eu.gaiax.wizard.vault.Vault;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobKey;
 import org.shredzone.acme4j.*;
@@ -19,19 +18,19 @@ import org.shredzone.acme4j.exception.AcmeException;
 import org.shredzone.acme4j.toolbox.AcmeUtils;
 import org.shredzone.acme4j.util.CSRBuilder;
 import org.shredzone.acme4j.util.KeyPairUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.List;
+import java.util.UUID;
 
 import static eu.gaiax.wizard.api.utils.StringPool.TEMP_FOLDER;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class CertificateService {
 
@@ -42,15 +41,24 @@ public class CertificateService {
 
     // RSA key size of generated key pairs
     private static final int KEY_SIZE = 2048;
+    private final String sslProvider;
 
     private enum ChallengeType {
         DNS
     }
 
-    private final Vault vault;
     private final DomainService domainService;
     private final ParticipantRepository participantRepository;
     private final ScheduleService scheduleService;
+    private final VaultService vaultService;
+
+    public CertificateService(VaultService vaultService, DomainService domainService, ParticipantRepository participantRepository, ScheduleService scheduleService, @Value("wizard.sslProvider") String sslProvider) {
+        this.vaultService = vaultService;
+        this.domainService = domainService;
+        this.participantRepository = participantRepository;
+        this.scheduleService = scheduleService;
+        this.sslProvider = sslProvider;
+    }
 
     private static void checkOrderStatus(Order order) throws AcmeException {
         try {
@@ -91,7 +99,7 @@ public class CertificateService {
 
             // Create a session for Let's Encrypt.
             // Use "acme://letsencrypt.org" for production server
-            Session session = new Session("acme://letsencrypt.org");
+            Session session = new Session(this.sslProvider);
 
             // Get the Account.
             // If there is no account yet, create a new one.
@@ -193,7 +201,7 @@ public class CertificateService {
             }
             log.info("CertificateService(createSSLCertificate) -> Certificate has been created for participant {}", participantId);
         } catch (Exception e) {
-            log.error("CertificateService(createSSLCertificate) -> Can not create certificate for did ->{}, domain ->{}", participant.getDomain(), participant.getDomain(), e);
+            log.error("CertificateService(createSSLCertificate) -> Can not create certificate for participant id ->{}, domain ->{}", participant.getId(), participant.getDomain(), e);
             participant.setStatus(RegistrationStatus.CERTIFICATE_CREATION_FAILED.getStatus());
         } finally {
             this.participantRepository.save(participant);
@@ -312,7 +320,12 @@ public class CertificateService {
             log.info("CertificateService(authorize) -> Challenge has been completed for domain {}, Remember to remove the validation resource.", auth.getIdentifier().getDomain());
 
         } finally {
-            this.domainService.deleteTxtRecordForSSLCertificate(domain, valuesToBeAdded);
+            try {
+                this.domainService.updateTxtRecords(domain, valuesToBeAdded, StringPool.DELETE);
+                log.info("DomainService(createSubDomain) -> Txt record has been deleted for {}", domain);
+            } catch (Exception e) {
+                log.error("DomainService(createSubDomain) -> Txt record has not been deleted for {}", domain, e);
+            }
         }
     }
 
@@ -328,7 +341,13 @@ public class CertificateService {
         String domain = Dns01Challenge.toRRName(auth.getIdentifier());
 
         //Create TXT records
-        this.domainService.createTxtRecordForSSLCertificate(domain, valuesToBeAdded);
+        try {
+            this.domainService.updateTxtRecords(domain, valuesToBeAdded, StringPool.CREATE);
+            log.info("DomainService(createSubDomain) -> Txt record has been created for {}", domain);
+        } catch (Exception e) {
+            log.error("DomainService(createSubDomain) -> Txt record has not been created for {}", domain, e);
+        }
+
 
         return challenge;
     }
@@ -354,12 +373,12 @@ public class CertificateService {
     }
 
     private void uploadCertificatesToVault(String participantId, File domainChain, File csrFile, File keyFile, File pkcs8Key) throws IOException {
-        this.uploadCertificatesToVault(participantId,
+        this.vaultService.uploadCertificatesToVault(participantId,
                 new String(Files.readAllBytes(domainChain.toPath())), new String(Files.readAllBytes(csrFile.toPath())),
                 new String(Files.readAllBytes(keyFile.toPath())), new String(Files.readAllBytes(pkcs8Key.toPath())));
     }
 
-    public void uploadCertificatesToVault(String participantId, String domainChain, String csr, String key, String pkcs8Key) {
+    /*public void uploadCertificatesToVault(String participantId, String domainChain, String csr, String key, String pkcs8Key) {
         Map<String, Object> data = new HashMap<>();
         if (StringUtils.hasText(domainChain)) {
             data.put("x509CertificateChain.pem", domainChain);
@@ -379,5 +398,5 @@ public class CertificateService {
             this.vault.patch(participantId, data);
         }
         log.info("CertificateService(uploadCertificatesToVault) -> Certificate has been uploaded on vault.");
-    }
+    }*/
 }

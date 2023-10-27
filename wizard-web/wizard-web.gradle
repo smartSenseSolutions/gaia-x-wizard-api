@@ -18,3 +18,54 @@ dependencies {
 bootJar {
     enabled = true
 }
+
+jacoco {
+    toolVersion = "${jacocoVersion}"
+}
+
+
+jacocoTestReport {
+    reports {
+        xml.required = false
+        csv.required = false
+        html.required = true
+    }
+}
+
+def jacocoExclude = [
+        'eu/gaiax/wizard/GaiaXWizardApplication.class',
+        '**/config/**',
+        '**/exception/**',
+        'eu/gaiax/wizard/core/service/job/**',
+        'eu/gaiax/wizard/core/service/ssl/CertificateService.class',
+        'eu/gaiax/wizard/core/service/k8s/K8SService.class',
+        'eu/gaiax/wizard/api/utils/**',
+        'eu/gaiax/wizard/dao/entity/**',
+        'eu/gaiax/wizard/api/client/CustomErrorDecoder.class'
+]
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExclude)
+        }))
+    }
+}
+
+jacocoTestCoverageVerification {
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExclude)
+        })
+    }
+}
+
+testCodeCoverageReport {
+    afterEvaluate {
+        getClassDirectories().setFrom(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExclude)
+        })
+    }
+}
