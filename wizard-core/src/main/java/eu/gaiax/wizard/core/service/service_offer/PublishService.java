@@ -19,25 +19,25 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class PublishService {
-
+    
     private final ObjectMapper objectMapper;
     private final MessagingQueueClient messagingQueueClient;
     private final ServiceOfferRepository serviceOfferRepository;
     @Value("${wizard.host.wizard}")
     private String wizardHost;
-
+    
     public void publishServiceComplianceToMessagingQueue(UUID serviceOfferId, String complianceCredential) throws JsonProcessingException {
         PublishToQueueRequest publishToQueueRequest = new PublishToQueueRequest();
         publishToQueueRequest.setSource(this.wizardHost);
         publishToQueueRequest.setData((Map<String, Object>) this.objectMapper.readValue(complianceCredential, Map.class).get("complianceCredential"));
-
+        
         try {
             ResponseEntity<Object> publishServiceComplianceResponse = this.messagingQueueClient.publishServiceCompliance(publishToQueueRequest);
             if (publishServiceComplianceResponse.getStatusCode().equals(HttpStatus.CREATED)) {
                 if (publishServiceComplianceResponse.getHeaders().containsKey("location")) {
                     String rawMessageId = publishServiceComplianceResponse.getHeaders().get("location").get(0);
                     String messageReferenceId = rawMessageId.substring(rawMessageId.lastIndexOf("/") + 1);
-
+                    
                     this.serviceOfferRepository.updateMessageReferenceId(serviceOfferId, messageReferenceId);
                     log.info("Service offer published to messaging queue. Message Reference ID: {}", messageReferenceId);
                 } else {

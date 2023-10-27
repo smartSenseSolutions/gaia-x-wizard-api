@@ -37,7 +37,7 @@ import static org.mockito.Mockito.doReturn;
 @ContextConfiguration(initializers = {ContainerContextInitializer.class})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DataMasterControllerTest {
-
+    
     @Autowired
     private AccessTypeMasterRepository accessTypeMasterRepository;
     @Autowired
@@ -60,59 +60,59 @@ class DataMasterControllerTest {
     private TestRestTemplate restTemplate;
     @Autowired
     private ObjectMapper mapper;
-
+    
     @MockBean
     @Autowired
     private PolicyService policyService;
-
+    
     @Test
     void fetch_access_master_200() {
         final String type = "access";
         this.request_master_data(this.accessTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_entity_master_200() {
         final String type = "entity";
         this.request_master_data(this.entityTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_format_master_200() {
         final String type = "format";
         this.request_master_data(this.formatTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_registration_master_200() {
         final String type = "registration";
         this.request_master_data(this.registrationTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_request_master_200() {
         final String type = "request";
         this.request_master_data(this.requestTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_standard_master_200() {
         final String type = "standard";
         this.request_master_data(this.standardTypeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_subdivision_master_200() {
         final String type = "subdivision";
         this.request_master_data(this.subdivisionCodeMasterRepository.count(), type);
     }
-
+    
     @Test
     void fetch_spdx_master_200() {
         final String type = "spdxLicense";
         this.request_master_data(this.spdxLicenseMasterRepository.count(), type);
     }
-
+    
     private void request_master_data(Long count, String type) {
         FilterRequest request = HelperService.prepareDefaultFilterRequest();
         ResponseEntity<CommonResponse> response = this.restTemplate.exchange("/public/master-data/" + type + "/filter", HttpMethod.POST, new HttpEntity<>(request), CommonResponse.class);
@@ -121,7 +121,7 @@ class DataMasterControllerTest {
         assertEquals(count, pageResponse.getPageable().getTotalElements());
         assertTrue(((Collection<?>) pageResponse.getContent()).size() > 0);
     }
-
+    
     @Test
     void fetch_subdivision_name_200() {
         final String type = "subdivisionMaster";
@@ -132,7 +132,7 @@ class DataMasterControllerTest {
         Map<String, Object> payload = (Map<String, Object>) response.getBody().getPayload();
         assertEquals(Collections.singletonList("Brussels Hoofdstedelijk Gewest"), payload.get("serviceAvailabilityLocation"));
     }
-
+    
     @Test
     void fetch_subdivision_master_400() {
         final String type = "subdivisionMaster";
@@ -140,11 +140,11 @@ class DataMasterControllerTest {
         ResponseEntity<CommonResponse> response = this.restTemplate.exchange("/public/master-data/" + type + "/filter", HttpMethod.POST, new HttpEntity<>(request), CommonResponse.class);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
-
+    
     @Test
     void fetch_label_level_list_200() {
         List<LabelLevelTypeInterface> labelLevelTypeAndQuestionList = this.labelLevelService.getLabelLevelTypeAndQuestionList();
         assertThat(labelLevelTypeAndQuestionList).isNotNull();
     }
-
+    
 }

@@ -99,6 +99,48 @@ public class ContainerContextInitializer implements ApplicationContextInitialize
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        
+        properties.put("server.compression.enabled", "true");
+        properties.put("wizard.application.name", "gaia-x-wizard");
+        properties.put("wizard.database.postgres.connection-timeout", "120000");
+        properties.put("wizard.database.postgres.pool-size", "10");
+        properties.put("wizard.keycloak.webAuthRedirectUrl", "http://localhost:8189/*");
+        properties.put("wizard.keycloak.actionTokenLifespan", "300");
+        properties.put("wizard.keycloak.requiredActionsEmailRedirectionUrl", "http://localhost:8189");
+        
+        properties.put("wizard.security.corsOrigins", "*");
+        properties.put("wizard.signer-policies", "integrityCheck,holderSignature,complianceSignature,complianceCheck");
+        properties.put("wizard.host.signer", "http://localhost:8080/");
+        properties.put("wizard.host.wizard", "http://localhost:8080/");
+        properties.put("wizard.host.messagingQueue", "http://localhost:8080/");
+        properties.put("wizard.quartz.scheduler.instanceName", "smartSense");
+        properties.put("wizard.quartz.scheduler.instanceId", "AUTO");
+        properties.put("wizard.quartz.scheduler.batchTriggerAcquisitionMaxCount", "10");
+        properties.put("wizard.management.port", "8090");
+        properties.put("wizard.gaia-x.registryService", "https://registry.gaia-x.eu/v1");
+        properties.put("wizard.context.participant", "https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#");
+        properties.put("wizard.context.registrationNumber", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/participant");
+        properties.put("wizard.context.tnc", "https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#");
+        properties.put("wizard.context.serviceOffer", "https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1");
+        properties.put("wizard.context.ODRLPolicy", "http://www.w3.org/ns/odrl.jsonld,https://www.w3.org/ns/odrl/2/ODRL22.json");
+        properties.put("wizard.context.labelLevel", "https://www.w3.org/2018/credentials/v1,https://w3id.org/security/suites/jws-2020/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#");
+        properties.put("wizard.context.resource", "https://www.w3.org/2018/credentials/v1,https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#");
+        properties.put("wizard.gaiax.tnc", "In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate the visual form of a document or a typeface without relying on meaningful content.");
+        properties.put("spring.liquibase.change-log", "classpath:/db/changelog/changelog-master.xml");
+        properties.put("spring.main.allow-bean-definition-overriding", "true");
+        properties.put("spring.application.name", "gaia-x-wizard");
+        properties.put("spring.datasource.initialization-mode", "always");
+        properties.put("spring.quartz.job-store-type", "jdbc");
+        properties.put("spring.quartz.properties.org.quartz.scheduler.instanceName", "smartSense");
+        properties.put("spring.quartz.properties.org.quartz.scheduler.instanceId", "AUTO");
+        properties.put("spring.quartz.properties.org.quartz.scheduler.batchTriggerAcquisitionMaxCount", "10");
+        properties.put("spring.quartz.properties.org.quartz.scheduler.batchTriggerAcquisitionFireAheadTimeWindow", "1000");
+        properties.put("spring.quartz.properties.org.quartz.jobStore.isClustered", "true");
+        properties.put("spring.quartz.properties.org.quartz.jobStore.clusterCheckinInterval", "10000");
+        properties.put("spring.quartz.properties.org.quartz.jobStore.acquireTriggersWithinLock", "true");
+        properties.put("spring.quartz.properties.org.quartz.jobStore.driverDelegateClass", "org.quartz.impl.jdbcjobstore.PostgreSQLDelegate");
+        properties.put("spring.quartz.properties.org.quartz.threadPool.threadCount", "10");
+        
         TestPropertyValues testProperties = TestPropertyValues.empty();
         testProperties.and(properties).applyTo(applicationContext.getEnvironment());
     }
