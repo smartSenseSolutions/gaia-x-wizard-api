@@ -52,7 +52,7 @@ public class CertificateService {
     private final ScheduleService scheduleService;
     private final VaultService vaultService;
 
-    public CertificateService(VaultService vaultService, DomainService domainService, ParticipantRepository participantRepository, ScheduleService scheduleService, @Value("wizard.sslProvider") String sslProvider) {
+    public CertificateService(VaultService vaultService, DomainService domainService, ParticipantRepository participantRepository, ScheduleService scheduleService, @Value("${wizard.sslProvider}") String sslProvider) {
         this.vaultService = vaultService;
         this.domainService = domainService;
         this.participantRepository = participantRepository;
