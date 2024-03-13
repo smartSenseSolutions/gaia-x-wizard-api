@@ -74,7 +74,7 @@ public class StringPool {
     public static final String ACTION = "action";
     public static final String SUBTYPE = "subType";
     public static final String JSON_EXTENSION = ".json";
-    public static final String AGGREGATION_OF = "gx:aggregationOf";
+    public static final String AGGREGATION_OF = "gx:aggregationOfExists";
     public static final String DEPENDS_ON = "gx:dependsOn";
 
     public static final String CUSTOM_ATTRIBUTE = "gx:customAttribute";
