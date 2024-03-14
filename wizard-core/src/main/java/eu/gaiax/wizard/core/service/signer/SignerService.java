@@ -274,7 +274,7 @@ public class SignerService {
 
     public Map<String, String> signService(Participant participant, CreateServiceOfferingRequest request, String name) {
         Map<String, String> response = new HashMap<>();
-        String id = this.wizardHost + participant.getId() + "/" + name + JSON_EXTENSION;
+        String id = participant.getDomain() + participant.getId() + "/" + name + JSON_EXTENSION;
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put(ID, request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
@@ -288,7 +288,7 @@ public class SignerService {
                 .serviceOffering(VerifiableCredential.ServiceOffering.builder()
                         .context(this.contextConfig.serviceOffer())
                         .type(StringPool.VERIFIABLE_CREDENTIAL)
-                        .id(participant.getDid())
+                        .id(id)
                         .issuer(participant.getDid())
                         .issuanceDate(issuanceDate)
                         .credentialSubject(request.getCredentialSubject())

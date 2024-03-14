@@ -93,7 +93,7 @@ public class ResourceController extends BaseController {
                                        {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
                                      "gx:license": [ "http://smartproof.in/.well-known/license"],
-                                     "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
+                                     "gx:aggregationOfExists": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
                                      "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                    }
                                                         
@@ -188,7 +188,7 @@ public class ResourceController extends BaseController {
                                      {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
                                      ],
                                      "gx:license": [ "http://smartproof.in/.well-known/license"],
-                                     "gx:aggregationOf": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
+                                     "gx:aggregationOfExists": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
                                      "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
                                    }
                                  }
