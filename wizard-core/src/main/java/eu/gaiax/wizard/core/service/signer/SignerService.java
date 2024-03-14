@@ -173,6 +173,13 @@ public class SignerService {
         return this.wizardHost + participantId.toString() + "/" + PARTICIPANT_JSON;
     }
 
+    private String formServiceOfferingJsonUrl(String domain, UUID participantId, String name) {
+        if (StringUtils.hasText(domain)) {
+            return "https://" + domain + "/" + participantId.toString() + "/" + name + JSON_EXTENSION;
+        }
+        return this.wizardHost + participantId.toString() + "/" + name + JSON_EXTENSION;
+    }
+
     public void createSignedLegalParticipant(Participant participant, String issuer, String verificationMethod, String key, boolean ownDid) {
         log.info("SignerService(createParticipantJson) -> Initiate the legal participate creation process for participant {}, ownDid {}", participant.getId(), ownDid);
         File file = new File(TEMP_FOLDER + "participant.json");
@@ -274,7 +281,7 @@ public class SignerService {
 
     public Map<String, String> signService(Participant participant, CreateServiceOfferingRequest request, String name) {
         Map<String, String> response = new HashMap<>();
-        String id = participant.getDomain() + participant.getId() + "/" + name + JSON_EXTENSION;
+        String id = formServiceOfferingJsonUrl(participant.getDomain(), participant.getId(), name);
         Map<String, Object> providedBy = new HashMap<>();
         providedBy.put(ID, request.getParticipantJsonUrl());
         request.getCredentialSubject().put("gx:providedBy", providedBy);
