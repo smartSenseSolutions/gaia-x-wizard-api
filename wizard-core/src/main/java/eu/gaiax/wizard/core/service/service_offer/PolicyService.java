@@ -14,7 +14,6 @@ import eu.gaiax.wizard.api.model.service_offer.PolicyEvaluationRequest;
 import eu.gaiax.wizard.api.model.setting.ContextConfig;
 import eu.gaiax.wizard.api.utils.CommonUtils;
 import eu.gaiax.wizard.api.utils.S3Utils;
-import eu.gaiax.wizard.api.utils.StringPool;
 import eu.gaiax.wizard.api.utils.Validate;
 import eu.gaiax.wizard.core.service.InvokeService;
 import lombok.RequiredArgsConstructor;
@@ -114,13 +113,29 @@ public class PolicyService {
             log.info("Error encountered while parsing service for policy");
         }
 
-        Optional<JsonNode> policyVcOptional = list.stream()
-                .filter(vc -> vc.get(StringPool.CREDENTIAL_SUBJECT).get("type").asText().equals("gx:ServiceOffering"))
-                .findFirst();
-        if (policyVcOptional.isPresent() && policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).has(StringPool.GX_POLICY)) {
-            return policyVcOptional.get().get(StringPool.CREDENTIAL_SUBJECT).get(StringPool.GX_POLICY);
+        for (JsonNode vc : list) {
+            JsonNode credentialSubject = vc.get(CREDENTIAL_SUBJECT);
+            if (credentialSubject.isArray()){
+                for (JsonNode cs : credentialSubject) {
+                    JsonNode serviceOfferingPolicy = getServiceOfferingPolicy(vc, cs);
+                    if (Objects.nonNull(serviceOfferingPolicy)){
+                        return serviceOfferingPolicy;
+                    }
+                }
+            } else {
+                JsonNode serviceOfferingPolicy = getServiceOfferingPolicy(vc, credentialSubject);
+                if (Objects.nonNull(serviceOfferingPolicy)){
+                    return serviceOfferingPolicy;
+                }
+            }
         }
+        return null;
+    }
 
+    private JsonNode getServiceOfferingPolicy(JsonNode vc, JsonNode cs) {
+        if (cs.get("type").asText().equals("gx:ServiceOffering") && cs.has(GX_POLICY)) {
+            return cs.get(GX_POLICY);
+        }
         return null;
     }
 
