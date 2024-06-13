@@ -110,7 +110,9 @@ class ServiceOfferServiceUnitTest {
         doReturn(participant).when(this.participantService).findParticipantById(any());
 
         doNothing().when(this.signerService).validateRequestUrl(anyList(), anyList(), nullable(String.class), anyString(), nullable(List.class));
-        doNothing().when(this.policyService).hostPolicy(anyString(), anyString());
+				   	doReturn(UUID.randomUUID().toString()).when(signerService).formServiceOfferingJsonUrl(anyString(),any(),anyString());
+
+					    doNothing().when(this.policyService).hostPolicy(anyString(), anyString());
         doNothing().when(this.publishService).publishServiceComplianceToMessagingQueue(any(), anyString());
 
         doReturn(this.credential).when(this.credentialService).createCredential(anyString(), anyString(), anyString(), anyString(), any());
@@ -127,7 +129,8 @@ class ServiceOfferServiceUnitTest {
         doReturn(labelLevelMap).when(this.serviceLabelLevelService).createLabelLevelVc(any(), any(), anyString());
 
         doReturn(this.randomUUID).when(this.vaultService).getParticipantPrivateKeySecret(anyString());
-        doReturn(null).when(this.serviceLabelLevelService).saveServiceLabelLevelLink(anyString(), anyString(), any(), any());
+
+					doReturn(null).when(this.serviceLabelLevelService).saveServiceLabelLevelLink(anyString(), anyString(), any(), any());
         try (MockedStatic<HashingService> hashingServiceMockedStatic = Mockito.mockStatic(HashingService.class)) {
             hashingServiceMockedStatic.when(() -> HashingService.fetchJsonContent(anyString())).thenReturn(this.randomUUID);
             ServiceOfferResponse responseServiceOffer = this.serviceOfferService.createServiceOffering(this.createServiceOfferingRequest, UUID.randomUUID().toString(), false);
@@ -221,6 +224,7 @@ class ServiceOfferServiceUnitTest {
         Participant participant = new Participant();
         participant.setId(UUID.fromString(this.randomUUID));
         participant.setKeyStored(true);
+								participant.setDomain(this.randomUUID);
         participant.setOwnDidSolution(true);
         return participant;
     }
