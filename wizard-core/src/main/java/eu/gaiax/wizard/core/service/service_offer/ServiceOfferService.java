@@ -140,7 +140,7 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         serviceOffer = this.serviceOfferRepository.save(serviceOffer);
 
         if (!participant.isOwnDidSolution()) {
-            this.signerService.addServiceEndpoint(participant.getId(), serviceHostUrl, this.serviceEndpointConfig.linkDomainType(), serviceHostUrl);
+            this.signerService.addServiceEndpoint(participant.getId(), vcUrl, this.serviceEndpointConfig.linkDomainType(), vcUrl);
         }
 
         this.publishService.publishServiceComplianceToMessagingQueue(serviceOffer.getId(), complianceCredential.get(SERVICE_VC));
