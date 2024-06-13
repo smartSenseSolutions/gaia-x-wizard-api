@@ -173,7 +173,7 @@ public class SignerService {
         return this.wizardHost + participantId.toString() + "/" + PARTICIPANT_JSON;
     }
 
-    private String formServiceOfferingJsonUrl(String domain, UUID participantId, String name) {
+    public String formServiceOfferingJsonUrl(String domain, UUID participantId, String name) {
         if (StringUtils.hasText(domain)) {
             return "https://" + domain + "/" + participantId.toString() + "/" + name + JSON_EXTENSION;
         }

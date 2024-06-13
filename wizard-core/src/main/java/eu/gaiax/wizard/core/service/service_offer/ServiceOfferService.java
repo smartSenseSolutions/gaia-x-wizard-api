@@ -110,7 +110,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         }
 
         String serviceName = "service_" + this.getRandomString();
-        String serviceHostUrl = this.wizardHost + participant.getId() + "/" + serviceName + ".json";
+
+								String serviceHostUrl = signerService.formServiceOfferingJsonUrl(participant.getDomain(), participant.getId(), serviceName);
 
         Map<String, String> labelLevelVc = this.createServiceOfferLabelLevel(participant, request, serviceHostUrl);
         Map<String, Object> credentialSubject = request.getCredentialSubject();
@@ -122,7 +123,8 @@ public class ServiceOfferService extends BaseService<ServiceOffer, UUID> {
         request.setCredentialSubject(credentialSubject);
 
         Map<String, String> complianceCredential = this.signerService.signService(participant, request, serviceName);
-        Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get(SERVICE_VC), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
+
+								Credential serviceOffVc = this.credentialService.createCredential(complianceCredential.get(SERVICE_VC), serviceHostUrl, CredentialTypeEnum.SERVICE_OFFER.getCredentialType(), "", participant);
         List<StandardTypeMaster> supportedStandardList = this.getSupportedStandardList(complianceCredential.get(SERVICE_VC));
 
         ServiceOffer serviceOffer = ServiceOffer.builder()
