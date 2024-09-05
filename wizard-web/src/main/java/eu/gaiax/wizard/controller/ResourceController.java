@@ -44,195 +44,212 @@ public class ResourceController extends BaseController {
             @Content(examples = {
                     @ExampleObject(name = "Create physical resource", value = """
                             {
-                                  "verificationMethod": "did:web:example.com",
-                                "email":"exmaple@gmail.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                  "credentialSubject": {
-                                    "type": "gx:PhysicalResource",
-                                    "gx:name": "Test Resource 1",
-                                    "gx:description": "Test Resource 1 description",
-                                    "gx:maintainedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:ownedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:manufacturedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:locationAddress": [
-                                      {
-                                        "gx:countryCode": "FR-DE"
-                                      }
-                                    ],
-                                    "gx:location": [
-                                      {
-                                        "gx:gps": "35.89421911 139.94637467"
-                                      }
-                                    ]
+                              "verificationMethod": "did:web:example.com",
+                              "email": "exmaple@gmail.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "credentialSubject": {
+                                "type": "gx:PhysicalResource",
+                                "gx:name": "Test Resource 1",
+                                "gx:description": "Test Resource 1 description",
+                                "gx:maintainedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
                                   }
-                                }
+                                ],
+                                "gx:ownedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:manufacturedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:locationAddress": [
+                                  {
+                                    "@type": "vcard:Address",
+                                    "vcard:postal-code": "12345",
+                                    "vcard:street-address": "123 Main St",
+                                    "gx:countryCode": "US"
+                                  }
+                                ],
+                                "gx:location": [
+                                  "35.89421911 139.94637467"
+                                ]
+                              }
+                            }
                             """),
                     @ExampleObject(name = "Create virtual resource , Software resource", value = """                                                        
-                                 {
-                                  "email":"exmaple@gmail.com",
-                                   "verificationMethod": "did:web:example.com",
-                                   "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                   "credentialSubject": {
-                                     "type": "VirtualResource",
-                                     "subType":"SoftwareResource",
-                                     "gx:name": "Soft_res_sing_2",
-                                     "gx:description": "sign Test Resource 2 description",
-                                     "gx:copyrightOwnedBy": [
-                                       {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
-                                     ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"],
-                                     "gx:aggregationOfExists": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
-                                     "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
-                                   }
-                                                        
-                                 }
+                            {
+                              "email": "exmaple@gmail.com",
+                              "verificationMethod": "did:web:example.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "credentialSubject": {
+                                "type": "VirtualResource",
+                                "subType": "SoftwareResource",
+                                "gx:name": "Soft_res_sing_2",
+                                "gx:description": "sign Test Resource 2 description",
+                                "gx:copyrightOwnedBy": [
+                                  {
+                                    "id": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json"
+                                  }
+                                ],
+                                "gx:license": [
+                                  "http://smartproof.in/.well-known/license"
+                                ],
+                                "gx:aggregationOfExists": [
+                                  {
+                                    "id": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"
+                                  }
+                                ],
+                                "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
+                              }
+                            }
                             """),
                     @ExampleObject(name = "Create virtual resource , Data resource", value = """
-                               {
-                                 "email": "exmaple@gmail.com",
-                                    "verificationMethod": "did:web:example.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                 "credentialSubject": {
-                                   "type": "VirtualResource",
-                                   "subType": "DataResource",
-                                   "gx:name": "Test Resource 1",
-                                   "gx:description": "Test Resource 1 description",
-                                   "gx:copyrightOwnedBy": [
-                                     {
-                                       "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                     }
-                                   ],
-                                   "gx:license": [
-                                     "http://smartproof.in/.well-known/license"
-                                   ],
-                                   "gx:producedBy": {
-                                     "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCic"
-                                   },
-                                   "gx:exposedThrough": [
-                                     "http://smartproof.in/api/test-resource-1"
-                                   ],
-                                   "gx:containsPII": false,
-                                   "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
-                                 }
-                               }
+                            {
+                              "email": "exmaple@gmail.com",
+                              "verificationMethod": "did:web:example.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "credentialSubject": {
+                                "type": "VirtualResource",
+                                "subType": "DataResource",
+                                "gx:name": "Test Resource 1",
+                                "gx:description": "Test Resource 1 description",
+                                "gx:copyrightOwnedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:license": [
+                                  "http://smartproof.in/.well-known/license"
+                                ],
+                                "gx:producedBy": {
+                                  "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCic"
+                                },
+                                "gx:exposedThrough": {
+                                  "id": "http://smartproof.in/api/test-resource-1"
+                                },
+                                "gx:containsPII": false,
+                                "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
+                              }
+                            }
                             """)
             })
     })
     public CommonResponse<Resource> createResource(@PathVariable(StringPool.PARTICIPANT_ID) String participantId, @Valid @RequestBody CreateResourceRequest request, Principal principal) {
-        this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.resourceService.createResource(request, this.requestForClaim(StringPool.ID, principal).toString()), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
+        validateParticipantId(participantId, principal);
+        return CommonResponse.of(resourceService.createResource(request, requestForClaim(StringPool.ID, principal).toString()), messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
     @io.swagger.v3.oas.annotations.parameters.RequestBody(content = {
             @Content(examples = {
                     @ExampleObject(name = "Create physical resource", value = """
                             {
-                                  "verificationMethod": "did:web:example.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                 "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
-                                  "credentialSubject": {
-                                    "type": "gx:PhysicalResource",
-                                    "gx:name": "Test Resource 1",
-                                    "gx:description": "Test Resource 1 description",
-                                    "gx:maintainedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:ownedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:manufacturedBy": [
-                                      {
-                                        "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                      }
-                                    ],
-                                    "gx:locationAddress": [
-                                      {
-                                        "gx:countryCode": "FR-DE"
-                                      }
-                                    ],
-                                    "gx:location": [
-                                      {
-                                        "gx:gps": "35.89421911 139.94637467"
-                                      }
-                                    ]
+                              "verificationMethod": "did:web:example.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
+                              "credentialSubject": {
+                                "type": "gx:PhysicalResource",
+                                "gx:name": "Test Resource 1",
+                                "gx:description": "Test Resource 1 description",
+                                "gx:maintainedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
                                   }
-                                }
+                                ],
+                                "gx:ownedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:manufacturedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:locationAddress": [
+                                  {
+                                    "@type": "vcard:Address",
+                                    "vcard:postal-code": "12345",
+                                    "vcard:street-address": "123 Main St",
+                                    "gx:countryCode": "US"
+                                  }
+                                ],
+                                "gx:location": [
+                                  "35.89421911 139.94637467"
+                                ]
+                              }
+                            }
                             """),
                     @ExampleObject(name = "Create virtual resource , Software resource", value = """                                                        
-                                 {
-                                  "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
-                                   "verificationMethod": "did:web:example.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                   "credentialSubject": {
-                                     "type": "VirtualResource",
-                                     "subType":"SoftwareResource",
-                                     "gx:name": "Soft_res_sing_2",
-                                    "gx:description": "sign Test Resource 2 description",
-                                     "gx:copyrightOwnedBy": [
-                                     {"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json" }
-                                     ],
-                                     "gx:license": [ "http://smartproof.in/.well-known/license"],
-                                     "gx:aggregationOfExists": [{"id":"https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"}],
-                                     "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
-                                   }
-                                 }
+                            {
+                              "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
+                              "verificationMethod": "did:web:example.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "credentialSubject": {
+                                "type": "VirtualResource",
+                                "subType": "SoftwareResource",
+                                "gx:name": "Soft_res_sing_2",
+                                "gx:description": "sign Test Resource 2 description",
+                                "gx:copyrightOwnedBy": [
+                                  {
+                                    "id": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/participant.json"
+                                  }
+                                ],
+                                "gx:license": [
+                                  "http://smartproof.in/.well-known/license"
+                                ],
+                                "gx:aggregationOfExists": [
+                                  {
+                                    "id": "https://wizard-api.smart-x.smartsenselabs.com/12081064-8878-477e-8092-564a240c69e2/resource_b5b7e6b0-ae24-4458-b3f9-27572abc39e7.json"
+                                  }
+                                ],
+                                "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
+                              }
+                            }
                             """),
                     @ExampleObject(name = "Create virtual resource , Data resource", value = """
-                               {
-                                 "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
-                                 "verificationMethod": "did:web:example.com",
-                                 "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
-                                 "credentialSubject": {
-                                   "type": "VirtualResource",
-                                   "subType": "DataResource",
-                                   "gx:name": "Test Resource 1",
-                                   "gx:description": "Test Resource 1 description",
-                                   "gx:copyrightOwnedBy": [
-                                     {
-                                       "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
-                                     }
-                                   ],
-                                   "gx:license": [
-                                     "http://smartproof.in/.well-known/license"
-                                   ],
-                                   "gx:producedBy": {
-                                     "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCic"
-                                   },
-                                   "gx:exposedThrough": [
-                                     "http://smartproof.in/api/test-resource-1"
-                                   ],
-                                   "gx:containsPII": false,
-                                   "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
-                                 }
-                               }
+                            {
+                              "participantJsonUrl": "https://example.com/12081064-8878-477e-8092-564a240c69e2/participant.json",
+                              "verificationMethod": "did:web:example.com",
+                              "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
+                              "credentialSubject": {
+                                "type": "VirtualResource",
+                                "subType": "DataResource",
+                                "gx:name": "Test Resource 1",
+                                "gx:description": "Test Resource 1 description",
+                                "gx:copyrightOwnedBy": [
+                                  {
+                                    "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCichXWdMH3S2c8AaDLm3kXmf5R8DFPWTYo5iRYkn8kvgU3AjMXc2qTbhuMHCpucKGgT1ZMkcHUygZkt11iD3T8VJNKYwsdk4MGoZwdqoFUuTKVcsXVTBA4ofD1Dtqzjavyng5WUpvJf4gRyfGkMvYYuHCgay8TK8Dayt6Rhcs3r2d1gRCg2UV419S9CpWZGwKQNEXdYbaB2eTiNbQ83KMd4mj1oSJgF7LLDZLJtKJbhwLzR3x35QUqEGevRxnRDKoPdHrEZN7r9TVAmvr9rt7Xq8eB4zGMTza59hisEAUaHsmWQNaVDorqFyZgN5bXswMK1irVQ5SVR9osCCRrKUKkntxfakjmSqapPfveMP39vkgTXfEhsfLUZXGwFcpgLpWxWRn1QLnJY11BVymS7DyaSvbSKotNFQxyV6vghfM2Jetw1mLxU5qsQqDYnDYJjPZQSmkwxjX3yenPVCz6N2ox83tj9AuuQrzg5p2iukNdunDd2QCsHaMEtTq9JVLzXtWs2eZbPkxCBEQwoKTGGVhKu5yxZjCtQGc#9894e9b0a38aa105b50bb9f4e7d0975641273416e70f166f4bd9fd1b00dfe81d"
+                                  }
+                                ],
+                                "gx:license": [
+                                  "http://smartproof.in/.well-known/license"
+                                ],
+                                "gx:producedBy": {
+                                  "id": "https://wizard.lab.gaia-x.eu/api/credentials/2d37wbGvQzbAQ84yRouh2m2vBKkN8s5AfH9Q75HZRCUQmJW7yAVSNKzjJj6gcjE2mDNDUHCic"
+                                },
+                                "gx:exposedThrough": {
+                                  "id": "https://ambuja.dev.smart-x.smartsenselabs.com/2c9317d0-f1b2-451b-a80e-ef40750417ce/service_y66P.json"
+                                },
+                                "gx:containsPII": false,
+                                "gx:customAttribute": "https://docs.gaia-x.eu/technical-committee/policy-rules-committee/trust-framework/latest/resource/"
+                              }
+                            }
                             """)
             })
     })
     @Operation(summary = "Create Resource")
     @PostMapping(path = "public/resource", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<Resource> createPublicResource(@Valid @RequestBody CreateResourceRequest request) {
-        return CommonResponse.of(this.resourceService.createResource(request, null), this.messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
+        return CommonResponse.of(resourceService.createResource(request, null), messageSource.getMessage("entity.creation.successful", new String[]{"Resource"}, LocaleContextHolder.getLocale()));
     }
 
     @PostMapping(path = "public/resource/validation", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public void validateResource(@Valid @RequestBody CreateResourceRequest request) throws JsonProcessingException {
-        this.resourceService.validateResourceRequest(request);
+        resourceService.validateResourceRequest(request);
     }
 
     @Operation(summary = "Public API to filter resources")
@@ -324,7 +341,7 @@ public class ResourceController extends BaseController {
     })
     @PostMapping(path = RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@Valid @RequestBody FilterRequest filterRequest) {
-        return CommonResponse.of(this.resourceService.filterResource(filterRequest, null));
+        return CommonResponse.of(resourceService.filterResource(filterRequest, null));
     }
 
     @Operation(summary = "API to filter user's resources")
@@ -416,8 +433,8 @@ public class ResourceController extends BaseController {
     })
     @PostMapping(path = PARTICIPANT_RESOURCE_FILTER, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public CommonResponse<PageResponse<ResourceFilterResponse>> filterResource(@PathVariable(value = "participantId") String participantId, @Valid @RequestBody FilterRequest filterRequest, Principal principal) {
-        this.validateParticipantId(participantId, principal);
-        return CommonResponse.of(this.resourceService.filterResource(filterRequest, participantId));
+        validateParticipantId(participantId, principal);
+        return CommonResponse.of(resourceService.filterResource(filterRequest, participantId));
     }
 
 }

@@ -5,8 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.List;
 
 @ConfigurationProperties(prefix = "wizard.context")
-public record ContextConfig(List<String> serviceOffer,
-                            List<String> participant,
-                            List<String> registrationNumber, List<String> labelLevel,
-                            List<String> tnc, List<String> ODRLPolicy, List<String> resource) {
+public record ContextConfig(List<String> serviceOffer, List<String> participant, List<String> registrationNumber,
+                            List<String> labelLevel, List<String> tnc, List<String> ODRLPolicy, List<String> resource,
+                            List<String> resourceData) {
 }
