@@ -11,8 +11,8 @@ import java.util.Set;
 @Getter
 public enum ResourceType {
     PHYSICAL_RESOURCE("gx:PhysicalResource", "Physical"),
-    VIRTUAL_DATA_RESOURCE("gx:VirtualDataResource", "Virtual (Data)"),
-    VIRTUAL_SOFTWARE_RESOURCE("gx:VirtualSoftwareResource", "Virtual (Software)");
+    DATA_RESOURCE("gx:DataResource", "Virtual (Data)"),
+    SOFTWARE_RESOURCE("gx:SoftwareResource", "Virtual (Software)");
 
     private final String value;
     private final String label;

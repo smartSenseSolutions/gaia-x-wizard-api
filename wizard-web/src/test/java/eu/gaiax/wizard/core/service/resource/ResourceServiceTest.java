@@ -162,7 +162,7 @@ class ResourceServiceTest {
 
         Map<String, Object> credentialSubject = new HashMap<>();
         credentialSubject.put(TYPE, "VirtualResource");
-        credentialSubject.put(SUBTYPE, "VirtualDataResource");
+        credentialSubject.put(SUBTYPE, "DataResource");
         credentialSubject.put(NAME, this.randomUUID);
         credentialSubject.put("gx:description", this.randomUUID);
         credentialSubject.put("gx:license", "http://localhost");
@@ -186,7 +186,7 @@ class ResourceServiceTest {
 
         Map<String, Object> credentialSubject = new HashMap<>();
         credentialSubject.put(TYPE, "VirtualResource");
-        credentialSubject.put(SUBTYPE, "VirtualSoftwareResource");
+        credentialSubject.put(SUBTYPE, "SoftwareResource");
         credentialSubject.put(NAME, this.randomUUID);
         credentialSubject.put("gx:description", this.randomUUID);
         credentialSubject.put("gx:license", "http://localhost");

@@ -86,7 +86,7 @@ public class ResourceController extends BaseController {
                                    "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                                    "credentialSubject": {
                                      "type": "VirtualResource",
-                                     "subType":"VirtualSoftwareResource",
+                                     "subType":"SoftwareResource",
                                      "gx:name": "Soft_res_sing_2",
                                      "gx:description": "sign Test Resource 2 description",
                                      "gx:copyrightOwnedBy": [
@@ -106,7 +106,7 @@ public class ResourceController extends BaseController {
                                  "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                                  "credentialSubject": {
                                    "type": "VirtualResource",
-                                   "subType": "VirtualDataResource",
+                                   "subType": "DataResource",
                                    "gx:name": "Test Resource 1",
                                    "gx:description": "Test Resource 1 description",
                                    "gx:copyrightOwnedBy": [
@@ -181,7 +181,7 @@ public class ResourceController extends BaseController {
                                  "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                                    "credentialSubject": {
                                      "type": "VirtualResource",
-                                     "subType":"VirtualSoftwareResource",
+                                     "subType":"SoftwareResource",
                                      "gx:name": "Soft_res_sing_2",
                                     "gx:description": "sign Test Resource 2 description",
                                      "gx:copyrightOwnedBy": [
@@ -200,7 +200,7 @@ public class ResourceController extends BaseController {
                                  "privateKey": "-----BEGIN PRIVATE KEY---  ----END PRIVATE KEY-----",
                                  "credentialSubject": {
                                    "type": "VirtualResource",
-                                   "subType": "VirtualDataResource",
+                                   "subType": "DataResource",
                                    "gx:name": "Test Resource 1",
                                    "gx:description": "Test Resource 1 description",
                                    "gx:copyrightOwnedBy": [

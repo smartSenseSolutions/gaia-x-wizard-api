@@ -130,7 +130,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
                     .participant(participant)
                     .build();
             
-            if (resource.getType().equals(ResourceType.VIRTUAL_DATA_RESOURCE.getValue())) {
+            if (resource.getType().equals(ResourceType.DATA_RESOURCE.getValue())) {
                 SimpleDateFormat formatter = new SimpleDateFormat(DATE_TIME_FORMAT);
                 if (request.getCredentialSubject().containsKey(OBSOLETE_TIME)) {
                     resource.setObsoleteDate(formatter.parse((String) request.getCredentialSubject().get(OBSOLETE_TIME)));
@@ -200,7 +200,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
             this.validateVirtualResource(request, jsonObject);
         }
         
-        if (request.getCredentialSubject().containsKey(SUBTYPE) && ResourceType.VIRTUAL_DATA_RESOURCE.getValue().equals("gx:" + request.getCredentialSubject().get(SUBTYPE).toString())) {
+        if (request.getCredentialSubject().containsKey(SUBTYPE) && ResourceType.DATA_RESOURCE.getValue().equals("gx:" + request.getCredentialSubject().get(SUBTYPE).toString())) {
             if (request.getCredentialSubject().containsKey(OBSOLETE_TIME)) {
                 this.validateDate((String) request.getCredentialSubject().get(OBSOLETE_TIME), "invalid.obsolete.date");
             }
@@ -352,6 +352,7 @@ public class ResourceService extends BaseService<Resource, UUID> {
         }
         resourceRequest.put(CREDENTIAL_SUBJECT, credentialSub);
         map.put("resource", resourceRequest);
+        //todo: Need to Impl Change
         Map<String, Object> resourceMap = new HashMap<>();
         resourceMap.put(ISSUER, participant.getDid());
         resourceMap.put("verificationMethod", request.getVerificationMethod());
